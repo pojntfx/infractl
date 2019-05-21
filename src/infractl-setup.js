@@ -15,14 +15,14 @@ commander
 
 if (commander.zerotierApiEndpoint) {
   setZeroTierConfig({ zerotierApiEndpoint: commander.zerotierApiEndpoint });
-  console.log("ZeroTier API endpoint set.");
+  console.log("ZeroTier API endpoint successfully set.");
 }
 
 if (commander.zerotierApiAccessToken) {
   setZeroTierConfig({
     zerotierApiAccessToken: commander.zerotierApiAccessToken
   });
-  console.log("ZeroTier API access token set.");
+  console.log("ZeroTier API access token successfully set.");
 }
 
 if (!(commander.zerotierApiEndpoint || commander.zerotierApiAccessToken)) {
