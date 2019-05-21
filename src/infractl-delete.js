@@ -2,6 +2,6 @@
 
 const commander = require("commander");
 commander
-  .command("networks", "Delete network")
+  .command("networks", "Delete network(s)")
   .alias("network")
   .parse(process.argv);

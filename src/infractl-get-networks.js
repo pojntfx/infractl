@@ -4,7 +4,7 @@ const table = require("markdown-table");
 const ZeroTier = require("./zerotier");
 const { getZeroTierConfig } = require("./config");
 const commander = require("commander");
-commander.parse(process.argv);
+commander.arguments("[id]").parse(process.argv);
 
 const config = getZeroTierConfig();
 
