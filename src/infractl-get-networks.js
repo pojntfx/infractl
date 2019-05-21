@@ -8,7 +8,7 @@ commander.parse(process.argv);
 
 const config = getZeroTierConfig();
 
-if (config.endpoint && config.accessKey) {
+if (config.endpoint && config.accessToken) {
   const zerotier = new ZeroTier(config);
   commander.args[0]
     ? zerotier
@@ -38,5 +38,7 @@ if (config.endpoint && config.accessKey) {
           )
         );
 } else {
-  console.error("ZeroTier has not yet been set up!");
+  console.error(
+    "The networks part (ZeroTier) of infractl has not yet been set up!"
+  );
 }
