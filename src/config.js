@@ -5,5 +5,12 @@ const configstore = new Configstore(package.name);
 
 module.exports.getZeroTierConfig = () => ({
   endpoint: configstore.get("zerotier.endpoint"),
-  accessKey: configstore.get("zerotier.accessKey")
+  accessToken: configstore.get("zerotier.accessToken")
 });
+
+module.exports.setZeroTierConfig = options => {
+  options.zerotierApiEndpoint &&
+    configstore.set("zerotier.endpoint", options.zerotierApiEndpoint);
+  options.zerotierApiAccessToken &&
+    configstore.set("zerotier.accessToken", options.zerotierApiAccessToken);
+};
