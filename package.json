@@ -2,16 +2,16 @@
   "name": "infractl",
   "version": "0.0.1-alpha1",
   "description": "A simple CLI to manage infrastructure for k3s clusters",
-  "main": "src/infractl.js",
+  "main": "src/cmd/infractl",
   "scripts": {
-    "build": "pkg . -t node8-linux,node8-macos,node8-win --out-path dist && chmod +x ./src/*infractl*.js",
+    "build": "chmod +x ./src/cmd/* && pkg . -t node8-linux,node8-macos,node8-win --out-path dist",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "bin": {
-    "infractl": "src/infractl.js"
+    "infractl": "src/cmd/infractl"
   },
   "pkg": {
-    "scripts": "src/*.js"
+    "scripts": "src/**/*.js"
   },
   "author": "Felicitas Pojtinger <felicitas@pojtinger.com>",
   "license": "AGPL-3.0",
