@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 
-const { setZeroTierConfig } = require("./config");
 const commander = require("commander");
+const { setZeroTierConfig } = require("../lib/config");
+
 commander
   .option(
     "-z, --zerotier-api-endpoint <endpoint>",
