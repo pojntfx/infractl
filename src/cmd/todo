@@ -1,0 +1,5 @@
+next up:
+- decompose every action into it's own async function in lib/ (but decompose loops into the main body)
+- refactor the update and create actions into a single apply action and simpler function body (ID hasn't been supplied => create, otherwise update! no check if ID is wrong!)
+- add "{get(w/table or JSON like before),update,delete} network-members --network-id <id> <member-id> --member-name --authorized" actions
+- add withConfigCheck() and other HOCs
