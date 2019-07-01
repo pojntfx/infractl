@@ -14,7 +14,7 @@ commander
   )
   .parse(process.argv);
 
-commander.args[0]
+commander.networkName || commander.private
   ? withZeroTierConfig(config =>
       withZeroTierConfigCheck(config, config =>
         withUpsertedZeroTierNetworkAsTable({
