@@ -9,7 +9,7 @@ commander
   .arguments("<id>")
   .option("-n, --network-name <name>", "Network's name (i.e. skynet-1)")
   .option(
-    "-p, --private",
+    "-p, --private <true|false>",
     "Whether the network should be private (default false)"
   )
   .parse(process.argv);

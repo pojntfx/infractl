@@ -12,11 +12,18 @@ module.exports = withUpsertedZeroTierNetworkAsTable = ({
       .upsertNetwork(
         id || undefined,
         networkName
-          ? private
+          ? private === "true"
             ? {
                 config: {
                   name: networkName,
                   private: true
+                }
+              }
+            : private === "false"
+            ? {
+                config: {
+                  name: networkName,
+                  private: false
                 }
               }
             : {
@@ -24,10 +31,16 @@ module.exports = withUpsertedZeroTierNetworkAsTable = ({
                   name: networkName
                 }
               }
-          : private
+          : private === "true"
           ? {
               config: {
                 private: true
+              }
+            }
+          : private === "false"
+          ? {
+              config: {
+                private: false
               }
             }
           : {}
