@@ -4,7 +4,7 @@ const withTable = require("../lib/withTable");
 
 require("../lib/asZeroTierAction")({
   args: "[id]",
-  action: (zerotier, commander) =>
+  action: (commander, zerotier) =>
     commander.args[0]
       ? zerotier
           .getNetwork(commander.args[0])

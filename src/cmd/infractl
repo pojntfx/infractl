@@ -1,11 +1,8 @@
 #!/usr/bin/env node
 
-const commander = require("commander");
-
-commander
-  .version("0.0.1-alpha1")
-  .command("apply", "Create or update resources")
-  .command("get", "Get resources")
-  .command("delete", "Delete resources")
-  .command("setup", "Setup infractl")
-  .parse(process.argv);
+require("../lib/asApp")("0.0.1-alpha1", [
+  ["apply", "Create or update resources", "a"],
+  ["get", "Get resources", "g"],
+  ["delete", "Delete resources", "d"],
+  ["setup", "Setup infractl", "s"]
+]);

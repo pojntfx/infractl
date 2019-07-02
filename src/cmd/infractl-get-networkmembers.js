@@ -12,7 +12,7 @@ require("../lib/asZeroTierAction")({
     ]
   ],
   checker: commander => commander.networkId,
-  action: (zerotier, commander) =>
+  action: (commander, zerotier) =>
     commander.args[0]
       ? zerotier
           .getNetworkMember(commander.networkId, commander.args[0])
