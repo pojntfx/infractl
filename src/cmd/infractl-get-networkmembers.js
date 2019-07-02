@@ -8,7 +8,7 @@ const ZeroTier = require("../lib/zerotier");
 
 commander
   .arguments("[id]")
-  .option("-n, --network-id <id>", "Network's id (i.e. be8030bc14)")
+  .option("-e, --network-id <id>", "Network's id (i.e. d3ecf5726df0ac91)")
   .parse(process.argv);
 
 commander.networkId
@@ -44,7 +44,7 @@ commander.networkId
                       name,
                       online,
                       authorized,
-                      ipAssignments.join(", "),
+                      ipAssignments.join(","),
                       physicalAddress
                     ]
                   )
