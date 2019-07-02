@@ -1,16 +1,14 @@
 #!/usr/bin/env node
 
-const commander = require("commander");
-
-commander
-  .command(
+require("../lib/asVerb")([
+  [
     "networks",
-    "List all networks (without id) or get details on a network (with id)"
-  )
-  .alias("network")
-  .command(
+    "List all networks (without id) or get details on a network (with id)",
+    "network"
+  ],
+  [
     "networkmembers",
-    "List all network members of a network (without id) or get details on a network member (with id)"
-  )
-  .alias("networkmember")
-  .parse(process.argv);
+    "List all network members of a network (without id) or get details on a network member (with id)",
+    "networkmember"
+  ]
+]);
