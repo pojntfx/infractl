@@ -15,6 +15,10 @@ commander
     "Whether the member should be authorized (default false)"
   )
   .option(
+    "-h, --hidden <true|false>",
+    "Whether the member should be hidden (default false)"
+  )
+  .option(
     "-i, --virtual-ips <num1,num2,...>",
     "Member's virtual IPs (i.e. 172.26.201.90,172.26.201.91"
   )
@@ -22,15 +26,23 @@ commander
 
 commander.networkId &&
 commander.args[0] &&
-(commander.memberName || commander.authorized || commander.virtualIps)
+(commander.memberName ||
+  commander.authorized ||
+  commander.virtualIps ||
+  commander.hidden)
   ? withZeroTierConfig(config =>
       withZeroTierConfigCheck(config, config => {
         const zerotier = new ZeroTier(config);
         zerotier
           .updateNetworkMember(commander.networkId, commander.args[0], {
             name: commander.memberName,
+            hidden:
+              commander.hidden === "false"
+                ? false
+                : commander.hidden === "true"
+                ? true
+                : false,
             config: {
-              name: commander.memberName,
               authorized:
                 commander.authorized === "true"
                   ? true
@@ -44,7 +56,8 @@ commander.args[0] &&
           .then(
             ({
               nodeId,
-              config: { name, authorized, ipAssignments },
+              name,
+              config: { authorized, ipAssignments },
               online,
               physicalAddress
             }) =>
