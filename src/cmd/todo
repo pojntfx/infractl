@@ -1,4 +1,0 @@
-next up:
-- add "{get(w/table or JSON like before),update,delete} network-members --network-id <id> <member-id> --member-name --authorized" actions
-- improve CLI design (consult commander docs on optional properties, types etc.)
-- add withConfigCheck() and other HOCs

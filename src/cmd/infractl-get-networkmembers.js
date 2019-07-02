@@ -9,6 +9,10 @@ const ZeroTier = require("../lib/zerotier");
 commander
   .arguments("[id]")
   .option("-e, --network-id <id>", "Network's id (i.e. d3ecf5726df0ac91)")
+  .option(
+    "-a, --with-hidden <true|false>",
+    "Whether to show hidden network members or not (default false)"
+  )
   .parse(process.argv);
 
 commander.networkId
@@ -33,21 +37,26 @@ commander.networkId
                     "VIRTUAL IPS",
                     "PHYSICAL IP"
                   ],
-                  data: networkMembers.map(
-                    ({
-                      nodeId,
-                      config: { name, authorized, ipAssignments },
-                      online,
-                      physicalAddress
-                    }) => [
-                      nodeId,
-                      name,
-                      online,
-                      authorized,
-                      ipAssignments.join(","),
-                      physicalAddress
-                    ]
-                  )
+                  data: networkMembers
+                    .filter(({ hidden }) =>
+                      commander.withHidden === "true" ? true : !hidden
+                    )
+                    .map(
+                      ({
+                        nodeId,
+                        name,
+                        config: { authorized, ipAssignments },
+                        online,
+                        physicalAddress
+                      }) => [
+                        nodeId,
+                        name,
+                        online,
+                        authorized,
+                        ipAssignments.join(","),
+                        physicalAddress
+                      ]
+                    )
                 }).then(table => console.log(table))
               );
       })
