@@ -1,16 +1,10 @@
 #!/usr/bin/env node
 
-const commander = require("commander");
-const { withZeroTierConfig } = require("../lib/config");
-const withZeroTierConfigCheck = require("../lib/withZeroTierConfigCheck");
 const withTable = require("../lib/withTable");
-const ZeroTier = require("../lib/zerotier");
 
-commander.arguments("[id]").parse(process.argv);
-
-withZeroTierConfig(config =>
-  withZeroTierConfigCheck(config, config => {
-    const zerotier = new ZeroTier(config);
+require("../lib/asZeroTierAction")({
+  args: "[id]",
+  action: (zerotier, commander) =>
     commander.args[0]
       ? zerotier
           .getNetwork(commander.args[0])
@@ -39,6 +33,5 @@ withZeroTierConfig(config =>
               ]
             )
           }).then(table => console.log(table))
-        );
-  })
-);
+        )
+});

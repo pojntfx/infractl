@@ -1,10 +1,9 @@
 #!/usr/bin/env node
 
-const asZeroTierAction = require("../lib/asZeroTierAction");
 const withTable = require("../lib/withTable");
 
-asZeroTierAction({
-  args: ["[id]"],
+require("../lib/asZeroTierAction")({
+  args: "[id]",
   options: [
     ["-e, --network-id <id>", "Network's id (i.e. d3ecf5726df0ac91)"],
     [
