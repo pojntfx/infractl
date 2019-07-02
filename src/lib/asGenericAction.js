@@ -1,8 +1,5 @@
 const commander = require("commander");
 const withArgumentCheck = require("./withArgumentCheck");
-const { withZeroTierConfig } = require("./config");
-const withZeroTierConfigCheck = require("./withZeroTierConfigCheck");
-const ZeroTier = require("./zerotier");
 
 module.exports = async ({ args, options, checker, action }) => {
   commander.arguments(args);
@@ -12,11 +9,6 @@ module.exports = async ({ args, options, checker, action }) => {
   return withArgumentCheck(
     commander,
     checker ? checker : () => true,
-    commander =>
-      withZeroTierConfig(config =>
-        withZeroTierConfigCheck(config, config =>
-          action(commander, new ZeroTier(config), config)
-        )
-      )
+    commander => action(commander)
   );
 };
