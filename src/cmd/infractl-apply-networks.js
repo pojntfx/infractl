@@ -3,11 +3,11 @@
 const withTable = require("../lib/withTable");
 
 require("../lib/asZeroTierAction")({
-  args: "<id>",
+  args: "[id]",
   options: [
-    ["-n, --network-name <name>", "Network's name (i.e. skynet-1)"],
+    ["-n, --network-name [name]", "Network's name (i.e. skynet-1)"],
     [
-      "-p, --private <true|false>",
+      "-p, --private [true|false]",
       "Whether the network should be private (default false)"
     ]
   ],

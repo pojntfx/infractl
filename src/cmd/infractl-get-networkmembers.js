@@ -7,7 +7,7 @@ require("../lib/asZeroTierAction")({
   options: [
     ["-e, --network-id <id>", "Network's id (i.e. d3ecf5726df0ac91)"],
     [
-      "-a, --with-hidden <true|false>",
+      "-a, --with-hidden [true|false]",
       "Whether to show hidden network members or not (default false)"
     ]
   ],
