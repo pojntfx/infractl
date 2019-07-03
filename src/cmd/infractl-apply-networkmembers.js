@@ -6,17 +6,17 @@ require("../lib/asZeroTierAction")({
   args: "<id>",
   options: [
     ["-e, --network-id <id>", "Network's id (i.e. d3ecf5726df0ac91)"],
-    ["-n, --member-name <name>", "Member's name (i.e. nexus-1)"],
+    ["-n, --member-name [name]", "Member's name (i.e. nexus-1)"],
     [
-      "-a, --authorized <true|false>",
+      "-a, --authorized [true|false]",
       "Whether the member should be authorized (default false)"
     ],
     [
-      "-h, --hidden <true|false>",
+      "-h, --hidden [true|false]",
       "Whether the member should be hidden (default false)"
     ],
     [
-      "-i, --virtual-ips <num1,num2,...>",
+      "-i, --virtual-ips [ip1,ip2,...]",
       "Member's virtual IPs (i.e. 172.26.201.90,172.26.201.91"
     ]
   ],
