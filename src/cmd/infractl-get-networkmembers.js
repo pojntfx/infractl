@@ -21,14 +21,7 @@ require("../lib/asZeroTierAction")({
           )
       : zerotier.getNetworkMembers(commander.networkId).then(networkMembers =>
           withTable({
-            headers: [
-              "ID",
-              "NAME",
-              "ONLINE",
-              "AUTHORIZED",
-              "VIRTUAL IPS",
-              "PHYSICAL IP"
-            ],
+            headers: ["ID", "NAME", "ONLINE", "AUTHORIZED", "IPS"],
             data: networkMembers
               .filter(({ hidden }) =>
                 commander.withHidden === "true" ? true : !hidden
@@ -38,15 +31,13 @@ require("../lib/asZeroTierAction")({
                   nodeId,
                   name,
                   config: { authorized, ipAssignments },
-                  online,
-                  physicalAddress
+                  online
                 }) => [
                   nodeId,
                   name,
                   online,
                   authorized,
-                  ipAssignments.join(","),
-                  physicalAddress
+                  ipAssignments.join(",")
                 ]
               )
           }).then(table => console.log(table))

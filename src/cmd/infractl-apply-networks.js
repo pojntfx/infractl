@@ -59,15 +59,9 @@ require("../lib/asZeroTierAction")({
         }) => {
           withTable({
             preceedingText: "Network successfully applied:",
-            headers: [
-              "ID",
-              "NAME",
-              "PRIVATE",
-              "ONLINE MEMBERS",
-              "AUTHORIZED MEMBERS"
-            ],
+            headers: ["ID", "NAME", "ONLINE", "AUTHORIZED", "PRIVATE"],
             data: [
-              [id, name, private, onlineMemberCount, authorizedMemberCount]
+              [id, name, onlineMemberCount, authorizedMemberCount, private]
             ]
           }).then(table => console.log(table));
         }

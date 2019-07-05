@@ -1,8 +1,8 @@
 const commander = require("commander");
 const withArgumentCheck = require("./withArgumentCheck");
-const { withZeroTierConfig } = require("./config");
-const withZeroTierConfigCheck = require("./withZeroTierConfigCheck");
-const ZeroTier = require("./zerotier");
+const { withHetznerCloudConfig } = require("./config");
+const withHetznerCloudConfigCheck = require("./withHetznerCloudConfigCheck");
+const HetznerCloud = require("./hetznerCloud");
 
 module.exports = async ({ args, options, checker, action }) => {
   args && commander.arguments(args);
@@ -13,9 +13,9 @@ module.exports = async ({ args, options, checker, action }) => {
     commander,
     checker ? checker : () => true,
     commander =>
-      withZeroTierConfig(config =>
-        withZeroTierConfigCheck(config, config =>
-          action(commander, new ZeroTier(config), config)
+      withHetznerCloudConfig(config =>
+        withHetznerCloudConfigCheck(config, config =>
+          action(commander, new HetznerCloud(config), config)
         )
       )
   );
