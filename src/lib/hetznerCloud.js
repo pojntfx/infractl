@@ -27,4 +27,30 @@ module.exports = class {
     const nodes = await this.__fetch(`servers/${id}`);
     return nodes.json();
   }
+
+  async upsertNode(id, newNode) {
+    const upsertedNode = await this.__fetch(id ? `servers/${id}` : "servers", {
+      method: id ? "PUT" : "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(newNode)
+    });
+    return upsertedNode.json();
+  }
+
+  async updateNodeStatus(id, status) {
+    const updatedNode = await this.__fetch(
+      status
+        ? `servers/${id}/actions/poweron`
+        : `servers/${id}/actions/poweroff`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        }
+      }
+    );
+    return updatedNode.json();
+  }
 };

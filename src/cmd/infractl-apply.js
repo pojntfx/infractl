@@ -2,5 +2,6 @@
 
 require("../lib/asVerb")([
   ["networks", "Create or update network", "network"],
-  ["networkmembers", "Update network member", "networkmember"]
+  ["networkmembers", "Update network member", "networkmember"],
+  ["nodes", "Create or update node", "node"]
 ]);
