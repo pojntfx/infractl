@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-const { setZeroTierConfig } = require("../lib/config");
+const { setZeroTierConfig, setHetznerCloudConfig } = require("../lib/config");
 
 require("../lib/asGenericAction")({
   options: [
@@ -11,10 +11,21 @@ require("../lib/asGenericAction")({
     [
       "-Z, --zerotier-api-access-token <token>",
       "ZeroTier API access token (i.e. VIh83kxrwYb3LGHfdS6BVhwGBAOXZMps)"
+    ],
+    [
+      "-h, --hetzner-cloud-api-endpoint <endpoint>",
+      "Hetzner Cloud API endpoint (i.e. https://api.hetzner.cloud/v1)"
+    ],
+    [
+      "-H, --hetzner-cloud-api-access-token <token>",
+      "Hetzner Cloud API access token (i.e. jEheVytlAoFl7F8MqUQ7jAo2hOXASztX)"
     ]
   ],
   checker: commander =>
-    !(commander.zerotierApiEndpoint || commander.zerotierApiAccessToken),
+    commander.zerotierApiEndpoint ||
+    commander.zerotierApiAccessToken ||
+    commander.hetznerCloudApiEndpoint ||
+    commander.hetznerCloudApiAccessToken,
   action: commander => {
     if (commander.zerotierApiEndpoint) {
       setZeroTierConfig({ zerotierApiEndpoint: commander.zerotierApiEndpoint });
@@ -25,6 +36,18 @@ require("../lib/asGenericAction")({
         zerotierApiAccessToken: commander.zerotierApiAccessToken
       });
       console.log("ZeroTier API access token successfully set.");
+    }
+    if (commander.hetznerCloudApiEndpoint) {
+      setHetznerCloudConfig({
+        hetznerCloudApiEndpoint: commander.hetznerCloudApiEndpoint
+      });
+      console.log("Hetzner Cloud API endpoint successfully set.");
+    }
+    if (commander.hetznerCloudApiAccessToken) {
+      setHetznerCloudConfig({
+        hetznerCloudApiAccessToken: commander.hetznerCloudApiAccessToken
+      });
+      console.log("Hetzner Cloud API access token successfully set.");
     }
   }
 });

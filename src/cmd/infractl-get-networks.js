@@ -11,13 +11,7 @@ require("../lib/asZeroTierAction")({
           .then(network => console.log(JSON.stringify(network, null, 4)))
       : zerotier.getNetworks().then(networks =>
           withTable({
-            headers: [
-              "ID",
-              "NAME",
-              "PRIVATE",
-              "ONLINE MEMBERS",
-              "AUTHORIZED MEMBERS"
-            ],
+            headers: ["ID", "NAME", "ONLINE", "AUTHORIZED", "PRIVATE"],
             data: networks.map(
               ({
                 id,
@@ -27,9 +21,9 @@ require("../lib/asZeroTierAction")({
               }) => [
                 id,
                 name,
-                private,
                 onlineMemberCount,
-                authorizedMemberCount
+                authorizedMemberCount,
+                private
               ]
             )
           }).then(table => console.log(table))

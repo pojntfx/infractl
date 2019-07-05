@@ -10,5 +10,10 @@ require("../lib/asVerb")([
     "networkmembers",
     "List all network members of a network (without id) or get details on a network member (with id)",
     "networkmember"
+  ],
+  [
+    "nodes",
+    "List all nodes (without id) or get details on a node (with id)",
+    "node"
   ]
 ]);

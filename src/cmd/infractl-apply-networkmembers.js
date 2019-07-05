@@ -47,34 +47,11 @@ require("../lib/asZeroTierAction")({
           ipAssignments: commander.virtualIps && commander.virtualIps.split(",")
         }
       })
-      .then(
-        ({
-          nodeId,
-          name,
-          config: { authorized, ipAssignments },
-          online,
-          physicalAddress
-        }) =>
-          withTable({
-            preceedingText: "Network member successfully applied:",
-            headers: [
-              "ID",
-              "NAME",
-              "ONLINE",
-              "AUTHORIZED",
-              "VIRTUAL IPS",
-              "PHYSICAL IP"
-            ],
-            data: [
-              [
-                nodeId,
-                name,
-                online,
-                authorized,
-                ipAssignments.join(","),
-                physicalAddress
-              ]
-            ]
-          }).then(table => console.log(table))
+      .then(({ nodeId, name, config: { authorized, ipAssignments }, online }) =>
+        withTable({
+          preceedingText: "Network member successfully applied:",
+          headers: ["ID", "NAME", "ONLINE", "AUTHORIZED", "IPS"],
+          data: [[nodeId, name, online, authorized, ipAssignments.join(",")]]
+        }).then(table => console.log(table))
       )
 });
