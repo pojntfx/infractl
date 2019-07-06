@@ -12,11 +12,10 @@ Options:
   -h, --help     output usage information
 
 Commands:
-  create         Create resources
-  get            Get resources
-  update         Update resources
-  delete         Delete resources
-  setup          Setup infractl
+  apply|a        Create or update resources
+  get|g          Get resources
+  delete|d       Delete resources
+  setup|s        Setup infractl
   help [cmd]     display help for [cmd]
 ```
 
