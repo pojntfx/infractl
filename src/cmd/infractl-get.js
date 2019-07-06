@@ -18,7 +18,7 @@ require("../lib/asVerb")([
   ],
   [
     "sshkeys",
-    "List all ssh keys (without id) or get details on a ssh key (with id)",
+    "List all SSH keys (without id) or get details on a SSH key (with id)",
     "sshkey"
   ]
 ]);
