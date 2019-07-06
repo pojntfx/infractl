@@ -16,6 +16,10 @@ require("../lib/asHetznerCloudAction")({
       "Node's location (fsn1,nbg1,hel1) (cannot be updated)"
     ],
     [
+      "-k, --ssh-keys [key1,key2,...]",
+      "Node's SSH keys (i.e. pojntfx@thinkpadx1c3.pojtinger.space) (cannot be updated)"
+    ],
+    [
       "-p, --powered-on [true|false]",
       "Whether the node should be powered on (default true)"
     ]
@@ -25,7 +29,8 @@ require("../lib/asHetznerCloudAction")({
     commander.operatingSystem ||
     commander.nodeType ||
     commander.location ||
-    commander.poweredOn,
+    commander.poweredOn ||
+    commander.sshKeys,
   action: (commander, hetznerCloud) =>
     hetznerCloud
       .upsertNode(commander.args[0] || undefined, {
@@ -33,6 +38,8 @@ require("../lib/asHetznerCloudAction")({
         image: (!commander.args[0] && commander.operatingSystem) || undefined,
         server_type: (!commander.args[0] && commander.nodeType) || undefined,
         location: (!commander.args[0] && commander.location) || undefined,
+        ssh_keys:
+          (!commander.args[0] && commander.sshKeys.split(",")) || undefined,
         start_after_create: !commander.args[0]
           ? commander.poweredOn === "false"
             ? false
@@ -55,8 +62,8 @@ require("../lib/asHetznerCloudAction")({
             image: { name: os }
           }
         }) => {
-          commander.args[0] &&
-            (commander.poweredOn === "false"
+          commander.args[0]
+            ? commander.poweredOn === "false"
               ? hetznerCloud
                   .updateNodeStatus(commander.args[0], false)
                   .then(updatedNode =>
@@ -134,7 +141,22 @@ require("../lib/asHetznerCloudAction")({
                       location
                     ]
                   ]
-                }).then(table => console.log(table)));
+                }).then(table => console.log(table))
+            : withTable({
+                preceedingText: "Node successfully applied:",
+                headers: [
+                  "ID",
+                  "NAME",
+                  "ONLINE",
+                  "IP",
+                  "OS",
+                  "TYPE",
+                  "LOCATION"
+                ],
+                data: [
+                  [id, name, status === "running", ip, os, serverType, location]
+                ]
+              }).then(table => console.log(table));
         }
       )
 });
