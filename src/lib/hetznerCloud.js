@@ -60,4 +60,14 @@ module.exports = class {
     });
     return deletedNode;
   }
+
+  async getSSHKeys() {
+    const sshKeys = await this.__fetch("ssh_keys");
+    return sshKeys.json();
+  }
+
+  async getSSHKey(id) {
+    const sshKey = await this.__fetch(`ssh_keys/${id}`);
+    return sshKey.json();
+  }
 };

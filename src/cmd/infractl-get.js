@@ -15,5 +15,10 @@ require("../lib/asVerb")([
     "nodes",
     "List all nodes (without id) or get details on a node (with id)",
     "node"
+  ],
+  [
+    "sshkeys",
+    "List all ssh keys (without id) or get details on a ssh key (with id)",
+    "sshkey"
   ]
 ]);
