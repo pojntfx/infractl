@@ -70,4 +70,25 @@ module.exports = class {
     const sshKey = await this.__fetch(`ssh_keys/${id}`);
     return sshKey.json();
   }
+
+  async upsertSSHKey(id, newKey) {
+    const upsertedSSHKey = await this.__fetch(
+      id ? `ssh_keys/${id}` : "ssh_keys",
+      {
+        method: id ? "PUT" : "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(newKey)
+      }
+    );
+    return upsertedSSHKey.json();
+  }
+
+  async deleteSSHKey(id) {
+    const deletedSSHKey = await this.__fetch(`ssh_keys/${id}`, {
+      method: "DELETE"
+    });
+    return deletedSSHKey;
+  }
 };
