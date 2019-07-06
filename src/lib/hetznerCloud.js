@@ -53,4 +53,11 @@ module.exports = class {
     );
     return updatedNode.json();
   }
+
+  async deleteNode(id) {
+    const deletedNode = await this.__fetch(`servers/${id}`, {
+      method: "DELETE"
+    });
+    return deletedNode;
+  }
 };
