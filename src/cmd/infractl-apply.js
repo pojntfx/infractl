@@ -6,5 +6,10 @@ require("../lib/asVerb")([
   ["nodes", "Create or update node", "node"],
   ["sshkeys", "Create or update SSH key", "sshkey"],
   ["networkbinaries", "Create or update network binary", "networkbinary"],
-  ["networkpeers", "Create or update network peer", "networkpeer"]
+  ["networkpeers", "Create or update network peer", "networkpeer"],
+  [
+    "networkjoinedmembers",
+    "Create or update network joined member",
+    "networkjoinedmember"
+  ]
 ]);

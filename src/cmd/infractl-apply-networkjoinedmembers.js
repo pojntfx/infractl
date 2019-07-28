@@ -8,8 +8,10 @@ require("../lib/asGenericAction")({
     [
       "-k, --ssh-key-file [file]",
       "Path to private SSH key for authentication (default ~/.ssh/id_rsa)"
-    ]
+    ],
+    ["-e, --network-id <id>", "Network's id (i.e. d3ecf5726df0ac91)"]
   ],
+  checker: commander => commander.networkId,
   action: commander =>
     commander.args.map(target =>
       withSSH(
@@ -19,12 +21,12 @@ require("../lib/asGenericAction")({
         },
         ssh =>
           ssh
-            .execCommand(
-              "systemctl disable zerotier-one.service --now && rm -f /etc/systemd/system/zerotier-one.service && systemctl daemon-reload"
-            )
+            .execCommand(`zerotier-one -q join ${commander.networkId}`)
             .then(() => {
               ssh.dispose();
-              console.log(`Network peer successfully deleted on ${target}.`);
+              console.log(
+                `Network joined member successfully applied on ${target}.`
+              );
             })
       )
     )
