@@ -3,5 +3,6 @@
 require("../lib/asVerb")([
   ["networks", "Delete network(s)", "network"],
   ["nodes", "Delete node(s)", "node"],
-  ["sshkeys", "Delete SSH key(s)", "sshkey"]
+  ["sshkeys", "Delete SSH key(s)", "sshkey"],
+  ["networkbinaries", "Delete network binary/binaries", "networkbinary"]
 ]);
