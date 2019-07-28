@@ -45,7 +45,7 @@ require("../lib/asGenericAction")({
         .source(`${shell.tempdir()}/zerotier-one`)
         .destination(`${target}:/usr/local/bin/zerotier-one`);
       rsync.execute(() =>
-        console.log(`Network binary successfully applied on ${target}.`)
+        console.log(`Network binary successfully applied to ${target}.`)
       );
     });
   }
