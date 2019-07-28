@@ -12,7 +12,19 @@ require("../lib/asZeroTierAction")({
     ]
   ],
   checker: commander => commander.networkName || commander.private,
-  action: (commander, zerotier) =>
+  action: (commander, zerotier) => {
+    const defaultConfig = {
+      v4AssignMode: { zt: true },
+      v6AssignMode: { "6plane": true },
+      ipAssignmentPools: [
+        {
+          ipRangeStart: "192.168.195.1",
+          ipRangeEnd: "192.168.195.254"
+        }
+      ],
+      routes: [{ target: "192.168.195.0/24", via: null, flags: 0, metric: 0 }],
+      enableBroadcast: true
+    };
     zerotier
       .upsertNetwork(
         commander.args[0] || undefined,
@@ -21,34 +33,39 @@ require("../lib/asZeroTierAction")({
             ? {
                 config: {
                   name: commander.networkName,
-                  private: true
+                  private: true,
+                  ...defaultConfig
                 }
               }
             : commander.private === "false"
             ? {
                 config: {
                   name: commander.networkName,
-                  private: false
+                  private: false,
+                  ...defaultConfig
                 }
               }
             : {
                 config: {
-                  name: commander.networkName
+                  name: commander.networkName,
+                  ...defaultConfig
                 }
               }
           : commander.private === "true"
           ? {
               config: {
-                private: true
+                private: true,
+                ...defaultConfig
               }
             }
           : commander.private === "false"
           ? {
               config: {
-                private: false
+                private: false,
+                ...defaultConfig
               }
             }
-          : {}
+          : { config: defaultConfig }
       )
       .then(
         ({
@@ -65,5 +82,6 @@ require("../lib/asZeroTierAction")({
             ]
           }).then(table => console.log(table));
         }
-      )
+      );
+  }
 });
