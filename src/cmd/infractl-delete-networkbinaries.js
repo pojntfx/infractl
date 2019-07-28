@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-const SSH = require("node-ssh");
+const withSSH = require("../lib/withSSH");
 
 require("../lib/asGenericAction")({
   args: "<user@ip> [otherTargets...]",
@@ -11,19 +11,17 @@ require("../lib/asGenericAction")({
     ]
   ],
   action: commander =>
-    commander.args.map(target => {
-      const ssh = new SSH();
-      ssh
-        .connect({
-          host: target.split("@")[1],
-          username: target.split("@")[0],
-          privateKey: commander.sshKeyFile || `${process.env.HOME}/.ssh/id_rsa`
-        })
-        .then(() =>
+    commander.args.map(target =>
+      withSSH(
+        {
+          address: target,
+          privateKey: commander.sshKeyFile
+        },
+        ssh =>
           ssh.execCommand("rm -f /usr/local/bin/zerotier-one").then(() => {
-            console.log(`Network binary successfully deleted from ${target}.`);
-            return ssh.dispose();
+            ssh.dispose();
+            console.log(`Network binary successfully deleted on ${target}.`);
           })
-        );
-    })
+      )
+    )
 });

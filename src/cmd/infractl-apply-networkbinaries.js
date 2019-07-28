@@ -3,7 +3,7 @@
 const shell = require("shelljs");
 const download = require("download");
 const fs = require("fs");
-const Rsync = require("rsync");
+const withRsync = require("../lib/withRsync");
 
 require("../lib/asGenericAction")({
   args: "<user@ip> [otherTargets...]",
@@ -38,13 +38,12 @@ require("../lib/asGenericAction")({
         (!fs.existsSync(`${shell.tempdir()}/zerotier-one`) &&
           (await downloadAndExtract()));
     commander.args.map(target => {
-      const rsync = new Rsync()
-        .shell("ssh")
-        .set(commander.reUpload === "true" ? "ignore-times" : undefined)
-        .chmod("+x")
-        .source(`${shell.tempdir()}/zerotier-one`)
-        .destination(`${target}:/usr/local/bin/zerotier-one`);
-      rsync.execute(() =>
+      withRsync({
+        source: `${shell.tempdir()}/zerotier-one`,
+        destination: `${target}:/usr/local/bin/zerotier-one`,
+        permissions: "+x",
+        reUpload: commander.reUpload === "true"
+      }).then(() =>
         console.log(`Network binary successfully applied to ${target}.`)
       );
     });

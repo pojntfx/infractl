@@ -2,9 +2,8 @@
 
 const shell = require("shelljs");
 const fs = require("fs");
-const Rsync = require("rsync");
-const SSH = require("node-ssh");
 const withSSH = require("../lib/withSSH");
+const withRsync = require("../lib/withRsync");
 
 require("../lib/asGenericAction")({
   args: "<user@ip> [otherTargets...]",
@@ -28,14 +27,13 @@ ExecStart=/usr/local/bin/zerotier-one
 WantedBy=multi-user.target
 `,
       () =>
-        commander.args.map(target => {
-          const rsync = new Rsync()
-            .shell("ssh")
-            .set(commander.reUpload === "true" ? "ignore-times" : undefined)
-            .chmod("+rwx")
-            .source(`${shell.tempdir()}/zerotier-one.service`)
-            .destination(`${target}:/etc/systemd/system/zerotier-one.service`);
-          rsync.execute(() => {
+        commander.args.map(target =>
+          withRsync({
+            source: `${shell.tempdir()}/zerotier-one.service`,
+            destination: `${target}:/etc/systemd/system/zerotier-one.service`,
+            permissions: "+rwx",
+            reUpload: commander.reUpload === "true"
+          }).then(() =>
             withSSH(
               { address: target, privateKey: commander.sshKeyFile },
               ssh =>
@@ -46,12 +44,12 @@ WantedBy=multi-user.target
                   .then(() => {
                     ssh.dispose();
                     console.log(
-                      `Network peer successfully applied to ${target}.`
+                      `Network peer successfully applied on ${target}.`
                     );
                   })
-            );
-          });
-        })
+            )
+          )
+        )
     );
   }
 });
