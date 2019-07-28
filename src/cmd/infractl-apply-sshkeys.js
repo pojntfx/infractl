@@ -12,7 +12,7 @@ require("../lib/asHetznerCloudAction")({
     ],
     [
       "-f, --ssh-key-file [file]",
-      "Path to public SSH key (i.e. ~/.ssh/id_rsa.pub) (cannot be updated)"
+      "Path to public SSH key (i.e. ~/.ssh/id_rsa.pub) (cannot be updated). Note: For all `ssh`-based connections from this client, ]`ssh-agent` needs to be used."
     ]
   ],
   checker: commander => commander.sshKeyName || commander.sshKeyFile,
