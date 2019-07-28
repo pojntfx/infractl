@@ -6,7 +6,8 @@ module.exports = async ({ address, privateKey }, functionToCall) => {
     .connect({
       host: address.split("@")[1],
       username: address.split("@")[0],
-      privateKey: privateKey || `${process.env.HOME}/.ssh/id_rsa`
+      privateKey: privateKey || `${process.env.HOME}/.ssh/id_rsa`,
+      agent: process.env.SSH_AUTH_SOCK
     })
     .then(() => functionToCall(ssh));
 };
