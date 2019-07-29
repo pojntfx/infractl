@@ -1,7 +1,6 @@
 #!/usr/bin/env node
 
 const withSSH = require("../lib/withSSH");
-const withTable = require("../lib/withTable");
 
 require("../lib/asGenericAction")({
   args: "<user@ip>",
@@ -12,10 +11,7 @@ require("../lib/asGenericAction")({
         .execCommand(`cat /var/lib/rancher/k3s/server/node-token`)
         .then(result => {
           ssh.dispose();
-          withTable({
-            headers: ["TOKEN"],
-            data: [[result.stdout]]
-          }).then(table => console.log(table));
+          console.log(result.stdout);
         })
     )
 });
