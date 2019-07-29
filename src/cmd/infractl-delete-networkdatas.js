@@ -9,7 +9,7 @@ require("../lib/asGenericAction")({
       withSSH(target, ssh =>
         ssh.execCommand(`rm -rf /var/lib/zerotier-one`).then(() => {
           ssh.dispose();
-          console.log(`Network config successfully deleted on ${target}.`);
+          console.log(`Network data successfully deleted on ${target}.`);
         })
       )
     )
