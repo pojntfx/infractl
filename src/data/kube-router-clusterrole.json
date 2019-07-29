@@ -1,0 +1,24 @@
+{
+  "kind": "ClusterRole",
+  "metadata": {
+    "name": "kube-router",
+    "namespace": "kube-system"
+  },
+  "rules": [
+    {
+      "apiGroups": [""],
+      "resources": ["namespaces", "pods", "services", "nodes", "endpoints"],
+      "verbs": ["list", "get", "watch"]
+    },
+    {
+      "apiGroups": ["networking.k8s.io"],
+      "resources": ["networkpolicies"],
+      "verbs": ["list", "get", "watch"]
+    },
+    {
+      "apiGroups": ["extensions"],
+      "resources": ["networkpolicies"],
+      "verbs": ["get", "list", "watch"]
+    }
+  ]
+}
