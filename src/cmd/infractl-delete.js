@@ -11,5 +11,7 @@ require("../lib/asVerb")([
   ],
   ["networkpeers", "Delete network peer(s)", "networkpeer"],
   ["networkbinaries", "Delete network binary/binaries", "networkbinary"],
-  ["networkconfigs", "Delete network config(s)", "networkconfig"]
+  ["networkconfigs", "Delete network config(s)", "networkconfig"],
+  ["clustermanagers", "Delete cluster manager(s)", "clustermanager"],
+  ["clusterbinaries", "Delete cluster binary/binaries", "clusterbinary"]
 ]);
