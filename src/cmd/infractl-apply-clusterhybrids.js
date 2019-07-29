@@ -10,13 +10,13 @@ require("../lib/asGenericAction")({
   args: "<user@ip> [otherTargets...]",
   action: commander =>
     fs.writeFile(
-      `${shell.tempdir()}/k3s-manager.service`,
+      `${shell.tempdir()}/k3s-hybrid.service`,
       `[Unit]
-Description=k3s kubernetes daemon (manager only)
+Description=k3s kubernetes daemon (manager and worker)
 After=network.target
 
 [Service]
-ExecStart=/usr/local/bin/k3s server --disable-agent --no-flannel
+ExecStart=/usr/local/bin/k3s server --no-flannel
 
 [Install]
 WantedBy=multi-user.target
@@ -24,20 +24,20 @@ WantedBy=multi-user.target
       () =>
         commander.args.map(target =>
           withRsync({
-            source: `${shell.tempdir()}/k3s-manager.service`,
-            destination: `${target}:/etc/systemd/system/k3s-manager.service`,
+            source: `${shell.tempdir()}/k3s-hybrid.service`,
+            destination: `${target}:/etc/systemd/system/k3s-hybrid.service`,
             permissions: "+rwx",
             reUpload: commander.reUpload === "true"
           }).then(() =>
             withSSH(target, ssh =>
               ssh
                 .execCommand(
-                  "systemctl daemon-reload && systemctl enable k3s-manager.service --now"
+                  "systemctl daemon-reload && systemctl enable k3s-hybrid.service --now"
                 )
                 .then(() =>
                   withPatches(ssh, () =>
                     console.log(
-                      `Cluster manager successfully applied on ${target}.`
+                      `Cluster hybrid successfully applied on ${target}.`
                     )
                   )
                 )

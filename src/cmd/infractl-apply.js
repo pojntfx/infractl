@@ -13,5 +13,7 @@ require("../lib/asVerb")([
     "networkjoinedmember"
   ],
   ["clusterbinaries", "Create or update cluster binary", "clusterbinary"],
-  ["clustermanagers", "Create or update cluster manager", "clustermanager"]
+  ["clustermanagers", "Create or update cluster manager", "clustermanager"],
+  ["clusterhybrids", "Create or update cluster hybrid", "clusterhybrid"],
+  ["clusterworkers", "Create or update cluster worker", "clusterworker"]
 ]);
