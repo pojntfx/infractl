@@ -74,7 +74,7 @@ net.bridge.bridge-nf-call-iptables = 1
                               .execCommand(
                                 "semanage fcontext -a -t bin_t /usr/local/bin/k3s && restorecon -v /usr/local/bin/k3s"
                               )
-                              .then(() => {
+                              .then(() =>
                                 ssh
                                   .execCommand(
                                     "mkdir -p /opt/cni/bin && ln -s /var/lib/rancher/k3s/data/*/bin/* /opt/cni/bin"
@@ -84,8 +84,8 @@ net.bridge.bridge-nf-call-iptables = 1
                                     console.log(
                                       `Cluster binary successfully applied to ${target}.`
                                     );
-                                  });
-                              })
+                                  })
+                              )
                           )
                       )
                   )
