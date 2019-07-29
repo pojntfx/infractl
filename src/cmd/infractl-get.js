@@ -22,5 +22,6 @@ require("../lib/asVerb")([
     "sshkey"
   ],
   ["networkpeers", "Get details on a network peer", "networkpeer"],
-  ["clustermanagers", "Get details on a cluster manager", "clustermanager"]
+  ["clustertokens", "Get details on a cluster token", "clustertoken"],
+  ["clusterconfigs", "Get details on a cluster config", "clusterconfig"]
 ]);
