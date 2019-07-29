@@ -12,11 +12,11 @@ require("../lib/asVerb")([
   ["networkpeers", "Delete network peer(s)", "networkpeer"],
   ["networkbinaries", "Delete network binary/binaries", "networkbinary"],
   ["networkdatas", "Delete network data(s)", "networkdata"],
+  ["clusterrouters", "Delete cluster router", "clusterrouter"],
   ["clustermanagers", "Delete cluster manager(s)", "clustermanager"],
   ["clusterhybrids", "Delete cluster hybrid(s)", "clusterhybrid"],
   ["clusterworkers", "Delete cluster worker(s)", "clusterworker"],
   ["clusterbinaries", "Delete cluster binary/binaries", "clusterbinary"],
   ["clusterconfigs", "Delete cluster config(s)", "clusterconfig"],
-  ["clusterdatas", "Delete cluster data(s)", "clusterdata"],
-  ["clusterrouters", "Delete cluster router", "clusterrouter"]
+  ["clusterdatas", "Delete cluster data(s)", "clusterdata"]
 ]);
