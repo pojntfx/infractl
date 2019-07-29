@@ -17,5 +17,6 @@ require("../lib/asVerb")([
   ["clusterworkers", "Delete cluster worker(s)", "clusterworker"],
   ["clusterbinaries", "Delete cluster binary/binaries", "clusterbinary"],
   ["clusterconfigs", "Delete cluster config(s)", "clusterconfig"],
-  ["clusterdatas", "Delete cluster data(s)", "clusterdata"]
+  ["clusterdatas", "Delete cluster data(s)", "clusterdata"],
+  ["clusterrouters", "Delete cluster router", "clusterrouter"]
 ]);

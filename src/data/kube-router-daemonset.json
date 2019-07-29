@@ -19,7 +19,7 @@
         }
       },
       "spec": {
-        "serviceAccountName": "default",
+        "serviceAccountName": "kube-router",
         "containers": [
           {
             "name": "kube-router",

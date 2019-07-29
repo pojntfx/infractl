@@ -45,7 +45,7 @@ require("../lib/asGenericAction")({
         withSSH(target, ssh =>
           ssh
             .execCommand(
-              "command -v dnf && sudo dnf install -y systemd-resolved; command -v yum && sudo yum install -y systemd-resolved; command -v apt && sudo apt install -y systemd-resolved"
+              "command -v dnf && sudo dnf install -y systemd-resolved iscsi-initiator-utils; command -v yum && sudo yum install -y systemd-resolved iscsi-initiator-utils; command -v apt && sudo apt install -y systemd-resolved open-iscsi"
             )
             .then(() => {
               fs.writeFile(
