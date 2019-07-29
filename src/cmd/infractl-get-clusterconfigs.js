@@ -9,7 +9,9 @@ require("../lib/asGenericAction")({
     withSSH(commander.args[0], ssh =>
       ssh.execCommand(`cat /etc/rancher/k3s/k3s.yaml`).then(result => {
         ssh.dispose();
-        console.log(result.stdout);
+        console.log(
+          result.stdout.replace("localhost", commander.args[0].split("@")[1])
+        );
       })
     )
 });
