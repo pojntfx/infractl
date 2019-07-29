@@ -21,5 +21,6 @@ require("../lib/asVerb")([
     "List all SSH keys (without id) or get details on a SSH key (with id)",
     "sshkey"
   ],
-  ["networkpeers", "Get details on a network peer", "networkpeer"]
+  ["networkpeers", "Get details on a network peer", "networkpeer"],
+  ["clustermanagers", "Get details on a cluster manager", "clustermanager"]
 ]);
