@@ -4,6 +4,7 @@ const shell = require("shelljs");
 const fs = require("fs");
 const withSSH = require("../lib/withSSH");
 const withRsync = require("../lib/withRsync");
+const withPatches = require("../lib/withPatches");
 
 require("../lib/asGenericAction")({
   args: "<user@ip> [otherTargets...]",
@@ -33,28 +34,13 @@ WantedBy=multi-user.target
                 .execCommand(
                   "systemctl daemon-reload && systemctl enable k3s-manager.service --now"
                 )
-                .then(() => {
-                  // Wait with the patch until k3s has self-extracted
-                  const retryPatchUntilItWorks = () =>
-                    ssh
-                      .execCommand("ls /var/lib/rancher/k3s/data/*/bin/*")
-                      .then(res => res.stdout.includes("bin/bridge"))
-                      .then(extracted =>
-                        extracted
-                          ? ssh
-                              .execCommand(
-                                "mkdir -p /opt/cni/bin && rm -rf /opt/cni/bin/* && ln -sf /var/lib/rancher/k3s/data/*/bin/* /opt/cni/bin"
-                              )
-                              .then(() => {
-                                ssh.dispose();
-                                console.log(
-                                  `Cluster manager successfully applied on ${target}.`
-                                );
-                              })
-                          : setTimeout(retryPatchUntilItWorks, 1000)
-                      );
-                  retryPatchUntilItWorks();
-                })
+                .then(() =>
+                  withPatches(ssh, () =>
+                    console.log(
+                      `Cluster manager successfully applied on ${target}.`
+                    )
+                  )
+                )
             )
           )
         )
