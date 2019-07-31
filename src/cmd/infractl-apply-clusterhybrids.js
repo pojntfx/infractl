@@ -16,7 +16,7 @@ Description=k3s kubernetes daemon (manager and worker)
 After=network.target
 
 [Service]
-ExecStart=/usr/local/bin/k3s server --no-flannel
+ExecStart=/usr/local/bin/k3s server --no-flannel --no-deploy traefik --no-deploy servicelb
 
 [Install]
 WantedBy=multi-user.target
@@ -32,7 +32,7 @@ WantedBy=multi-user.target
             withSSH(target, ssh =>
               ssh
                 .execCommand(
-                  "systemctl daemon-reload && systemctl enable k3s-hybrid.service --now"
+                  "systemctl daemon-reload; systemctl enable k3s-hybrid.service --now"
                 )
                 .then(() =>
                   withPatches(ssh, () =>

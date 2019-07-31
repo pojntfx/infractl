@@ -9,7 +9,7 @@ require("../lib/asGenericAction")({
       withSSH(target, ssh =>
         ssh
           .execCommand(
-            "systemctl disable zerotier-one.service --now && rm -f /etc/systemd/system/zerotier-one.service && systemctl daemon-reload"
+            "systemctl disable zerotier-one.service --now; rm -f /etc/systemd/system/zerotier-one.service; systemctl daemon-reload"
           )
           .then(() => {
             ssh.dispose();

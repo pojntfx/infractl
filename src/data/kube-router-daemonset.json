@@ -20,6 +20,7 @@
       },
       "spec": {
         "serviceAccountName": "kube-router",
+        "serviceAccount": "kube-router",
         "containers": [
           {
             "name": "kube-router",
@@ -88,20 +89,16 @@
             "command": [
               "/bin/sh",
               "-c",
-              "set -e -x; if [ ! -f /etc/cni/net.d/10-kuberouter.conflist ]; then if [ -f /etc/cni/net.d/*.conf ]; then rm -f /etc/cni/net.d/*.conf; fi; TMP=/etc/cni/net.d/.tmp-kuberouter-cfg; cp /etc/kube-router/cni-conf.json ${TMP}; mv ${TMP} /etc/cni/net.d/10-kuberouter.conflist; fi; if [ ! -f /var/lib/kube-router/kubeconfig ]; then TMP=/var/lib/kube-router/.tmp-kubeconfig; cp /etc/kube-router/kubeconfig ${TMP}; mv ${TMP} /var/lib/kube-router/kubeconfig; fi"
+              "set -e -x; if [ ! -f /etc/cni/net.d/10-kuberouter.conflist ]; then if [ -f /etc/cni/net.d/*.conf ]; then rm -f /etc/cni/net.d/*.conf; fi; TMP=/etc/cni/net.d/.tmp-kuberouter-cfg; cp /etc/kube-router/cni-conf.json ${TMP}; mv ${TMP} /etc/cni/net.d/10-kuberouter.conflist; fi"
             ],
             "volumeMounts": [
               {
-                "mountPath": "/etc/cni/net.d",
-                "name": "cni-conf-dir"
+                "name": "cni-conf-dir",
+                "mountPath": "/etc/cni/net.d"
               },
               {
-                "mountPath": "/etc/kube-router",
-                "name": "kube-router-cfg"
-              },
-              {
-                "name": "kubeconfig",
-                "mountPath": "/var/lib/kube-router"
+                "name": "kube-router-cfg",
+                "mountPath": "/etc/kube-router"
               }
             ]
           }
@@ -144,8 +141,14 @@
           },
           {
             "name": "kubeconfig",
-            "hostPath": {
-              "path": "/var/lib/kube-router"
+            "configMap": {
+              "name": "kube-proxy",
+              "items": [
+                {
+                  "key": "kubeconfig.conf",
+                  "path": "kubeconfig"
+                }
+              ]
             }
           }
         ]

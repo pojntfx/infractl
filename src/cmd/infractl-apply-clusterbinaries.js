@@ -45,7 +45,7 @@ require("../lib/asGenericAction")({
         withSSH(target, ssh =>
           ssh
             .execCommand(
-              "command -v dnf && sudo dnf install -y systemd-resolved; command -v yum && sudo yum install -y systemd-resolved; command -v apt && sudo apt install -y systemd-resolved"
+              "command -v dnf && sudo dnf install -y systemd-resolved iscsi-initiator-utils; command -v yum && sudo yum install -y systemd-resolved iscsi-initiator-utils; command -v apt && sudo apt install -y open-iscsi"
             )
             .then(() => {
               fs.writeFile(
@@ -62,7 +62,7 @@ net.bridge.bridge-nf-call-iptables = 1
                   }).then(() =>
                     ssh
                       .execCommand(
-                        "sysctl --system && modprobe br_netfilter && systemctl enable --now systemd-resolved && systemctl restart systemd-resolved"
+                        "sysctl --system; modprobe br_netfilter; systemctl enable --now systemd-resolved; systemctl restart systemd-resolved"
                       )
                       .then(() =>
                         ssh
@@ -72,12 +72,12 @@ net.bridge.bridge-nf-call-iptables = 1
                           .then(() =>
                             ssh
                               .execCommand(
-                                "semanage fcontext -a -t bin_t /usr/local/bin/k3s && restorecon -v /usr/local/bin/k3s"
+                                "semanage fcontext -a -t bin_t /usr/local/bin/k3s; restorecon -v /usr/local/bin/k3s"
                               )
                               .then(() =>
                                 ssh
                                   .execCommand(
-                                    "mkdir -p /opt/cni/bin && ln -s /var/lib/rancher/k3s/data/*/bin/* /opt/cni/bin"
+                                    "mkdir -p /opt/cni/bin; ln -s /var/lib/rancher/k3s/data/*/bin/* /opt/cni/bin"
                                   )
                                   .then(() => {
                                     ssh.dispose();

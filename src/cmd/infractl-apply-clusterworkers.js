@@ -45,7 +45,7 @@ WantedBy=multi-user.target
             withSSH(target, ssh =>
               ssh
                 .execCommand(
-                  "systemctl daemon-reload && systemctl enable k3s-worker.service --now"
+                  "systemctl daemon-reload; systemctl enable k3s-worker.service --now"
                 )
                 .then(() =>
                   withPatches(ssh, () =>
