@@ -1,0 +1,13 @@
+{
+  "kind": "ConfigMap",
+  "metadata": {
+    "name": "kube-proxy",
+    "labels": {
+      "tier": "node",
+      "k8s-app": "kube-router"
+    }
+  },
+  "data": {
+    "kubeconfig.conf": "%KUBECONFIG%"
+  }
+}

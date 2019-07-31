@@ -16,7 +16,7 @@ Description=k3s kubernetes daemon (manager only)
 After=network.target
 
 [Service]
-ExecStart=/usr/local/bin/k3s server --disable-agent --no-flannel
+ExecStart=/usr/local/bin/k3s server --disable-agent --no-flannel --no-deploy traefik --no-deploy servicelb
 
 [Install]
 WantedBy=multi-user.target
@@ -32,7 +32,7 @@ WantedBy=multi-user.target
             withSSH(target, ssh =>
               ssh
                 .execCommand(
-                  "systemctl daemon-reload && systemctl enable k3s-manager.service --now"
+                  "systemctl daemon-reload; systemctl enable k3s-manager.service --now"
                 )
                 .then(() =>
                   withPatches(ssh, () =>

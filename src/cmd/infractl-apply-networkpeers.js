@@ -31,7 +31,7 @@ WantedBy=multi-user.target
             withSSH(target, ssh =>
               ssh
                 .execCommand(
-                  "systemctl daemon-reload && systemctl enable zerotier-one.service --now"
+                  "systemctl daemon-reload; systemctl enable zerotier-one.service --now"
                 )
                 .then(() => {
                   ssh.dispose();

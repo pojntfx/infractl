@@ -2,7 +2,8 @@
 
 const { Client, KubeConfig } = require("kubernetes-client");
 const Request = require("kubernetes-client/backends/request");
-let kubeRouterCfg = require("../data/kube-router-cfg.json");
+let kubeProxy = require("../data/kube-proxy.json");
+const kubeRouterCfg = require("../data/kube-router-cfg.json");
 const kubeRouterDaemonset = require("../data/kube-router-daemonset.json");
 const kubeRouterServiceaccount = require("../data/kube-router-serviceaccount.json");
 const kubeRouterClusterrole = require("../data/kube-router-clusterrole.json");
@@ -34,8 +35,18 @@ require("../lib/asGenericAction")({
         "UTF-8"
       );
     }
-    kubeRouterCfg.data.kubeconfig = clusterconfig;
+    kubeProxy.data["kubeconfig.conf"] = clusterconfig;
     await client.loadSpec();
+    await client.api.v1
+      .namespaces("kube-system")
+      .configmaps.post({ body: kubeProxy })
+      .catch(
+        async () =>
+          await client.api.v1
+            .namespaces("kube-system")
+            .configmaps("kube-proxy")
+            .put({ body: kubeProxy })
+      );
     await client.api.v1
       .namespaces("kube-system")
       .configmaps.post({ body: kubeRouterCfg })

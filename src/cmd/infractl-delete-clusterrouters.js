@@ -26,6 +26,10 @@ require("../lib/asGenericAction")({
     await client.loadSpec();
     await client.api.v1
       .namespaces("kube-system")
+      .configmaps("kube-proxy")
+      .delete();
+    await client.api.v1
+      .namespaces("kube-system")
       .configmaps("kube-router-cfg")
       .delete();
     await client.apis.extensions.v1beta1

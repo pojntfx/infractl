@@ -8,11 +8,19 @@ require("../lib/asGenericAction")({
     commander.args.map(target =>
       withSSH(target, ssh =>
         ssh
-          .execCommand("rm -rf /var/lib/rancher ${HOME}/.rancher /opt/cni")
-          .then(() => {
-            ssh.dispose();
-            console.log(`Cluster data successfully deleted on ${target}.`);
-          })
+          .execCommand(
+            "umount /var/lib/rancher/k3s/agent/kubelet/pods/*/volumes/kubernetes.io~secret/*; rm -rf /var/lib/rancher; rm -rf ${HOME}/.rancher; rm -rf /var/lib/cni; rm -rf /opt/cni"
+          )
+          .then(() =>
+            ssh
+              .execCommand(
+                "ip link del kube-bridge; ip link del dummy0; ip link del kube-dummy-if"
+              )
+              .then(() => {
+                ssh.dispose();
+                console.log(`Cluster data successfully deleted on ${target}.`);
+              })
+          )
       )
     )
 });

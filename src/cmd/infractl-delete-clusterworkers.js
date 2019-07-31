@@ -9,7 +9,7 @@ require("../lib/asGenericAction")({
       withSSH(target, ssh =>
         ssh
           .execCommand(
-            "systemctl disable k3s-worker.service --now && rm -f /etc/systemd/system/k3s-worker.service && systemctl daemon-reload"
+            "systemctl disable k3s-worker.service --now; rm -f /etc/systemd/system/k3s-worker.service; systemctl daemon-reload"
           )
           .then(() => {
             ssh.dispose();
