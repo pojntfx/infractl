@@ -16,5 +16,6 @@ require("../lib/asVerb")([
   ["clustermanagers", "Create or update cluster manager", "clustermanager"],
   ["clusterhybrids", "Create or update cluster hybrid", "clusterhybrid"],
   ["clusterworkers", "Create or update cluster worker", "clusterworker"],
-  ["clusterrouters", "Create or update cluster router", "clusterrouter"]
+  ["clusterrouters", "Create or update cluster router", "clusterrouter"],
+  ["clusterstorages", "Create or update cluster storage", "clusterstorage"]
 ]);

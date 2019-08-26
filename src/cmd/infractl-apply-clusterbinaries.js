@@ -11,7 +11,7 @@ require("../lib/asGenericAction")({
   options: [
     [
       "-s, --source [source]",
-      "Network binary's source (default https://github.com/rancher/k3s/releases/download/v0.7.0/k3s)"
+      "Network binary's source (default https://github.com/rancher/k3s/releases/download/v0.8.1/k3s)"
     ],
     [
       "-d, --re-download [true|false]",
@@ -26,7 +26,7 @@ require("../lib/asGenericAction")({
     const downloadAndExtract = () =>
       download(
         commander.source ||
-          "https://github.com/rancher/k3s/releases/download/v0.7.0/k3s"
+          "https://github.com/rancher/k3s/releases/download/v0.8.1/k3s"
       ).then(data => {
         fs.writeFileSync(`${shell.tempdir()}/k3s`, data);
       });

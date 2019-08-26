@@ -11,7 +11,7 @@ require("../lib/asGenericAction")({
   options: [
     [
       "-s, --source [source]",
-      "Network binary's source (default http://download.zerotier.com/dist/debian/buster/pool/main/z/zerotier-one/zerotier-one_1.2.12_amd64.deb)"
+      "Network binary's source (default http://download.zerotier.com/dist/debian/buster/zerotier-one_1.4.2-2_amd64.deb)"
     ],
     [
       "-d, --re-download [true|false]",
@@ -26,7 +26,7 @@ require("../lib/asGenericAction")({
     const downloadAndExtract = () =>
       download(
         commander.source ||
-          "http://download.zerotier.com/dist/debian/buster/pool/main/z/zerotier-one/zerotier-one_1.2.12_amd64.deb"
+          "http://download.zerotier.com/dist/debian/buster/zerotier-one_1.4.2-2_amd64.deb"
       ).then(data => {
         fs.writeFileSync(`${shell.tempdir()}/zerotier-one.deb`, data);
         shell.exec(
