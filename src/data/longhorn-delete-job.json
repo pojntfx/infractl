@@ -1,0 +1,34 @@
+{
+  "apiVersion": "batch/v1",
+  "kind": "Job",
+  "metadata": {
+    "name": "longhorn-uninstall"
+  },
+  "spec": {
+    "activeDeadlineSeconds": 900,
+    "backoffLimit": 1,
+    "template": {
+      "metadata": {
+        "name": "longhorn-uninstall"
+      },
+      "spec": {
+        "containers": [
+          {
+            "name": "longhorn-uninstall",
+            "image": "rancher/longhorn-manager:v0.5.0",
+            "imagePullPolicy": "Always",
+            "command": ["longhorn-manager", "uninstall", "--force"],
+            "env": [
+              {
+                "name": "LONGHORN_NAMESPACE",
+                "value": "longhorn-system"
+              }
+            ]
+          }
+        ],
+        "restartPolicy": "OnFailure",
+        "serviceAccountName": "longhorn-uninstall-service-account"
+      }
+    }
+  }
+}

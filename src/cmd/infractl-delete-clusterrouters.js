@@ -2,7 +2,6 @@
 
 const { Client, KubeConfig } = require("kubernetes-client");
 const Request = require("kubernetes-client/backends/request");
-const fs = require("fs");
 
 require("../lib/asGenericAction")({
   options: [
