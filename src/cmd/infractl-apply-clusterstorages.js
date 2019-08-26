@@ -11,7 +11,6 @@ const longhornService = require("../data/longhorn-service.json");
 const longhornServiceaccount = require("../data/longhorn-serviceaccount.json");
 const longhornDeployment = require("../data/longhorn-deployment.json");
 const longhornStorageclass = require("../data/longhorn-storageclass.json");
-const fs = require("fs");
 const _ = require("lodash");
 
 require("../lib/asGenericAction")({
@@ -23,21 +22,15 @@ require("../lib/asGenericAction")({
   ],
   action: async commander => {
     let client = {};
-    let clusterconfig = {};
     if (commander.clusterconfig) {
       const kubeconfig = new KubeConfig();
       kubeconfig.loadFromFile(commander.clusterconfig);
-      clusterconfig = fs.readFileSync(commander.clusterconfig, "UTF-8");
       const backend = new Request({ kubeconfig });
       client = new Client({
         backend
       });
     } else {
       client = new Client();
-      clusterconfig = fs.readFileSync(
-        `${process.env.HOME}/.kube/config`,
-        "UTF-8"
-      );
     }
     await client.loadSpec();
     await client.api.v1.namespaces
