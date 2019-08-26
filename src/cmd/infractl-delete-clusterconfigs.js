@@ -7,10 +7,14 @@ require("../lib/asGenericAction")({
   action: commander =>
     commander.args.map(target =>
       withSSH(target, ssh =>
-        ssh.execCommand(`rm -rf /etc/rancher`).then(() => {
-          ssh.dispose();
-          console.log(`Cluster config successfully deleted on ${target}.`);
-        })
+        ssh
+          .execCommand(
+            "rm -rf /etc/rancher; ip link del kube-bridge; ip link del dummy0; ip link del kube-dummy-if"
+          )
+          .then(() => {
+            ssh.dispose();
+            console.log(`Cluster config successfully deleted on ${target}.`);
+          })
       )
     )
 });
