@@ -32,14 +32,16 @@ WantedBy=multi-user.target
             withSSH(target, ssh =>
               ssh
                 .execCommand(
-                  "systemctl daemon-reload; systemctl enable k3s-hybrid.service --now"
+                  `systemctl daemon-reload;
+systemctl enable k3s-hybrid.service --now;`
                 )
                 .then(() =>
-                  withPatches(ssh, () =>
+                  withPatches(ssh, () => {
+                    ssh.dispose();
                     console.log(
                       `Cluster hybrid successfully applied on ${target}.`
-                    )
-                  )
+                    );
+                  })
                 )
             )
           )
