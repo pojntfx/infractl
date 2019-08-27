@@ -27,9 +27,7 @@ Description=k3s kubernetes daemon (worker only)
 After=network.target
 
 [Service]
-ExecStart=/usr/local/bin/k3s agent --no-flannel --token ${
-        commander.clusterToken
-      } --server ${commander.manager}
+ExecStart=/usr/local/bin/k3s agent --no-flannel --token ${commander.clusterToken} --server ${commander.manager}
 
 [Install]
 WantedBy=multi-user.target
@@ -45,14 +43,16 @@ WantedBy=multi-user.target
             withSSH(target, ssh =>
               ssh
                 .execCommand(
-                  "systemctl daemon-reload; systemctl enable k3s-worker.service --now"
+                  `systemctl daemon-reload;
+systemctl enable k3s-worker.service --now;`
                 )
                 .then(() =>
-                  withPatches(ssh, () =>
+                  withPatches(ssh, () => {
+                    ssh.dispose();
                     console.log(
                       `Cluster worker successfully applied on ${target}.`
-                    )
-                  )
+                    );
+                  })
                 )
             )
           )

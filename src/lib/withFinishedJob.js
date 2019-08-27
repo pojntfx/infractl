@@ -1,5 +1,5 @@
 // Wait until a job has finished
-const withFinishedJob = (client, functionToCall) =>
+module.exports = (client, functionToCall) =>
   client.apis.batch.v1
     .namespaces("default")
     .job("longhorn-uninstall")
@@ -10,5 +10,3 @@ const withFinishedJob = (client, functionToCall) =>
         ? functionToCall()
         : setTimeout(() => withFinishedJob(client, functionToCall), 1000)
     );
-
-module.exports = withFinishedJob;
