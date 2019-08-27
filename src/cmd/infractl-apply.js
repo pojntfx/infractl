@@ -3,15 +3,9 @@
 require("../lib/asVerb")([
   ["sshkeys", "Create or update SSH key", "sshkey"],
   ["nodes", "Create or update node", "node"],
-  ["networks", "Create or update network", "network"],
   ["networkbinaries", "Create or update network binary", "networkbinary"],
-  ["networkpeers", "Create or update network peer", "networkpeer"],
-  ["networkmembers", "Update network member", "networkmember"],
-  [
-    "networkjoinedmembers",
-    "Create or update network joined member",
-    "networkjoinedmember"
-  ],
+  ["networkmanagers", "Create or update network manager", "networkmanager"],
+  ["networkworkers", "Create or update network worker", "networkworker"],
   ["clusterbinaries", "Create or update cluster binary", "clusterbinary"],
   ["clustermanagers", "Create or update cluster manager", "clustermanager"],
   ["clusterhybrids", "Create or update cluster hybrid", "clusterhybrid"],
