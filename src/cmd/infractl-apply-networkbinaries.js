@@ -11,7 +11,7 @@ require("../lib/asGenericAction")({
   options: [
     [
       "-s, --source [source]",
-      "Cluster binary's source (default https://github.com/rancher/k3s/releases/download/v0.8.1/k3s)"
+      "Network binary's source (default https://github.com/costela/wesher/releases/download/v0.2.3/wesher-amd64)"
     ],
     [
       "-d, --re-download [true|false]",
@@ -26,54 +26,47 @@ require("../lib/asGenericAction")({
     withDownloadedFile({
       source:
         commander.source ||
-        "https://github.com/rancher/k3s/releases/download/v0.8.1/k3s",
-      destination: `${shell.tempdir()}/k3s`,
+        "https://github.com/costela/wesher/releases/download/v0.2.3/wesher-amd64",
+      destination: `${shell.tempdir()}/wesher`,
       reDownload: commander.reDownload
     }).then(destination => {
       commander.args.map(target => {
         withRsync({
           source: destination,
-          destination: `${target}:/usr/local/bin/k3s`,
+          destination: `${target}:/usr/local/bin/wesher`,
           permissions: "+x",
           reUpload: commander.reUpload === "true"
         }).then(() => {
           withSSH(target, ssh =>
             ssh
               .execCommand(
-                `command -v dnf && sudo dnf install -y systemd-resolved iscsi-initiator-utils;
-command -v yum && sudo yum install -y systemd-resolved iscsi-initiator-utils;
-command -v apt && sudo apt install -y open-iscsi;`
+                `command -v apt && echo "deb http://deb.debian.org/debian/ unstable main" > /etc/apt/sources.list.d/unstable.list;
+command -v apt && printf 'Package: *\nPin: release a=unstable\nPin-Priority: 90\n' > /etc/apt/preferences.d/limit-unstable;
+command -v apt && sudo apt update;
+command -v apt && sudo apt install -y wireguard-dkms linux-headers-$(uname -r);`
               )
               .then(() => {
                 fs.writeFile(
-                  `${shell.tempdir()}/k3s.conf`,
-                  `net.bridge.bridge-nf-call-ip6tables = 1
-net.bridge.bridge-nf-call-iptables = 1                
+                  `${shell.tempdir()}/wesher.conf`,
+                  `net.ipv4.ip_forward = 1
+net.ipv4.conf.all.proxy_arp = 1
 `,
                   () =>
                     withRsync({
-                      source: `${shell.tempdir()}/k3s.conf`,
-                      destination: `${target}:/etc/sysctl.d/k3s.conf`,
+                      source: `${shell.tempdir()}/wesher.conf`,
+                      destination: `${target}:/etc/sysctl.d/wesher.conf`,
                       permissions: "+rwx",
                       reUpload: commander.reUpload === "true"
                     }).then(() =>
                       ssh
                         .execCommand(
                           `sysctl --system;
-sudo modprobe br_netfilter;
-sudo systemctl enable --now systemd-resolved;
-sudo systemctl restart systemd-resolved
-command -v dnf && sudo dnf install -y policycoreutils-python-utils;
-command -v yum && sudo yum install -y policycoreutils-python;
-command -v apt && sudo apt install -y policycoreutils-python-utils;
-sudo semanage fcontext -a -t bin_t /usr/local/bin/k3s; restorecon -v /usr/local/bin/k3s;
-mkdir -p /opt/cni/bin; ln -s /var/lib/rancher/k3s/data/*/bin/* /opt/cni/bin;
-mkdir -p /opt/cni/bin; ln -s /var/lib/rancher/k3s/data/*/bin/* /opt/cni/bin;`
+modprobe wireguard;`
                         )
                         .then(() => {
                           ssh.dispose();
                           console.log(
-                            `Cluster binary successfully applied to ${target}.`
+                            `Network binary successfully applied to ${target}.`
                           );
                         })
                     )
