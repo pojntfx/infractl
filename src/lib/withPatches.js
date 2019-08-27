@@ -7,7 +7,9 @@ const withPatches = (ssh, functionToCall) =>
       extracted
         ? ssh
             .execCommand(
-              "mkdir -p /opt/cni/bin; rm -rf /opt/cni/bin/*; ln -sf /var/lib/rancher/k3s/data/*/bin/* /opt/cni/bin"
+              `mkdir -p /opt/cni/bin;
+rm -rf /opt/cni/bin/*;
+ln -sf /var/lib/rancher/k3s/data/*/bin/* /opt/cni/bin;`
             )
             .then(() => {
               ssh.dispose();
