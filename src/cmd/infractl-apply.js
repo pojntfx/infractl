@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 require("../lib/asVerb")([
+  ["contexts", "Create or update context (setup infractl)", "context"],
   ["sshkeys", "Create or update SSH key", "sshkey"],
   ["nodes", "Create or update node", "node"],
   ["networkbinaries", "Create or update network binary", "networkbinary"],

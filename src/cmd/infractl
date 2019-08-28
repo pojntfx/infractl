@@ -3,6 +3,5 @@
 require("../lib/asApp")("0.0.1-alpha1", [
   ["apply", "Create or update resources", "a"],
   ["get", "Get resources", "g"],
-  ["delete", "Delete resources", "d"],
-  ["setup", "Setup infractl", "s"]
+  ["delete", "Delete resources", "d"]
 ]);

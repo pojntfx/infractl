@@ -15,7 +15,6 @@ Commands:
   apply|a        Create or update resources
   get|g          Get resources
   delete|d       Delete resources
-  setup|s        Setup infractl
   help [cmd]     display help for [cmd]
 ```
 
