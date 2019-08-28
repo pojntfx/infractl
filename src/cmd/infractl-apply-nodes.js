@@ -72,7 +72,7 @@ require("../lib/asHetznerCloudAction")({
                       headers: [
                         "ID",
                         "NAME",
-                        "ONLINE",
+                        "READY",
                         "IP",
                         "OS",
                         "TYPE",
@@ -100,7 +100,7 @@ require("../lib/asHetznerCloudAction")({
                       headers: [
                         "ID",
                         "NAME",
-                        "ONLINE",
+                        "READY",
                         "IP",
                         "OS",
                         "TYPE",
@@ -124,7 +124,7 @@ require("../lib/asHetznerCloudAction")({
                   headers: [
                     "ID",
                     "NAME",
-                    "ONLINE",
+                    "READY",
                     "IP",
                     "OS",
                     "TYPE",
@@ -147,7 +147,7 @@ require("../lib/asHetznerCloudAction")({
                 headers: [
                   "ID",
                   "NAME",
-                  "ONLINE",
+                  "READY",
                   "IP",
                   "OS",
                   "TYPE",

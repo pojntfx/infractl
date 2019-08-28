@@ -14,5 +14,10 @@ require("../lib/asVerb")([
   ["networktokens", "Get details on a network token", "networktoken"],
   ["networknodes", "List all nodes of a network", "networknode"],
   ["clustertokens", "Get details on a cluster token", "clustertoken"],
-  ["clusterconfigs", "Get details on a cluster config", "clusterconfig"]
+  ["clusterconfigs", "Get details on a cluster config", "clusterconfig"],
+  [
+    "clusternodes",
+    "List all nodes of a cluster (without id) or get details on a node (with id)",
+    "clusternode"
+  ]
 ]);
