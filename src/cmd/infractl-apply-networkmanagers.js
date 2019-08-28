@@ -15,7 +15,7 @@ Description=wesher overlay network daemon (manager and worker)
 After=network.target
 
 [Service]
-ExecStart=bash -c "[ -f /var/lib/wesher/state.json ] && /usr/local/bin/wesher || /usr/local/bin/wesher --init"
+ExecStart=bash -c "[ -d /var/lib/wesher ] && /usr/local/bin/wesher || /usr/local/bin/wesher --init"
 
 [Install]
 WantedBy=multi-user.target

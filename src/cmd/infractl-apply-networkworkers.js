@@ -24,7 +24,7 @@ require("../lib/asGenericAction")({
       After=network.target
 
 [Service]
-ExecStart=bash -c "[ -f /var/lib/wesher/state.json ] && /usr/local/bin/wesher --cluster-key ${commander.networkToken} --join ${commander.manager} || /usr/local/bin/wesher --init --cluster-key ${commander.networkToken} --join ${commander.manager}"
+ExecStart=bash -c "[ -d /var/lib/wesher ] && /usr/local/bin/wesher --cluster-key ${commander.networkToken} --join ${commander.manager} || /usr/local/bin/wesher --init --cluster-key ${commander.networkToken} --join ${commander.manager}"
 
 [Install]
 WantedBy=multi-user.target
@@ -43,14 +43,12 @@ WantedBy=multi-user.target
                   `systemctl daemon-reload;
 systemctl enable wesher-worker.service --now;`
                 )
-                .then(() =>
-                  withPatches(ssh, ssh => {
-                    ssh.dispose();
-                    console.log(
-                      `Network worker successfully applied on ${target}.`
-                    );
-                  })
-                )
+                .then(() => {
+                  ssh.dispose();
+                  console.log(
+                    `Network worker successfully applied on ${target}.`
+                  );
+                })
             )
           )
         )
