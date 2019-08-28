@@ -9,7 +9,7 @@ require("../lib/asGenericAction")({
     withSSH(commander.args[0], ssh =>
       ssh.execCommand(`cat /var/lib/wesher/state.json`).then(result => {
         ssh.dispose();
-        console.log(JSON.parse(result.stdout).ClusterKey);
+        console.log(result.stdout && JSON.parse(result.stdout).ClusterKey);
       })
     )
 });
