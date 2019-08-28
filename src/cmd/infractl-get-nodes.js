@@ -11,7 +11,7 @@ require("../lib/asHetznerCloudAction")({
           .then(node => console.log(JSON.stringify(node, null, 4)))
       : hetznerCloud.getNodes().then(nodes =>
           withTable({
-            headers: ["ID", "NAME", "ONLINE", "IP", "OS", "TYPE", "LOCATION"],
+            headers: ["ID", "NAME", "READY", "IP", "OS", "TYPE", "LOCATION"],
             data: nodes.servers.map(
               ({
                 id,

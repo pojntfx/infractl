@@ -33,7 +33,7 @@ require("../lib/asGenericAction")({
               );
           }
           withTable({
-            headers: ["ID", "NAME", "ONLINE", "IP"],
+            headers: ["ID", "NAME", "READY", "IP"],
             data: nodesWithOnlineStatus
           }).then(table => {
             ssh.dispose();
