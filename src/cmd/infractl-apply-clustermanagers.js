@@ -36,7 +36,7 @@ WantedBy=multi-user.target
 systemctl enable k3s-manager.service --now;`
                 )
                 .then(() =>
-                  withPatches(ssh, () => {
+                  withPatches(ssh, ssh => {
                     ssh.dispose();
                     console.log(
                       `Cluster manager successfully applied on ${target}.`

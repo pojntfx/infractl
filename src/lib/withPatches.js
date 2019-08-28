@@ -12,8 +12,7 @@ rm -rf /opt/cni/bin/*;
 ln -sf /var/lib/rancher/k3s/data/*/bin/* /opt/cni/bin;`
             )
             .then(() => {
-              ssh.dispose();
-              functionToCall();
+              functionToCall(ssh);
             })
         : setTimeout(() => withPatches(ssh, functionToCall), 1000)
     );

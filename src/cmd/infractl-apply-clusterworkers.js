@@ -47,7 +47,7 @@ WantedBy=multi-user.target
 systemctl enable k3s-worker.service --now;`
                 )
                 .then(() =>
-                  withPatches(ssh, () => {
+                  withPatches(ssh, ssh => {
                     ssh.dispose();
                     console.log(
                       `Cluster worker successfully applied on ${target}.`
