@@ -13,10 +13,7 @@ require("../lib/asGenericAction")({
       "-t, --cluster-token [clustertoken]",
       "Worker's cluster token (i.e. bb25f9c6::node:6bf075c)"
     ],
-    [
-      "-m, --manager [manager]",
-      "Worker's manager (i.e. https://195.201.22.140:6443)"
-    ]
+    ["-m, --manager [manager]", "Worker's manager (i.e. 195.201.22.140)"]
   ],
   checker: commander => commander.clusterToken && commander.manager,
   action: commander =>
@@ -27,7 +24,7 @@ Description=k3s kubernetes daemon (worker only)
 After=network.target
 
 [Service]
-ExecStart=/usr/local/bin/k3s agent --no-flannel --token ${commander.clusterToken} --server ${commander.manager}
+ExecStart=/usr/local/bin/k3s agent --no-flannel --token ${commander.clusterToken} --server https://${commander.manager}:6443
 
 [Install]
 WantedBy=multi-user.target
