@@ -45,6 +45,20 @@ require("../lib/asGenericAction")({
                     ])
                 );
             }
+            await ssh.execCommand(`ip a`).then(res =>
+              ssh.execCommand(`hostname`).then(res2 =>
+                nodesWithOnlineStatus.unshift([
+                  "NOT AVAILABLE (YOU ARE QUERYING VIA THIS NODE)",
+                  res2.stdout,
+                  true,
+                  res.stdout
+                    .split("wgoverlay")[1]
+                    .split("inet")[1]
+                    .split("/32")[0]
+                    .replace(" ", "")
+                ])
+              )
+            );
             withTable({
               headers: ["ID", "NAME", "READY", "IP"],
               data: nodesWithOnlineStatus
