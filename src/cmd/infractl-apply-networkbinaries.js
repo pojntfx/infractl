@@ -43,7 +43,13 @@ require("../lib/asGenericAction")({
                 `command -v apt && echo "deb http://deb.debian.org/debian/ unstable main" > /etc/apt/sources.list.d/unstable.list;
 command -v apt && printf 'Package: *\nPin: release a=unstable\nPin-Priority: 90\n' > /etc/apt/preferences.d/limit-unstable;
 command -v apt && sudo apt update;
-command -v apt && sudo apt install -y wireguard-dkms linux-headers-$(uname -r);`
+command -v apt && sudo apt install -y wireguard-dkms linux-headers-$(uname -r);
+command -v dnf && sudo dnf copr enable -y jdoss/wireguard;
+command -v dnf && sudo dnf install -y wireguard-dkms kernel-devel-$(uname -r) kernel-headers-$(uname -r);
+command -v yum && yum update -y;
+command -v yum && sudo curl -Lo /etc/yum.repos.d/wireguard.repo https://copr.fedorainfracloud.org/coprs/jdoss/wireguard/repo/epel-7/jdoss-wireguard-epel-7.repo;
+command -v yum && sudo yum install -y epel-release;
+command -v yum && sudo yum install -y wireguard-dkms kernel-devel-$(uname -r) kernel-headers-$(uname -r);`
               )
               .then(() => {
                 fs.writeFile(
@@ -61,7 +67,10 @@ net.ipv4.conf.all.proxy_arp = 1
                       ssh
                         .execCommand(
                           `sysctl --system;
-modprobe wireguard;`
+modprobe wireguard;
+systemctl disable firewalld --now;
+command -v ufw && sudo ufw allow 51820;
+command -v ufw && sudo ufw allow 7946;`
                         )
                         .then(() => {
                           ssh.dispose();
