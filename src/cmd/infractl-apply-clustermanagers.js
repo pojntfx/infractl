@@ -8,6 +8,12 @@ const withPatches = require("../lib/withPatches");
 
 require("../lib/asGenericAction")({
   args: "<user@ip> [otherTargets...]",
+  options: [
+    [
+      "-i, --additional-ip [ip]",
+      "Additional IP to provide certs for (i.e. 10.224.183.211)"
+    ]
+  ],
   action: commander =>
     fs.writeFile(
       `${shell.tempdir()}/k3s-manager.service`,
@@ -16,7 +22,9 @@ Description=k3s kubernetes daemon (manager only)
 After=network.target
 
 [Service]
-ExecStart=/usr/local/bin/k3s server --disable-agent --no-flannel --no-deploy traefik --no-deploy servicelb
+ExecStart=/usr/local/bin/k3s server${commander.additionalIp &&
+        " --tls-san " +
+          commander.additionalIp} --disable-agent --no-flannel --no-deploy traefik --no-deploy servicelb
 
 [Install]
 WantedBy=multi-user.target
