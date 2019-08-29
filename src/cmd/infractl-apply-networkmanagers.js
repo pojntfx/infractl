@@ -4,6 +4,7 @@ const shell = require("shelljs");
 const fs = require("fs");
 const withSSH = require("../lib/withSSH");
 const withRsync = require("../lib/withRsync");
+const crypto = require("crypto");
 
 require("../lib/asGenericAction")({
   args: "<user@ip> [otherTargets...]",
@@ -15,7 +16,9 @@ Description=wesher overlay network daemon (manager and worker)
 After=network.target
 
 [Service]
-ExecStart=bash -c "[ -d /var/lib/wesher ] && /usr/local/bin/wesher || /usr/local/bin/wesher --init"
+ExecStart=/usr/local/bin/wesher --cluster-key ${crypto
+        .randomBytes(32)
+        .toString("base64")}
 
 [Install]
 WantedBy=multi-user.target

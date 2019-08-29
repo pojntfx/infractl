@@ -24,7 +24,7 @@ require("../lib/asGenericAction")({
       After=network.target
 
 [Service]
-ExecStart=bash -c "[ -d /var/lib/wesher ] && /usr/local/bin/wesher --cluster-key ${commander.networkToken} --join ${commander.manager} || /usr/local/bin/wesher --init --cluster-key ${commander.networkToken} --join ${commander.manager}"
+ExecStart=/usr/local/bin/wesher --cluster-key ${commander.networkToken} --join ${commander.manager}
 
 [Install]
 WantedBy=multi-user.target
