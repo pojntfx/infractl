@@ -63,9 +63,11 @@ net.bridge.bridge-nf-call-iptables = 1
 sudo modprobe br_netfilter;
 sudo systemctl enable --now systemd-resolved;
 sudo systemctl restart systemd-resolved;
-command -v dnf && sudo dnf install -y policycoreutils-python-utils;
-command -v yum && sudo yum install -y policycoreutils-python;
-command -v apt && sudo apt install -y policycoreutils-python-utils;
+command -v dnf && sudo dnf install -y policycoreutils policycoreutils-python selinux-policy selinux-policy-targeted libselinux-utils setroubleshoot-server setools-console mcstrans;
+command -v yum && sudo yum install -y policycoreutils policycoreutils-python selinux-policy selinux-policy-targeted libselinux-utils setroubleshoot-server setools-console mcstrans;
+command -v apt && sudo apt install -y policycoreutils policycoreutils-python-utils selinux-basics selinux-policy-default auditd;
+command -v apt && sudo selinux-activate;
+command -v setenforce && sudo setenforce Permissive;
 systemctl disable firewalld --now;
 command -v ufw && sudo ufw allow 6443;
 sudo semanage fcontext -a -t bin_t /usr/local/bin/k3s; restorecon -v /usr/local/bin/k3s;
