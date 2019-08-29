@@ -40,9 +40,9 @@ require("../lib/asGenericAction")({
           withSSH(target, ssh =>
             ssh
               .execCommand(
-                `command -v dnf && sudo dnf install -y systemd-resolved iscsi-initiator-utils;
-command -v yum && sudo yum install -y systemd-resolved iscsi-initiator-utils;
-command -v apt && sudo apt install -y open-iscsi;`
+                `command -v dnf && sudo dnf install -y systemd-resolved iscsi-initiator-utils iptables;
+command -v yum && sudo yum install -y systemd-resolved iscsi-initiator-utils iptables;
+command -v apt && sudo apt install -y open-iscsi iptables;`
               )
               .then(() => {
                 fs.writeFile(
@@ -62,10 +62,12 @@ net.bridge.bridge-nf-call-iptables = 1
                           `sysctl --system;
 sudo modprobe br_netfilter;
 sudo systemctl enable --now systemd-resolved;
-sudo systemctl restart systemd-resolved
+sudo systemctl restart systemd-resolved;
 command -v dnf && sudo dnf install -y policycoreutils-python-utils;
 command -v yum && sudo yum install -y policycoreutils-python;
 command -v apt && sudo apt install -y policycoreutils-python-utils;
+systemctl disable firewalld --now;
+command -v ufw && sudo ufw allow 6443;
 sudo semanage fcontext -a -t bin_t /usr/local/bin/k3s; restorecon -v /usr/local/bin/k3s;
 mkdir -p /opt/cni/bin; ln -s /var/lib/rancher/k3s/data/*/bin/* /opt/cni/bin;
 mkdir -p /opt/cni/bin; ln -s /var/lib/rancher/k3s/data/*/bin/* /opt/cni/bin;`
