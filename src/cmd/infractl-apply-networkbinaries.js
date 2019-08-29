@@ -40,8 +40,10 @@ require("../lib/asGenericAction")({
           withSSH(target, ssh =>
             ssh
               .execCommand(
-                `command -v apt && echo "deb http://deb.debian.org/debian/ unstable main" > /etc/apt/sources.list.d/unstable.list;
-command -v apt && printf 'Package: *\nPin: release a=unstable\nPin-Priority: 90\n' > /etc/apt/preferences.d/limit-unstable;
+                `distro="$(awk -F= '/^NAME/{print $2}' /etc/os-release)";
+echo $distro | grep Debian && echo "deb http://deb.debian.org/debian/ unstable main" > /etc/apt/sources.list.d/unstable.list;
+echo $distro | grep Debian && printf 'Package: *\nPin: release a=unstable\nPin-Priority: 90\n' > /etc/apt/preferences.d/limit-unstable;
+echo $distro | grep Ubuntu && sudo add-apt-repository -y ppa:wireguard/wireguard;
 command -v apt && sudo apt update;
 command -v apt && sudo apt install -y wireguard-dkms linux-headers-$(uname -r);
 command -v dnf && sudo dnf copr enable -y jdoss/wireguard;
