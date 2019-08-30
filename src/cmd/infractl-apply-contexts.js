@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-const { setHetznerCloudConfig } = require("../lib/config");
+const applyContext = require("../lib/actions/applyContext");
 
 require("../lib/asGenericAction")({
   options: [
@@ -15,18 +15,9 @@ require("../lib/asGenericAction")({
   ],
   checker: commander =>
     commander.hetznerCloudApiEndpoint || commander.hetznerCloudApiAccessToken,
-  action: commander => {
-    if (commander.hetznerCloudApiEndpoint) {
-      setHetznerCloudConfig({
-        hetznerCloudApiEndpoint: commander.hetznerCloudApiEndpoint
-      });
-      console.log("Hetzner Cloud API endpoint successfully set.");
-    }
-    if (commander.hetznerCloudApiAccessToken) {
-      setHetznerCloudConfig({
-        hetznerCloudApiAccessToken: commander.hetznerCloudApiAccessToken
-      });
-      console.log("Hetzner Cloud API access token successfully set.");
-    }
-  }
+  action: commander =>
+    applyContext({
+      endpoint: commander.hetznerCloudApiEndpoint,
+      token: commander.hetznerCloudApiAccessToken
+    })
 });
