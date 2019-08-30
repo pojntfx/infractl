@@ -1,50 +1,34 @@
 #!/usr/bin/env node
 
-const shell = require("shelljs");
-const fs = require("fs");
-const withSSH = require("../lib/withSSH");
-const withRsync = require("../lib/withRsync");
-const withPatches = require("../lib/withPatches");
+const {
+  writeClusterhybrid,
+  uploadClusterhybrid
+} = require("../lib/actions/applyClusterhybrid");
 
 require("../lib/asGenericAction")({
   args: "<user@ip> [otherTargets...]",
+  options: [
+    [
+      "-u, --re-upload [true|false]",
+      "Whether the networkhybrid should be uploaded again if it already exists on the target (default false)"
+    ],
+    [
+      "-i, --additional-ip [ip]",
+      "Additional IP to provide certs for (i.e. 10.224.183.211)"
+    ]
+  ],
   action: commander =>
-    fs.writeFile(
-      `${shell.tempdir()}/k3s-hybrid.service`,
-      `[Unit]
-Description=k3s kubernetes daemon (manager and worker)
-After=network.target
-
-[Service]
-ExecStart=/usr/local/bin/k3s server --no-flannel --no-deploy traefik --no-deploy servicelb
-
-[Install]
-WantedBy=multi-user.target
-`,
-      () =>
-        commander.args.map(target =>
-          withRsync({
-            source: `${shell.tempdir()}/k3s-hybrid.service`,
-            destination: `${target}:/etc/systemd/system/k3s-hybrid.service`,
-            permissions: "+rwx",
-            reUpload: commander.reUpload === "true"
-          }).then(() =>
-            withSSH(target, ssh =>
-              ssh
-                .execCommand(
-                  `systemctl daemon-reload;
-systemctl enable k3s-hybrid.service --now;`
-                )
-                .then(() =>
-                  withPatches(ssh, ssh => {
-                    ssh.dispose();
-                    console.log(
-                      `Cluster hybrid successfully applied on ${target}.`
-                    );
-                  })
-                )
-            )
-          )
+    writeClusterhybrid({
+      additionalIp: commander.additionalIp
+    }).then(source =>
+      commander.args.map(target =>
+        uploadClusterhybrid({
+          source,
+          target,
+          reUpload: commander.reUpload
+        }).then(target =>
+          console.log(`Cluster hybrid successfully applied on ${target}.`)
         )
+      )
     )
 });
