@@ -1,50 +1,28 @@
 #!/usr/bin/env node
 
-const shell = require("shelljs");
-const fs = require("fs");
-const withSSH = require("../lib/withSSH");
-const withRsync = require("../lib/withRsync");
-const crypto = require("crypto");
+const {
+  writeNetworkmanager,
+  uploadNetworkmanager
+} = require("../lib/actions/applyNetworkmanager");
 
 require("../lib/asGenericAction")({
   args: "<user@ip> [otherTargets...]",
+  options: [
+    [
+      "-u, --re-upload [true|false]",
+      "Whether the networkmanager should be uploaded again if it already exists on the target (default false)"
+    ]
+  ],
   action: commander =>
-    fs.writeFile(
-      `${shell.tempdir()}/wesher-manager.service`,
-      `[Unit]
-Description=wesher overlay network daemon (manager and worker)
-After=network.target
-
-[Service]
-ExecStart=/usr/local/bin/wesher --cluster-key ${crypto
-        .randomBytes(32)
-        .toString("base64")}
-
-[Install]
-WantedBy=multi-user.target
-`,
-      () =>
-        commander.args.map(target =>
-          withRsync({
-            source: `${shell.tempdir()}/wesher-manager.service`,
-            destination: `${target}:/etc/systemd/system/wesher-manager.service`,
-            permissions: "+rwx",
-            reUpload: commander.reUpload === "true"
-          }).then(() =>
-            withSSH(target, ssh =>
-              ssh
-                .execCommand(
-                  `systemctl daemon-reload;
-systemctl enable wesher-manager.service --now;`
-                )
-                .then(() => {
-                  ssh.dispose();
-                  console.log(
-                    `Network manager successfully applied on ${target}.`
-                  );
-                })
-            )
-          )
+    writeNetworkmanager().then(source =>
+      commander.args.map(target =>
+        uploadNetworkmanager({
+          source,
+          target,
+          reUpload: commander.reUpload
+        }).then(target =>
+          console.log(`Network manager successfully applied on ${target}.`)
         )
+      )
     )
 });

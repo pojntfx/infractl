@@ -1,20 +1,13 @@
 #!/usr/bin/env node
 
-const withSSH = require("../lib/withSSH");
+const deleteNetworkmanager = require("../lib/actions/deleteNetworkmanager");
 
 require("../lib/asGenericAction")({
   args: "<user@ip> [otherTargets...]",
   action: commander =>
     commander.args.map(target =>
-      withSSH(target, ssh =>
-        ssh
-          .execCommand(
-            "systemctl disable wesher-manager.service --now; rm -f /etc/systemd/system/wesher-manager.service; systemctl daemon-reload"
-          )
-          .then(() => {
-            ssh.dispose();
-            console.log(`Network manager successfully deleted on ${target}.`);
-          })
+      deleteNetworkmanager(target).then(target =>
+        console.log(`Network manager successfully deleted on ${target}.`)
       )
     )
 });
