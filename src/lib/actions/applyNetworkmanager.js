@@ -1,14 +1,11 @@
-const shell = require("shelljs");
-const fs = require("fs");
-const withSSH = require("../withSSH");
-const withRsync = require("../withRsync");
 const crypto = require("crypto");
+const writeService = require("../writeService");
+const uploadAndStartService = require("../uploadAndStartService");
 
 const writeNetworkmanager = async () =>
-  new Promise(resolve =>
-    fs.writeFile(
-      `${shell.tempdir()}/wesher-manager.service`,
-      `[Unit]
+  writeService({
+    name: "wesher-manager.service",
+    content: `[Unit]
     Description=wesher overlay network daemon (manager and worker)
     After=network.target
     
@@ -19,31 +16,13 @@ const writeNetworkmanager = async () =>
     
     [Install]
     WantedBy=multi-user.target
-    `,
-      () => resolve(`${shell.tempdir()}/wesher-manager.service`)
-    )
-  );
+    `
+  });
 
-const uploadNetworkmanager = async ({ source, target, reUpload }) =>
-  new Promise(resolve =>
-    withRsync({
-      source,
-      destination: `${target}:/etc/systemd/system/wesher-manager.service`,
-      permissions: "+rwx",
-      reUpload: reUpload === "true"
-    }).then(() =>
-      withSSH(target, ssh =>
-        ssh
-          .execCommand(
-            `systemctl daemon-reload;
-    systemctl enable wesher-manager.service --now;`
-          )
-          .then(() => {
-            ssh.dispose();
-            resolve(target);
-          })
-      )
-    )
-  );
+const uploadNetworkmanager = async args =>
+  uploadAndStartService({
+    name: "wesher-manager.service",
+    ...args
+  });
 
 module.exports = { writeNetworkmanager, uploadNetworkmanager };
