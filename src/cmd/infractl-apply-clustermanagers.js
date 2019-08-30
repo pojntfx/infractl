@@ -1,58 +1,34 @@
 #!/usr/bin/env node
 
-const shell = require("shelljs");
-const fs = require("fs");
-const withSSH = require("../lib/withSSH");
-const withRsync = require("../lib/withRsync");
-const withPatches = require("../lib/withPatches");
+const {
+  writeClustermanager,
+  uploadClustermanager
+} = require("../lib/actions/applyClustermanager");
 
 require("../lib/asGenericAction")({
   args: "<user@ip> [otherTargets...]",
   options: [
+    [
+      "-u, --re-upload [true|false]",
+      "Whether the networkmanager should be uploaded again if it already exists on the target (default false)"
+    ],
     [
       "-i, --additional-ip [ip]",
       "Additional IP to provide certs for (i.e. 10.224.183.211)"
     ]
   ],
   action: commander =>
-    fs.writeFile(
-      `${shell.tempdir()}/k3s-manager.service`,
-      `[Unit]
-Description=k3s kubernetes daemon (manager only)
-After=network.target
-
-[Service]
-ExecStart=/usr/local/bin/k3s server${commander.additionalIp &&
-        " --tls-san " +
-          commander.additionalIp} --disable-agent --no-flannel --no-deploy traefik --no-deploy servicelb
-
-[Install]
-WantedBy=multi-user.target
-`,
-      () =>
-        commander.args.map(target =>
-          withRsync({
-            source: `${shell.tempdir()}/k3s-manager.service`,
-            destination: `${target}:/etc/systemd/system/k3s-manager.service`,
-            permissions: "+rwx",
-            reUpload: commander.reUpload === "true"
-          }).then(() =>
-            withSSH(target, ssh =>
-              ssh
-                .execCommand(
-                  `systemctl daemon-reload;
-systemctl enable k3s-manager.service --now;`
-                )
-                .then(() =>
-                  withPatches(ssh, ssh => {
-                    ssh.dispose();
-                    console.log(
-                      `Cluster manager successfully applied on ${target}.`
-                    );
-                  })
-                )
-            )
-          )
+    writeClustermanager({
+      additionalIp: commander.additionalIp
+    }).then(source =>
+      commander.args.map(target =>
+        uploadClustermanager({
+          source,
+          target,
+          reUpload: commander.reUpload
+        }).then(target =>
+          console.log(`Cluster manager successfully applied on ${target}.`)
         )
+      )
     )
 });
