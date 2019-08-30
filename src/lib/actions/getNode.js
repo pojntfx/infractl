@@ -1,4 +1,4 @@
-const withTable = require("../lib/withTable");
+const withTable = require("../withTable");
 
 module.exports = async ({ id, cloud }) =>
   id
