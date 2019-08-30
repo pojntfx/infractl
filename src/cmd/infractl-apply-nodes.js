@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-const withTable = require("../lib/withTable");
+const applyNode = require("../lib/actions/applyNode");
 
 require("../lib/asHetznerCloudAction")({
   args: "[id]",
@@ -31,132 +31,15 @@ require("../lib/asHetznerCloudAction")({
     commander.location ||
     commander.poweredOn ||
     commander.sshKeys,
-  action: (commander, hetznerCloud) =>
-    hetznerCloud
-      .upsertNode(commander.args[0] || undefined, {
-        name: commander.nodeName || undefined,
-        image: (!commander.args[0] && commander.operatingSystem) || undefined,
-        server_type: (!commander.args[0] && commander.nodeType) || undefined,
-        location: (!commander.args[0] && commander.location) || undefined,
-        ssh_keys:
-          (!commander.args[0] && commander.sshKeys.split(",")) || undefined,
-        start_after_create: !commander.args[0]
-          ? commander.poweredOn === "false"
-            ? false
-            : commander.poweredOn === true
-            ? true
-            : undefined
-          : undefined
-      })
-      .then(
-        ({
-          server: {
-            id,
-            name,
-            status,
-            public_net: {
-              ipv4: { ip }
-            },
-            server_type: { name: serverType },
-            datacenter: { name: location },
-            image: { name: os }
-          }
-        }) => {
-          commander.args[0]
-            ? commander.poweredOn === "false"
-              ? hetznerCloud
-                  .updateNodeStatus(commander.args[0], false)
-                  .then(updatedNode =>
-                    withTable({
-                      preceedingText: "Node successfully applied:",
-                      headers: [
-                        "ID",
-                        "NAME",
-                        "READY",
-                        "IP",
-                        "OS",
-                        "TYPE",
-                        "LOCATION"
-                      ],
-                      data: [
-                        [
-                          id,
-                          name,
-                          updatedNode.status === "running",
-                          ip,
-                          os,
-                          serverType,
-                          location
-                        ]
-                      ]
-                    }).then(table => console.log(table))
-                  )
-              : commander.poweredOn === "true"
-              ? hetznerCloud
-                  .updateNodeStatus(commander.args[0], true)
-                  .then(updatedNode =>
-                    withTable({
-                      preceedingText: "Node successfully applied:",
-                      headers: [
-                        "ID",
-                        "NAME",
-                        "READY",
-                        "IP",
-                        "OS",
-                        "TYPE",
-                        "LOCATION"
-                      ],
-                      data: [
-                        [
-                          id,
-                          name,
-                          updatedNode.status === "running",
-                          ip,
-                          os,
-                          serverType,
-                          location
-                        ]
-                      ]
-                    }).then(table => console.log(table))
-                  )
-              : withTable({
-                  preceedingText: "Node successfully applied:",
-                  headers: [
-                    "ID",
-                    "NAME",
-                    "READY",
-                    "IP",
-                    "OS",
-                    "TYPE",
-                    "LOCATION"
-                  ],
-                  data: [
-                    [
-                      id,
-                      name,
-                      status === "running",
-                      ip,
-                      os,
-                      serverType,
-                      location
-                    ]
-                  ]
-                }).then(table => console.log(table))
-            : withTable({
-                preceedingText: "Node successfully applied:",
-                headers: [
-                  "ID",
-                  "NAME",
-                  "READY",
-                  "IP",
-                  "OS",
-                  "TYPE",
-                  "LOCATION"
-                ],
-                data: [
-                  [id, name, status === "running", ip, os, serverType, location]
-                ]
-              }).then(table => console.log(table));
-        }
-      )
+  action: (commander, cloud) =>
+    applyNode({
+      id: commander.args[0],
+      name: commander.nodeName,
+      image: commander.operatingSystem,
+      nodeType: commander.nodeType,
+      location: commander.location,
+      sshKeys: commander.sshKeys,
+      poweredOn: commander.poweredOn,
+      cloud
+    })
 });
