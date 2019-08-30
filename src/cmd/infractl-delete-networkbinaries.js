@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-const deleteNetworkbinary = require("../lib/actions/deleteNetworkbinaries");
+const deleteNetworkbinary = require("../lib/actions/deleteNetworkbinary");
 
 require("../lib/asGenericAction")({
   args: "<user@ip> [otherTargets...]",

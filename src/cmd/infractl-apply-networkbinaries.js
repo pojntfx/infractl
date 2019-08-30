@@ -3,7 +3,7 @@
 const {
   downloadNetworkbinary,
   uploadNetworkbinary
-} = require("../lib/actions/applyNetworkbinaries");
+} = require("../lib/actions/applyNetworkbinary");
 
 require("../lib/asGenericAction")({
   args: "<user@ip> [otherTargets...]",
