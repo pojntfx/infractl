@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-const applyClusterrouter = require("../lib/actions/applyClusterrouter");
+const Clusters = require("../lib/models/clusters");
 
 require("../lib/asGenericAction")({
   options: [
@@ -9,8 +9,10 @@ require("../lib/asGenericAction")({
       "Path to the kubeconfig to work with (default ~/.kube/config)"
     ]
   ],
-  action: async commander =>
-    applyClusterrouter(commander.clusterconfig).then(() =>
-      console.log(`Cluster router successfully applied.`)
-    )
+  action: async commander => {
+    const clusters = new Clusters();
+    clusters
+      .applyRouter(commander.clusterconfig)
+      .then(() => console.log(`Cluster router successfully applied.`));
+  }
 });

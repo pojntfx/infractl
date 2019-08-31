@@ -1,9 +1,6 @@
 #!/usr/bin/env node
 
-const {
-  writeClustermanager,
-  uploadClustermanager
-} = require("../lib/actions/applyClustermanager");
+const Clusters = require("../lib/models/clusters");
 
 require("../lib/asGenericAction")({
   args: "<user@ip> [otherTargets...]",
@@ -17,18 +14,20 @@ require("../lib/asGenericAction")({
       "Additional IP to provide certs for (i.e. 10.224.183.211)"
     ]
   ],
-  action: commander =>
-    writeClustermanager({
-      additionalIp: commander.additionalIp
-    }).then(source =>
+  action: commander => {
+    const clusters = new Clusters();
+    clusters.writeManager(commander.additionalIp).then(source =>
       commander.args.map(target =>
-        uploadClustermanager({
-          source,
-          target,
-          reUpload: commander.reUpload
-        }).then(target =>
-          console.log(`Cluster manager successfully applied on ${target}.`)
-        )
+        clusters
+          .uploadManager({
+            source,
+            target,
+            reUpload: commander.reUpload
+          })
+          .then(target =>
+            console.log(`Cluster manager successfully applied on ${target}.`)
+          )
       )
-    )
+    );
+  }
 });

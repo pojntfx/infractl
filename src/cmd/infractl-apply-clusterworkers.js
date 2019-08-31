@@ -1,9 +1,6 @@
 #!/usr/bin/env node
 
-const {
-  writeClusterworker,
-  uploadClusterworker
-} = require("../lib/actions/applyClusterworker");
+const Clusters = require("../lib/models/clusters");
 
 require("../lib/asGenericAction")({
   args: "<user@ip> [otherTargets...]",
@@ -19,19 +16,25 @@ require("../lib/asGenericAction")({
     ]
   ],
   checker: commander => commander.clusterToken && commander.manager,
-  action: commander =>
-    writeClusterworker({
-      clusterToken: commander.clusterToken,
-      manager: commander.manager
-    }).then(source =>
-      commander.args.map(target =>
-        uploadClusterworker({
-          source,
-          target,
-          reUpload: commander.reUpload
-        }).then(target =>
-          console.log(`Cluster worker successfully applied on ${target}.`)
+  action: commander => {
+    const clusters = new Clusters();
+    clusters
+      .writeWorker({
+        clusterToken: commander.clusterToken,
+        manager: commander.manager
+      })
+      .then(source =>
+        commander.args.map(target =>
+          clusters
+            .uploadWorker({
+              source,
+              target,
+              reUpload: commander.reUpload
+            })
+            .then(target =>
+              console.log(`Cluster worker successfully applied on ${target}.`)
+            )
         )
-      )
-    )
+      );
+  }
 });

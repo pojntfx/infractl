@@ -1,9 +1,6 @@
 #!/usr/bin/env node
 
-const {
-  writeClusterhybrid,
-  uploadClusterhybrid
-} = require("../lib/actions/applyClusterhybrid");
+const Clusters = require("../lib/models/clusters");
 
 require("../lib/asGenericAction")({
   args: "<user@ip> [otherTargets...]",
@@ -17,18 +14,20 @@ require("../lib/asGenericAction")({
       "Additional IP to provide certs for (i.e. 10.224.183.211)"
     ]
   ],
-  action: commander =>
-    writeClusterhybrid({
-      additionalIp: commander.additionalIp
-    }).then(source =>
+  action: commander => {
+    const clusters = new Clusters();
+    clusters.writeHybrid(commander.additionalIp).then(source =>
       commander.args.map(target =>
-        uploadClusterhybrid({
-          source,
-          target,
-          reUpload: commander.reUpload
-        }).then(target =>
-          console.log(`Cluster hybrid successfully applied on ${target}.`)
-        )
+        clusters
+          .uploadHybrid({
+            source,
+            target,
+            reUpload: commander.reUpload
+          })
+          .then(target =>
+            console.log(`Cluster hybrid successfully applied on ${target}.`)
+          )
       )
-    )
+    );
+  }
 });

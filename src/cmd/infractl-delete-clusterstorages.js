@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-const deleteClusterstorage = require("../lib/actions/deleteClusterstorage");
+const Clusters = require("../lib/models/clusters");
 
 require("../lib/asGenericAction")({
   options: [
@@ -9,8 +9,10 @@ require("../lib/asGenericAction")({
       "Path to the kubeconfig to work with (default ~/.kube/config)"
     ]
   ],
-  action: async commander =>
-    deleteClusterstorage(commander.clusterconfig).then(() =>
-      console.log(`Cluster storage successfully deleted.`)
-    )
+  action: async commander => {
+    const clusters = new Clusters();
+    clusters
+      .deleteStorage(commander.clusterconfig)
+      .then(() => console.log(`Cluster storage successfully deleted.`));
+  }
 });

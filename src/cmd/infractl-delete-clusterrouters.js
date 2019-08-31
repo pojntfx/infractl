@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-const deleteClusterrouter = require("../lib/actions/deleteClusterrouter");
+const Clusters = require("../lib/models/clusters");
 
 require("../lib/asGenericAction")({
   options: [
@@ -9,8 +9,10 @@ require("../lib/asGenericAction")({
       "Path to the kubeconfig to work with (default ~/.kube/config)"
     ]
   ],
-  action: async commander =>
-    deleteClusterrouter(commander.clusterconfig).then(() =>
-      console.log(`Cluster router successfully deleted.`)
-    )
+  action: async commander => {
+    const clusters = new Clusters();
+    clusters
+      .deleteRouter(commander.clusterconfig)
+      .then(() => console.log("Cluster router successfully deleted."));
+  }
 });
