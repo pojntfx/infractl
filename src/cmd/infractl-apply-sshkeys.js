@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
-const applySSHKey = require("../lib/actions/applySSHKey");
+const SSHKeys = require("../lib/models/sshkeys");
+const withTable = require("../lib/withTable");
 
 require("../lib/asHetznerCloudAction")({
   args: "[id]",
@@ -15,11 +16,20 @@ require("../lib/asHetznerCloudAction")({
     ]
   ],
   checker: commander => commander.sshKeyName || commander.sshKeyFile,
-  action: (commander, cloud) =>
-    applySSHKey({
-      id: commander.args[0],
-      name: commander.sshKeyName,
-      file: commander.sshKeyFile,
-      cloud
-    })
+  action: (commander, cloud) => {
+    const sshKeys = new SSHKeys(cloud);
+    sshKeys
+      .apply({
+        id: commander.args[0],
+        name: commander.sshKeyName,
+        file: commander.sshKeyFile
+      })
+      .then(({ ssh_key: { id, name, fingerprint } }) => {
+        withTable({
+          preceedingText: "SSH key successfully applied:",
+          headers: ["ID", "NAME", "FINGERPRINT"],
+          data: [[id, name, fingerprint]]
+        }).then(table => console.log(table));
+      });
+  }
 });
