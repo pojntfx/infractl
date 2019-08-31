@@ -3,6 +3,10 @@ const fs = require("fs");
 const withRsync = require("../withRsync");
 const withSSH = require("../withSSH");
 const withDownloadedFile = require("../withDownloadedFile");
+const crypto = require("crypto");
+const writeService = require("../writeService");
+const uploadAndStartService = require("../uploadAndStartService");
+const stopAndDeleteService = require("../stopAndDeleteService");
 
 module.exports = class {
   async downloadBinary({ source, reDownload }) {
@@ -80,5 +84,34 @@ command -v ufw && sudo ufw allow 7946;`
         })
       )
     );
+  }
+
+  async writeManager() {
+    return writeService({
+      name: "wesher-manager.service",
+      content: `[Unit]
+Description=wesher overlay network daemon (manager and worker)
+After=network.target
+
+[Service]
+ExecStart=/usr/local/bin/wesher --cluster-key ${crypto
+        .randomBytes(32)
+        .toString("base64")}
+
+[Install]
+WantedBy=multi-user.target
+`
+    });
+  }
+
+  async uploadManager(args) {
+    return uploadAndStartService({
+      name: "wesher-manager.service",
+      ...args
+    });
+  }
+
+  async deleteManager(target) {
+    return stopAndDeleteService({ target, name: "wesher-manager.service" });
   }
 };
