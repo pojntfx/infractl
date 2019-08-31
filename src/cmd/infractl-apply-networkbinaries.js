@@ -1,9 +1,6 @@
 #!/usr/bin/env node
 
-const {
-  downloadNetworkbinary,
-  uploadNetworkbinary
-} = require("../lib/actions/applyNetworkbinary");
+const Networks = require("../lib/models/networks");
 
 require("../lib/asGenericAction")({
   args: "<user@ip> [otherTargets...]",
@@ -21,19 +18,25 @@ require("../lib/asGenericAction")({
       "Whether the binary should be uploaded again if it already exists on the target (default false)"
     ]
   ],
-  action: async commander =>
-    downloadNetworkbinary({
-      source: commander.source,
-      reDownload: commander.reDownload
-    }).then(destination =>
-      commander.args.map(target =>
-        uploadNetworkbinary({
-          source: destination,
-          target,
-          reUpload: commander.reDownload
-        }).then(target =>
-          console.log(`Network binary successfully applied to ${target}.`)
+  action: async commander => {
+    const networks = new Networks();
+    networks
+      .downloadBinary({
+        source: commander.source,
+        reDownload: commander.reDownload
+      })
+      .then(destination =>
+        commander.args.map(target =>
+          networks
+            .uploadBinary({
+              source: destination,
+              target,
+              reUpload: commander.reDownload
+            })
+            .then(target =>
+              console.log(`Network binary successfully applied to ${target}.`)
+            )
         )
-      )
-    )
+      );
+  }
 });
