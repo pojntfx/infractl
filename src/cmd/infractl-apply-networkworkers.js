@@ -1,9 +1,6 @@
 #!/usr/bin/env node
 
-const {
-  writeNetworkworker,
-  uploadNetworkworker
-} = require("../lib/actions/applyNetworkworker");
+const Networks = require("../lib/models/networks");
 
 require("../lib/asGenericAction")({
   args: "<user@ip> [otherTargets...]",
@@ -19,19 +16,25 @@ require("../lib/asGenericAction")({
     ]
   ],
   checker: commander => commander.networkToken && commander.manager,
-  action: commander =>
-    writeNetworkworker({
-      networkToken: commander.networkToken,
-      manager: commander.manager
-    }).then(source =>
-      commander.args.map(target =>
-        uploadNetworkworker({
-          source,
-          target,
-          reUpload: commander.reUpload
-        }).then(target =>
-          console.log(`Network worker successfully applied on ${target}.`)
+  action: commander => {
+    const networks = new Networks();
+    networks
+      .writeWorker({
+        networkToken: commander.networkToken,
+        manager: commander.manager
+      })
+      .then(source =>
+        commander.args.map(target =>
+          networks
+            .uploadWorker({
+              source,
+              target,
+              reUpload: commander.reUpload
+            })
+            .then(target =>
+              console.log(`Network worker successfully applied on ${target}.`)
+            )
         )
-      )
-    )
+      );
+  }
 });
