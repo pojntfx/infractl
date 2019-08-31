@@ -1,6 +1,5 @@
 #!/usr/bin/env node
 
-const applyNode = require("../lib/actions/applyNode");
 const Nodes = require("../lib/models/nodes");
 const withTable = require("../lib/withTable");
 

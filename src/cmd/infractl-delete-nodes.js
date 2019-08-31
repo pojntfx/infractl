@@ -1,9 +1,15 @@
 #!/usr/bin/env node
 
-const deleteNode = require("../lib/actions/deleteNode");
+const Nodes = require("../lib/models/nodes");
 
 require("../lib/asHetznerCloudAction")({
   args: "<id> [otherIds...]",
-  action: (commander, cloud) =>
-    commander.args.map(id => deleteNode({ id, cloud }))
+  action: (commander, cloud) => {
+    const nodes = new Nodes(cloud);
+    commander.args.map(id =>
+      nodes
+        .delete(id)
+        .then(() => console.log(`Node ${id} successfully deleted.`))
+    );
+  }
 });

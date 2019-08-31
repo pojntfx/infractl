@@ -90,7 +90,19 @@ module.exports = class {
     );
   }
 
-  async get() {}
+  async get(id) {
+    return new Promise(resolve =>
+      id
+        ? this.cloud
+            .getNode(id)
+            .then(node => resolve({ list: false, data: node }))
+        : this.cloud
+            .getNodes()
+            .then(nodes => resolve({ list: true, data: nodes }))
+    );
+  }
 
-  async delete() {}
+  async delete(id) {
+    return this.cloud.deleteNode(id);
+  }
 };
