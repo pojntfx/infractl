@@ -1,8 +1,9 @@
 const withTable = require("../withTable");
+const YAML = require("yaml");
 
 module.exports = async ({ id, cloud }) =>
   id
-    ? cloud.getNode(id).then(node => console.log(JSON.stringify(node, null, 4)))
+    ? cloud.getNode(id).then(node => console.log(YAML.stringify(node, null, 4)))
     : cloud.getNodes().then(nodes =>
         withTable({
           headers: ["ID", "NAME", "READY", "IP", "OS", "TYPE", "LOCATION"],

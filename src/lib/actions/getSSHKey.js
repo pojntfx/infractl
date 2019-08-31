@@ -1,10 +1,11 @@
 const withTable = require("../withTable");
+const YAML = require("yaml");
 
 module.exports = async ({ id, cloud }) =>
   id
     ? cloud
         .getSSHKey(id)
-        .then(sshKey => console.log(JSON.stringify(sshKey, null, 4)))
+        .then(sshKey => console.log(YAML.stringify(sshKey, null, 4)))
     : cloud.getSSHKeys().then(sshKeys =>
         withTable({
           headers: ["ID", "NAME", "FINGERPRINT"],

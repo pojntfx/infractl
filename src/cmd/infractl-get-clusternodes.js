@@ -2,6 +2,7 @@
 
 const withTable = require("../lib/withTable");
 const getClusternode = require("../lib/actions/getClusternode");
+const YAML = require("yaml");
 
 require("../lib/asGenericAction")({
   args: "[name]",
@@ -30,6 +31,6 @@ require("../lib/asGenericAction")({
               )
             ])
           }).then(table => console.log(table))
-        : console.log(JSON.stringify(nodes.data, null, 4))
+        : console.log(YAML.stringify(nodes.data, null, 4))
     )
 });
