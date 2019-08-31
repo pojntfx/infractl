@@ -114,4 +114,31 @@ WantedBy=multi-user.target
   async deleteManager(target) {
     return stopAndDeleteService({ target, name: "wesher-manager.service" });
   }
+
+  async writeWorker({ networkToken, manager }) {
+    return writeService({
+      name: "wesher-worker.service",
+      content: `[Unit]
+Description=wesher overlay network daemon (worker only)
+After=network.target
+
+[Service]
+ExecStart=/usr/local/bin/wesher --cluster-key ${networkToken} --join ${manager}
+
+[Install]
+WantedBy=multi-user.target
+`
+    });
+  }
+
+  async uploadWorker(args) {
+    return uploadAndStartService({
+      name: "wesher-worker.service",
+      ...args
+    });
+  }
+
+  async deleteWorker(target) {
+    return stopAndDeleteService({ target, name: "wesher-worker.service" });
+  }
 };
