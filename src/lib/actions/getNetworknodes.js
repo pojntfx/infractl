@@ -1,4 +1,5 @@
 const withSSH = require("../withSSH");
+const YAML = require("yaml");
 
 module.exports = async ({ target, node }) =>
   new Promise(resolve =>
@@ -10,7 +11,7 @@ module.exports = async ({ target, node }) =>
             ssh.dispose();
             resolve({
               list: false,
-              data: JSON.stringify(
+              data: YAML.stringify(
                 nodes.find(node => node.PubKey === target),
                 null,
                 4
