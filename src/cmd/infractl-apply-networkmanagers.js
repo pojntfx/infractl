@@ -1,9 +1,6 @@
 #!/usr/bin/env node
 
-const {
-  writeNetworkmanager,
-  uploadNetworkmanager
-} = require("../lib/actions/applyNetworkmanager");
+const Networks = require("../lib/models/networks");
 
 require("../lib/asGenericAction")({
   args: "<user@ip> [otherTargets...]",
@@ -13,16 +10,20 @@ require("../lib/asGenericAction")({
       "Whether the networkmanager should be uploaded again if it already exists on the target (default false)"
     ]
   ],
-  action: commander =>
-    writeNetworkmanager().then(source =>
+  action: commander => {
+    const networks = new Networks();
+    networks.writeManager().then(source =>
       commander.args.map(target =>
-        uploadNetworkmanager({
-          source,
-          target,
-          reUpload: commander.reUpload
-        }).then(target =>
-          console.log(`Network manager successfully applied on ${target}.`)
-        )
+        networks
+          .uploadManager({
+            source,
+            target,
+            reUpload: commander.reUpload
+          })
+          .then(target =>
+            console.log(`Network manager successfully applied on ${target}.`)
+          )
       )
-    )
+    );
+  }
 });

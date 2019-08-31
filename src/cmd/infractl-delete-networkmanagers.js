@@ -1,13 +1,17 @@
 #!/usr/bin/env node
 
-const deleteNetworkmanager = require("../lib/actions/deleteNetworkmanager");
+const Networks = require("../lib/models/networks");
 
 require("../lib/asGenericAction")({
   args: "<user@ip> [otherTargets...]",
-  action: commander =>
+  action: commander => {
+    const networks = new Networks();
     commander.args.map(target =>
-      deleteNetworkmanager(target).then(target =>
-        console.log(`Network manager successfully deleted on ${target}.`)
-      )
-    )
+      networks
+        .deleteManager(target)
+        .then(target =>
+          console.log(`Network manager successfully deleted on ${target}.`)
+        )
+    );
+  }
 });
