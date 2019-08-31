@@ -1,9 +1,6 @@
 #!/usr/bin/env node
 
-const {
-  downloadClusterbinary,
-  uploadClusterbinary
-} = require("../lib/actions/applyClusterbinary");
+const Clusters = require("../lib/models/clusters");
 
 require("../lib/asGenericAction")({
   args: "<user@ip> [otherTargets...]",
@@ -21,19 +18,25 @@ require("../lib/asGenericAction")({
       "Whether the binary should be uploaded again if it already exists on the target (default false)"
     ]
   ],
-  action: async commander =>
-    downloadClusterbinary({
-      source: commander.source,
-      reDownload: commander.reDownload
-    }).then(destination =>
-      commander.args.map(target =>
-        uploadClusterbinary({
-          source: destination,
-          target,
-          reUpload: commander.reDownload
-        }).then(target =>
-          console.log(`Cluster binary successfully applied to ${target}.`)
+  action: async commander => {
+    const clusters = new Clusters();
+    clusters
+      .downloadBinary({
+        source: commander.source,
+        reDownload: commander.reDownload
+      })
+      .then(destination =>
+        commander.args.map(target =>
+          clusters
+            .uploadBinary({
+              source: destination,
+              target,
+              reUpload: commander.reDownload
+            })
+            .then(target =>
+              console.log(`Cluster binary successfully applied to ${target}.`)
+            )
         )
-      )
-    )
+      );
+  }
 });

@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-const applyClusterstorage = require("../lib/actions/applyClusterstorage");
+const Clusters = require("../lib/models/clusters");
 
 require("../lib/asGenericAction")({
   options: [
@@ -9,8 +9,10 @@ require("../lib/asGenericAction")({
       "Path to the kubeconfig to work with (default ~/.kube/config)"
     ]
   ],
-  action: async commander =>
-    applyClusterstorage(commander.clusterconfig).then(() =>
-      console.log(`Cluster storage successfully applied.`)
-    )
+  action: async commander => {
+    const clusters = new Clusters();
+    clusters
+      .applyStorage(commander.clusterconfig)
+      .then(() => console.log(`Cluster storage successfully applied.`));
+  }
 });
