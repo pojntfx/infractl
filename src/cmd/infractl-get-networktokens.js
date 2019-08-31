@@ -1,12 +1,14 @@
 #!/usr/bin/env node
 
-const getNetworktoken = require("../lib/actions/getNetworktoken");
+const Networks = require("../lib/models/networks");
 
 require("../lib/asGenericAction")({
   args: "<user@ip>",
   checker: commander => commander.args[0],
-  action: commander =>
-    getNetworktoken(commander.args[0]).then(
-      token => token && console.log(token)
-    )
+  action: commander => {
+    const networks = new Networks();
+    networks
+      .getToken(commander.args[0])
+      .then(token => token && console.log(token));
+  }
 });

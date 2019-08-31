@@ -7,6 +7,7 @@ const crypto = require("crypto");
 const writeService = require("../writeService");
 const uploadAndStartService = require("../uploadAndStartService");
 const stopAndDeleteService = require("../stopAndDeleteService");
+const YAML = require("yaml");
 
 module.exports = class {
   async downloadBinary({ source, reDownload }) {
@@ -140,5 +141,96 @@ WantedBy=multi-user.target
 
   async deleteWorker(target) {
     return stopAndDeleteService({ target, name: "wesher-worker.service" });
+  }
+
+  async getToken(target) {
+    return new Promise(resolve =>
+      withSSH(target, ssh =>
+        ssh
+          .execCommand(`cat /etc/systemd/system/wesher-manager.service`)
+          .then(result => {
+            ssh.dispose();
+            resolve(
+              result.stdout &&
+                result.stdout
+                  .split("--cluster-key")[1]
+                  .split("\n")[0]
+                  .replace(" ", "")
+            );
+          })
+      )
+    );
+  }
+
+  async getNode({ target, node }) {
+    return new Promise(resolve =>
+      withSSH(node, ssh =>
+        ssh.execCommand(`cat /var/lib/wesher/state.json`).then(async result => {
+          if (result.stdout) {
+            const nodes = JSON.parse(result.stdout).Nodes;
+            if (target) {
+              ssh.dispose();
+              resolve({
+                list: false,
+                data: YAML.stringify(
+                  nodes.find(node => node.PubKey === target),
+                  null,
+                  4
+                )
+              });
+            } else {
+              const nodesWithOnlineStatus = [];
+              for (node of nodes) {
+                await ssh
+                  .execCommand(`ping -c 1 ${node.OverlayAddr.IP}`)
+                  .then(
+                    res =>
+                      (res.stdout.includes("1 received") &&
+                        nodesWithOnlineStatus.push([
+                          node.PubKey,
+                          node.Name,
+                          true,
+                          node.OverlayAddr.IP
+                        ])) ||
+                      nodesWithOnlineStatus.push([
+                        node.PubKey,
+                        node.Name,
+                        false,
+                        node.OverlayAddr.IP
+                      ])
+                  );
+              }
+              await ssh.execCommand(`ip a`).then(res =>
+                ssh.execCommand(`hostname`).then(res2 =>
+                  nodesWithOnlineStatus.unshift([
+                    "NOT AVAILABLE (YOU ARE QUERYING VIA THIS NODE)",
+                    res2.stdout,
+                    true,
+                    res.stdout
+                      .split("wgoverlay")[1]
+                      .split("inet")[1]
+                      .split("/32")[0]
+                      .replace(" ", "")
+                  ])
+                )
+              );
+              ssh.dispose();
+              resolve({ list: true, data: nodesWithOnlineStatus });
+            }
+          }
+        })
+      )
+    );
+  }
+
+  async deleteData(target) {
+    return new Promise(resolve =>
+      withSSH(target, ssh =>
+        ssh.execCommand("rm -rf /var/lib/wesher").then(() => {
+          ssh.dispose();
+          resolve(target);
+        })
+      )
+    );
   }
 };
