@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-const applyContext = require("../lib/actions/applyContext");
+const Contexts = require("../lib/models/contexts");
 
 require("../lib/asGenericAction")({
   options: [
@@ -15,9 +15,21 @@ require("../lib/asGenericAction")({
   ],
   checker: commander =>
     commander.hetznerCloudApiEndpoint || commander.hetznerCloudApiAccessToken,
-  action: commander =>
-    applyContext({
-      endpoint: commander.hetznerCloudApiEndpoint,
-      token: commander.hetznerCloudApiAccessToken
-    })
+  action: commander => {
+    const contexts = new Contexts();
+    if (commander.hetznerCloudApiEndpoint) {
+      contexts
+        .applyHetznerCloudApiEndpoint(commander.hetznerCloudApiEndpoint)
+        .then(() =>
+          console.log("Hetzner Cloud API endpoint successfully set.")
+        );
+    }
+    if (commander.hetznerCloudApiAccessToken) {
+      contexts
+        .applyHetznerCloudAccessToken(commander.hetznerCloudApiAccessToken)
+        .then(() =>
+          console.log("Hetzner Cloud API access token successfully set.")
+        );
+    }
+  }
 });
