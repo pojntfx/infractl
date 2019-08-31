@@ -29,6 +29,7 @@ const longhornDeleteClusterrole = require("../../data/longhorn-delete-clusterrol
 const longhornDeleteClusterrolebinding = require("../../data/longhorn-delete-clusterrolebinding.json");
 const longhornDeleteJob = require("../../data/longhorn-delete-job.json");
 const withFinishedJob = require("../withFinishedJob");
+const withPatches = require("../withPatches");
 
 module.exports = class {
   async downloadBinary({ source, reDownload }) {
@@ -129,6 +130,7 @@ WantedBy=multi-user.target
   async uploadManager(args) {
     return uploadAndStartService({
       name: "k3s-manager.service",
+      patchFunction: ssh => withPatches(ssh),
       ...args
     });
   }
@@ -158,6 +160,7 @@ WantedBy=multi-user.target
   async uploadHybrid(args) {
     return uploadAndStartService({
       name: "k3s-hybrid.service",
+      patchFunction: ssh => withPatches(ssh),
       ...args
     });
   }
@@ -185,6 +188,7 @@ WantedBy=multi-user.target
   async uploadWorker(args) {
     return uploadAndStartService({
       name: "k3s-worker.service",
+      patchFunction: ssh => withPatches(ssh),
       ...args
     });
   }
@@ -308,7 +312,7 @@ WantedBy=multi-user.target
         .namespaces("kube-system")
         .daemonsets("kube-router")
         .delete();
-      for (pod of (await client.api.v1
+      for (let pod of (await client.api.v1
         .namespaces("kube-system")
         .pods.get()).body.items
         .filter(pod => pod.metadata.name.includes("kube-router-"))

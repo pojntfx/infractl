@@ -1,7 +1,7 @@
 const withSSH = require("./withSSH");
 const withRsync = require("./withRsync");
 
-module.exports = async ({ name, source, target, reUpload }) =>
+module.exports = async ({ name, source, target, reUpload, patchFunction }) =>
   new Promise(resolve =>
     withRsync({
       source,
@@ -15,7 +15,8 @@ module.exports = async ({ name, source, target, reUpload }) =>
             `systemctl daemon-reload;
 systemctl enable ${name} --now;`
           )
-          .then(() => {
+          .then(async () => {
+            patchFunction && (await patchFunction(ssh));
             ssh.dispose();
             resolve(target);
           })
