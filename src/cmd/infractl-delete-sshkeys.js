@@ -1,14 +1,15 @@
 #!/usr/bin/env node
 
-const deleteSSHKey = require("../lib/actions/deleteSSHKey");
+const SSHKeys = require("../lib/models/sshkeys");
 
 require("../lib/asHetznerCloudAction")({
   args: "<id> [otherIds...]",
-  action: (commander, cloud) =>
+  action: (commander, cloud) => {
+    const sshKeys = new SSHKeys(cloud);
     commander.args.map(id =>
-      deleteSSHKey({
-        id,
-        cloud
-      })
-    )
+      sshKeys
+        .delete(id)
+        .then(() => console.log(`SSH key ${id} successfully deleted.`))
+    );
+  }
 });
