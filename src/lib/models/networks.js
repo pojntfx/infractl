@@ -1,6 +1,6 @@
 const shell = require("shelljs");
 const fs = require("fs");
-const withRsync = require("../withRsync");
+const withSCP = require("../withSCP");
 const withSSH = require("../withSSH");
 const withDownloadedFile = require("../withDownloadedFile");
 const crypto = require("crypto");
@@ -21,7 +21,7 @@ module.exports = class {
   }
   async uploadBinary({ source, target, reUpload }) {
     return new Promise(resolve =>
-      withRsync({
+      withSCP({
         source: source,
         destination: `${target}:/usr/local/bin/wesher`,
         permissions: "+x",
@@ -50,7 +50,7 @@ command -v yum && sudo yum install -y wireguard-dkms kernel-devel-$(uname -r) ke
 net.ipv4.conf.all.proxy_arp = 1
 `,
                 () =>
-                  withRsync({
+                  withSCP({
                     source: `${shell.tempdir()}/wesher.conf`,
                     destination: `${target}:/etc/sysctl.d/wesher.conf`,
                     permissions: "+rwx",

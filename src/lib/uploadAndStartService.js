@@ -1,9 +1,9 @@
 const withSSH = require("./withSSH");
-const withRsync = require("./withRsync");
+const withSCP = require("./withSCP");
 
 module.exports = async ({ name, source, target, reUpload, patchFunction }) =>
   new Promise(resolve =>
-    withRsync({
+    withSCP({
       source,
       destination: `${target}:/etc/systemd/system/${name}`,
       permissions: "+rwx",
