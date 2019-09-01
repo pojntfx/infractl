@@ -1,6 +1,6 @@
 const shell = require("shelljs");
 const fs = require("fs");
-const withRsync = require("../withRsync");
+const withSCP = require("../withSCP");
 const withSSH = require("../withSSH");
 const withDownloadedFile = require("../withDownloadedFile");
 const writeService = require("../writeService");
@@ -43,7 +43,7 @@ module.exports = class {
 
   async uploadBinary({ source, target, reUpload }) {
     return new Promise(resolve =>
-      withRsync({
+      withSCP({
         source,
         destination: `${target}:/usr/local/bin/k3s`,
         permissions: "+x",
@@ -63,7 +63,7 @@ command -v apt && sudo apt install -y open-iscsi iptables;`
 net.bridge.bridge-nf-call-iptables = 1                
 `,
                 () =>
-                  withRsync({
+                  withSCP({
                     source: `${shell.tempdir()}/k3s.conf`,
                     destination: `${target}:/etc/sysctl.d/k3s.conf`,
                     permissions: "+rwx",
