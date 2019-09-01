@@ -21,6 +21,7 @@ module.exports = async ({ source, destination, permissions, reUpload }) => {
         if (permissions) {
           await ssh.execCommand(`chmod ${permissions} ${targetPath}`);
         }
+        ssh.dispose();
         resolve(true);
       }
     })
