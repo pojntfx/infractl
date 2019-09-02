@@ -31,12 +31,14 @@ require("../lib/asHetznerCloudAction")({
   checker: commander => commander.args[0],
   action: async (commander, cloud) => {
     const newNodes = commander.args.filter(node => node === "new");
+    const existingNodes = commander.args.filter(node => node !== "new");
+    const createdNewNodes = existingNodes;
+    // Create new nodes if the user has specified them with the `new` keyword
     if (newNodes.length >= 1) {
       if (!commander.sshKey) {
         commander.outputHelp();
       } else {
         const nodes = new Nodes(cloud);
-        let createdNewNodes = [];
         for (let node of newNodes) {
           await nodes
             .apply({
@@ -47,20 +49,37 @@ require("../lib/asHetznerCloudAction")({
               sshKeys: commander.sshKey,
               poweredOn: true
             })
-            .then(createdNode => createdNewNodes.push(createdNode));
+            .then(createdNode =>
+              createdNewNodes.push(`root@${createdNode.ip}`)
+            );
         }
-        let readyNodes = [];
-        const pingNode = ip =>
-          new Promise(resolve =>
-            shell.exec(`ping -c 1 ${ip}`).includes("1 received")
-              ? resolve(ip)
-              : setTimeout(() => pingNode(ip).then(() => resolve(ip), 1000))
-          );
-        for (let node of createdNewNodes) {
-          await pingNode(node.ip).then(readyNode => readyNodes.push(readyNode));
-        }
-        console.log(readyNodes.length);
       }
     }
+    // Wait until all nodes are pingable
+    const pingableNodes = [];
+    const pingNode = ip =>
+      new Promise(resolve =>
+        shell.exec(`ping -c 1 ${ip}`).includes("1 received")
+          ? resolve(ip)
+          : setTimeout(() => pingNode(ip).then(() => resolve(ip), 1000))
+      );
+    for (let node of createdNewNodes) {
+      await pingNode(node.split("@")[1]).then(readyNode =>
+        pingableNodes.push(readyNode)
+      );
+    }
+    // Wait until all nodes are ssh-able
+    const sshableIps = [];
+    const sshNode = (user, ip) =>
+      new Promise(resolve =>
+        shell.exec(`ssh ${user}@${ip} 'echo $USER'`).includes(user)
+          ? resolve(ip)
+          : setTimeout(() => sshNode(user, ip).then(() => resolve(ip), 1000))
+      );
+    for (let ip of pingableNodes) {
+      await sshNode("root", ip).then(ip => sshableIps.push(`root@${ip}`));
+    }
+    // List the sshable ips
+    console.log(JSON.stringify(sshableIps));
   }
 });
