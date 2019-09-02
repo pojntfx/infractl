@@ -43,20 +43,22 @@ require("../lib/asHetznerCloudAction")({
         commander.outputHelp();
       } else {
         const nodes = new Nodes(cloud);
-        for (let _ of newNodes) {
-          await nodes
-            .apply({
-              name: `node-${crypto.randomBytes(8).toString("hex")}`,
-              operatingSystem: "debian-10",
-              nodeType: "cx21",
-              location: "nbg1",
-              sshKeys: commander.sshKey,
-              poweredOn: true
-            })
-            .then(createdNode =>
-              createdNewNodes.push(`root@${createdNode.ip}`)
-            );
-        }
+        await Promise.all(
+          newNodes.map(_ =>
+            nodes
+              .apply({
+                name: `node-${crypto.randomBytes(8).toString("hex")}`,
+                operatingSystem: "debian-10",
+                nodeType: "cx21",
+                location: "nbg1",
+                sshKeys: commander.sshKey,
+                poweredOn: true
+              })
+              .then(createdNode =>
+                createdNewNodes.push(`root@${createdNode.ip}`)
+              )
+          )
+        );
       }
     }
     // Wait until all nodes are pingable
@@ -67,11 +69,13 @@ require("../lib/asHetznerCloudAction")({
           ? resolve(ip)
           : setTimeout(() => pingNode(ip).then(() => resolve(ip), 1000))
       );
-    for (let node of createdNewNodes) {
-      await pingNode(node.split("@")[1]).then(readyNode =>
-        pingableNodes.push(`${node.split("@")[0]}@${readyNode}`)
-      );
-    }
+    await Promise.all(
+      createdNewNodes.map(node =>
+        pingNode(node.split("@")[1]).then(readyNode =>
+          pingableNodes.push(`${node.split("@")[0]}@${readyNode}`)
+        )
+      )
+    );
     // Wait until all nodes are ssh-able and check the fingerprints
     const sshableInternetNodes = [];
     const sshNode = (user, ip) =>
@@ -84,20 +88,28 @@ require("../lib/asHetznerCloudAction")({
           ? resolve(ip)
           : setTimeout(() => sshNode(user, ip).then(() => resolve(ip), 1000))
       );
-    for (let node of pingableNodes) {
-      await sshNode(node.split("@")[0], node.split("@")[1]).then(ip =>
-        sshableInternetNodes.push(`${node.split("@")[0]}@${ip}`)
-      );
-    }
+    await Promise.all(
+      pingableNodes.map(node =>
+        sshNode(node.split("@")[0], node.split("@")[1]).then(ip =>
+          sshableInternetNodes.push(`${node.split("@")[0]}@${ip}`)
+        )
+      )
+    );
     // Apply the network binaries
     const networks = new Networks();
     const networkBinarySource = await networks.downloadBinary({});
-    for (let ip of [...sshableInternetNodes, `${process.env.USER}@localhost`]) {
-      // Stop the running binary to allow for overwrite
-      await networks.deleteManager(ip);
-      await networks.deleteWorker(ip);
-      await networks.uploadBinary({ source: networkBinarySource, target: ip });
-    }
+    await Promise.all(
+      [...sshableInternetNodes, `${process.env.USER}@localhost`].map(ip =>
+        Promise.all([networks.deleteManager(ip), networks.deleteWorker(ip)])
+      )
+    );
+    await Promise.all(
+      [...sshableInternetNodes, `${process.env.USER}@localhost`].map(ip =>
+        Promise.all([
+          networks.uploadBinary({ source: networkBinarySource, target: ip })
+        ])
+      )
+    );
     const networkManagerIp =
       commander.networkManager || sshableInternetNodes[0];
     // Apply the network manager
@@ -126,12 +138,14 @@ require("../lib/asHetznerCloudAction")({
           ...sshableInternetNodes.filter((_, index) => index !== 0),
           `${process.env.USER}@localhost`
         ];
-    for (let ip of networkWorkerTargets) {
-      await networks.uploadWorker({
-        source: networkWorkerSource,
-        target: ip
-      });
-    }
+    await Promise.all(
+      networkWorkerTargets.map(ip =>
+        networks.uploadWorker({
+          source: networkWorkerSource,
+          target: ip
+        })
+      )
+    );
     // Wait until all nodes are ssh-able and check the fingerprints
     const networkNodes = [];
     let networkManagerNetworkNode = "";
@@ -147,24 +161,33 @@ require("../lib/asHetznerCloudAction")({
       networkNodes.push(`${node.split("@")[0]}@${localNetworkNodeIp}`);
     }
     const sshableNetworkNodes = [];
-    for (let node of networkNodes) {
-      await sshNode(node.split("@")[0], node.split("@")[1]).then(ip =>
-        sshableNetworkNodes.push(`${node.split("@")[0]}@${ip}`)
-      );
-    }
+    await Promise.all(
+      networkNodes.map(node =>
+        sshNode(node.split("@")[0], node.split("@")[1]).then(ip =>
+          sshableNetworkNodes.push(`${node.split("@")[0]}@${ip}`)
+        )
+      )
+    );
     // Apply the cluster binaries
     const clusters = new Clusters();
     const clusterBinarySource = await clusters.downloadBinary({});
-    for (let node of sshableNetworkNodes) {
-      // Stop the running binary to allow for overwrite
-      await clusters.deleteManager(node);
-      await clusters.deleteHybrid(node);
-      await clusters.deleteWorker(node);
-      await clusters.uploadBinary({
-        source: clusterBinarySource,
-        target: node
-      });
-    }
+    await Promise.all(
+      sshableNetworkNodes.map(node =>
+        Promise.all([
+          clusters.deleteManager(node),
+          clusters.deleteHybrid(node),
+          clusters.deleteWorker(node)
+        ])
+      )
+    );
+    await Promise.all(
+      sshableNetworkNodes.map(node =>
+        clusters.uploadBinary({
+          source: clusterBinarySource,
+          target: node
+        })
+      )
+    );
     // Apply the cluster manager
     if (!commander.clusterToken) {
       const source = await clusters.writeManager(
@@ -185,12 +208,14 @@ require("../lib/asHetznerCloudAction")({
       clusterToken,
       manager: networkManagerNetworkNode.split("@")[1]
     });
-    for (node of clusterWorkerTargets) {
-      await clusters.uploadWorker({
-        source: clusterWorkerSource,
-        target: node
-      });
-    }
+    await Promise.all(
+      clusterWorkerTargets.map(node =>
+        clusters.uploadWorker({
+          source: clusterWorkerSource,
+          target: node
+        })
+      )
+    );
     // Get the cluster config
     const clusterConfig = await clusters.getConfig(networkManagerNetworkNode);
     shell.mkdir("-p", `${process.env.HOME}/.kube`);
