@@ -5,6 +5,8 @@ const crypto = require("crypto");
 const shell = require("shelljs");
 const Networks = require("../lib/models/networks");
 const Clusters = require("../lib/models/clusters");
+const fs = require("fs");
+const withTable = require("../lib/withTable");
 
 require("../lib/asHetznerCloudAction")({
   args: "[user@ip|new] [otherTargets...]",
@@ -187,6 +189,25 @@ require("../lib/asHetznerCloudAction")({
     }
     // Get the cluster config
     const clusterConfig = await clusters.getConfig(networkManagerNetworkNode);
-    console.log(clusterConfig);
+    shell.mkdir("-p", `${process.env.HOME}/.kube`);
+    fs.writeFileSync(`${process.env.HOME}/.kube/config`, clusterConfig);
+    // Apply the cluster router
+    await clusters.applyRouter();
+    // Apply the cluster storage
+    await clusters.applyStorage();
+    // Get the cluster nodes
+    const clusterNodes = await clusters.getNodes({});
+    withTable({
+      headers: ["NAME", "READY"],
+      data: clusterNodes.data.map(node => [
+        node.metadata.name,
+        JSON.stringify(
+          !(
+            node.status.conditions.find(condition => condition.type === "Ready")
+              .status === "False"
+          )
+        )
+      ])
+    }).then(table => console.log(table));
   }
 });
