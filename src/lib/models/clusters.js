@@ -130,7 +130,7 @@ WantedBy=multi-user.target
   async uploadManager(args) {
     return uploadAndStartService({
       name: "k3s-manager.service",
-      patchFunction: ssh => withPatches(ssh),
+      patchFunction: ssh => withPatches({ manager: true, ssh }),
       ...args
     });
   }
@@ -160,7 +160,7 @@ WantedBy=multi-user.target
   async uploadHybrid(args) {
     return uploadAndStartService({
       name: "k3s-hybrid.service",
-      patchFunction: ssh => withPatches(ssh),
+      patchFunction: ssh => withPatches({ manager: true, ssh }),
       ...args
     });
   }
@@ -188,7 +188,7 @@ WantedBy=multi-user.target
   async uploadWorker(args) {
     return uploadAndStartService({
       name: "k3s-worker.service",
-      patchFunction: ssh => withPatches(ssh),
+      patchFunction: ssh => withPatches({ manager: false, ssh }),
       ...args
     });
   }

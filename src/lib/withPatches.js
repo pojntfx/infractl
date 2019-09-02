@@ -1,14 +1,16 @@
 // Wait with the patch until k3s has self-extracted
-const withPatches = ssh =>
+const withPatches = ({ ssh, manager }) =>
   new Promise(resolve =>
     ssh
       .execCommand(
-        `ls /var/lib/rancher/k3s/data/*/bin/*; [ -d /var/lib/rancher/k3s/server ] && echo "server" && cat /var/lib/rancher/k3s/server/node-token`
+        manager
+          ? `ls /var/lib/rancher/k3s/data/*/bin/*; cat /var/lib/rancher/k3s/server/node-token`
+          : `ls /var/lib/rancher/k3s/data/*/bin/*`
       )
-      .then(
-        res =>
-          (res.stdout.includes("server") && res.stdout.includes("::node:")) ||
-          res.stdout.includes("bin/bridge")
+      .then(res =>
+        manager
+          ? res.stdout.includes("bin/bridge") && res.stdout.includes("::node:")
+          : res.stdout.includes("bin/bridge")
       )
       .then(extracted =>
         extracted
@@ -19,7 +21,10 @@ rm -rf /opt/cni/bin/*;
 ln -sf /var/lib/rancher/k3s/data/*/bin/* /opt/cni/bin;`
               )
               .then(() => resolve(ssh))
-          : setTimeout(() => withPatches(ssh).then(() => resolve(ssh)), 1000)
+          : setTimeout(
+              () => withPatches({ ssh, manager }).then(() => resolve(ssh)),
+              1000
+            )
       )
   );
 
