@@ -83,7 +83,7 @@ require("../lib/asHetznerCloudAction")({
     // Apply the network binaries
     const networks = new Networks();
     const networkBinarySource = await networks.downloadBinary({});
-    for (let ip of sshableIps) {
+    for (let ip of [...sshableIps, `${process.env.USER}@localhost`]) {
       // Stop the running binary to allow for overwrite
       await networks.deleteManager(ip);
       await networks.deleteWorker(ip);
