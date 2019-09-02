@@ -66,31 +66,34 @@ require("../lib/asHetznerCloudAction")({
       );
     for (let node of createdNewNodes) {
       await pingNode(node.split("@")[1]).then(readyNode =>
-        pingableNodes.push(readyNode)
+        pingableNodes.push(`${node.split("@")[0]}@${readyNode}`)
       );
     }
-    // Wait until all nodes are ssh-able
-    const sshableIps = [];
+    // Wait until all nodes are ssh-able and check the fingerprints
+    const sshableInternetNodes = [];
     const sshNode = (user, ip) =>
       new Promise(resolve =>
         shell.exec(`ssh ${user}@${ip} 'echo $USER'`).includes(user)
           ? resolve(ip)
           : setTimeout(() => sshNode(user, ip).then(() => resolve(ip), 1000))
       );
-    for (let ip of pingableNodes) {
-      await sshNode("root", ip).then(ip => sshableIps.push(`root@${ip}`));
+    for (let node of pingableNodes) {
+      await sshNode(node.split("@")[0], node.split("@")[1]).then(ip =>
+        sshableInternetNodes.push(`${node.split("@")[0]}@${ip}`)
+      );
     }
     // Apply the network binaries
     const networks = new Networks();
     const networkBinarySource = await networks.downloadBinary({});
-    for (let ip of [...sshableIps, `${process.env.USER}@localhost`]) {
+    for (let ip of [...sshableInternetNodes, `${process.env.USER}@localhost`]) {
       // Stop the running binary to allow for overwrite
       await networks.deleteManager(ip);
       await networks.deleteWorker(ip);
       await networks.uploadBinary({ source: networkBinarySource, target: ip });
     }
     const networkManagerSource = await networks.writeManager();
-    const networkManagerIp = commander.networkManager || sshableIps[0];
+    const networkManagerIp =
+      commander.networkManager || sshableInternetNodes[0];
     // Apply the network manager
     await networks.uploadManager({
       source: networkManagerSource,
@@ -105,24 +108,35 @@ require("../lib/asHetznerCloudAction")({
     });
     const networkWorkerTargets = commander.networkManager
       ? [
-          ...sshableIps.filter(node => node !== commander.networkManager),
+          ...sshableInternetNodes.filter(
+            node => node !== commander.networkManager
+          ),
           `${process.env.USER}@localhost`
         ]
-      : [...sshableIps.shift(), `${process.env.USER}@localhost`];
+      : [
+          ...sshableInternetNodes.filter((_, index) => index !== 0),
+          `${process.env.USER}@localhost`
+        ];
     for (let ip of networkWorkerTargets) {
       await networks.uploadWorker({
         source: networkWorkerSource,
         target: ip
       });
     }
-    const localNetworkNodeIp = (await networks.getNode({
-      node: `${process.env.USER}@localhost`
-    })).data[0][3];
-    const networkNodes = (await networks.getNode({
-      node: networkManagerIp
-    })).data
-      .filter(node => node[3] !== localNetworkNodeIp)
-      .map(node => node[3]);
-    console.log(JSON.stringify(networkNodes, null, 4));
+    // Wait until all nodes are ssh-able and check the fingerprints
+    const networkNodes = [];
+    for (node of sshableInternetNodes) {
+      const localNetworkNodeIp = (await networks.getNode({
+        node
+      })).data[0][3];
+      networkNodes.push(`${node.split("@")[0]}@${localNetworkNodeIp}`);
+    }
+    const sshableNetworkNodes = [];
+    for (let node of networkNodes) {
+      await sshNode(node.split("@")[0], node.split("@")[1]).then(ip =>
+        sshableNetworkNodes.push(`${node.split("@")[0]}@${ip}`)
+      );
+    }
+    console.log(sshableNetworkNodes);
   }
 });
