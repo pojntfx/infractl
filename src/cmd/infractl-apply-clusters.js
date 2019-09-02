@@ -3,6 +3,7 @@
 const Nodes = require("../lib/models/nodes");
 const crypto = require("crypto");
 const shell = require("shelljs");
+const Networks = require("../lib/models/networks");
 
 require("../lib/asHetznerCloudAction")({
   args: "[user@ip|new] [otherTargets...]",
@@ -79,7 +80,24 @@ require("../lib/asHetznerCloudAction")({
     for (let ip of pingableNodes) {
       await sshNode("root", ip).then(ip => sshableIps.push(`root@${ip}`));
     }
-    // List the sshable ips
-    console.log(JSON.stringify(sshableIps));
+    // Apply the network binaries
+    const networks = new Networks();
+    const networkBinarySource = await networks.downloadBinary({});
+    for (let ip of sshableIps) {
+      // Stop the running binary to allow for overwrite
+      await networks.deleteManager(ip);
+      await networks.deleteWorker(ip);
+      await networks.uploadBinary({ source: networkBinarySource, target: ip });
+    }
+    const networkManagerSource = await networks.writeManager();
+    const networkManagerIp = commander.networkManager || sshableIps[0];
+    // Apply the network manager
+    await networks.uploadManager({
+      source: networkManagerSource,
+      target: networkManagerIp
+    });
+    const networkToken =
+      commander.networkToken || (await networks.getToken(networkManagerIp));
+    console.log(networkManagerIp, networkToken);
   }
 });
