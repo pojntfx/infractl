@@ -180,26 +180,28 @@ WantedBy=multi-user.target
               });
             } else {
               const nodesWithOnlineStatus = [];
-              for (node of nodes) {
-                await ssh
-                  .execCommand(`ping -c 1 ${node.OverlayAddr.IP}`)
-                  .then(
-                    res =>
-                      (res.stdout.includes("1 received") &&
+              await Promise.all(
+                nodes.map(node =>
+                  ssh
+                    .execCommand(`ping -c 1 ${node.OverlayAddr.IP}`)
+                    .then(
+                      res =>
+                        (res.stdout.includes("1 received") &&
+                          nodesWithOnlineStatus.push([
+                            node.PubKey,
+                            node.Name,
+                            true,
+                            node.OverlayAddr.IP
+                          ])) ||
                         nodesWithOnlineStatus.push([
                           node.PubKey,
                           node.Name,
-                          true,
+                          false,
                           node.OverlayAddr.IP
-                        ])) ||
-                      nodesWithOnlineStatus.push([
-                        node.PubKey,
-                        node.Name,
-                        false,
-                        node.OverlayAddr.IP
-                      ])
-                  );
-              }
+                        ])
+                    )
+                )
+              );
               await ssh.execCommand(`ip a`).then(res =>
                 ssh.execCommand(`hostname`).then(res2 =>
                   nodesWithOnlineStatus.unshift([
