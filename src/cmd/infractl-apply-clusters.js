@@ -76,7 +76,11 @@ require("../lib/asHetznerCloudAction")({
     const sshableInternetNodes = [];
     const sshNode = (user, ip) =>
       new Promise(resolve =>
-        shell.exec(`ssh ${user}@${ip} 'echo $USER'`).includes(user)
+        shell
+          .exec(
+            `ssh-keyscan -t rsa ${ip} >> ${process.env.HOME}/.ssh/known_hosts && ssh ${user}@${ip} 'echo $USER'`
+          )
+          .includes(user)
           ? resolve(ip)
           : setTimeout(() => sshNode(user, ip).then(() => resolve(ip), 1000))
       );
