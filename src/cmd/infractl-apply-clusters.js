@@ -98,6 +98,31 @@ require("../lib/asHetznerCloudAction")({
     });
     const networkToken =
       commander.networkToken || (await networks.getToken(networkManagerIp));
-    console.log(networkManagerIp, networkToken);
+    // Apply the network workers
+    const networkWorkerSource = await networks.writeWorker({
+      manager: networkManagerIp.split("@")[1],
+      networkToken
+    });
+    const networkWorkerTargets = commander.networkManager
+      ? [
+          ...sshableIps.filter(node => node !== commander.networkManager),
+          `${process.env.USER}@localhost`
+        ]
+      : [...sshableIps.shift(), `${process.env.USER}@localhost`];
+    for (let ip of networkWorkerTargets) {
+      await networks.uploadWorker({
+        source: networkWorkerSource,
+        target: ip
+      });
+    }
+    const localNetworkNodeIp = (await networks.getNode({
+      node: `${process.env.USER}@localhost`
+    })).data[0][3];
+    const networkNodes = (await networks.getNode({
+      node: networkManagerIp
+    })).data
+      .filter(node => node[3] !== localNetworkNodeIp)
+      .map(node => node[3]);
+    console.log(JSON.stringify(networkNodes, null, 4));
   }
 });
