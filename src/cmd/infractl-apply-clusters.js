@@ -79,15 +79,23 @@ require("../lib/asHetznerCloudAction")({
     // Wait until all nodes are ssh-able and check the fingerprints
     const sshableInternetNodes = [];
     const sshNode = (user, ip) =>
-      new Promise(resolve =>
+      new Promise(resolve => {
+        fs.writeFileSync(
+          `${process.env.HOME}/.ssh/known_hosts`,
+          fs
+            .readFileSync(`${process.env.HOME}/.ssh/known_hosts`, "UTF-8")
+            .split("\n")
+            .filter(line => !line.includes(ip))
+            .join("\n")
+        );
         shell
           .exec(
             `ssh-keyscan -t rsa ${ip} >> ${process.env.HOME}/.ssh/known_hosts && ssh ${user}@${ip} 'echo $USER'`
           )
           .includes(user)
           ? resolve(ip)
-          : setTimeout(() => sshNode(user, ip).then(() => resolve(ip), 1000))
-      );
+          : setTimeout(() => sshNode(user, ip).then(() => resolve(ip), 1000));
+      });
     await Promise.all(
       pingableNodes.map(node =>
         sshNode(node.split("@")[0], node.split("@")[1]).then(ip =>
