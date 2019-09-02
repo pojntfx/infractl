@@ -2,8 +2,14 @@
 const withPatches = ssh =>
   new Promise(resolve =>
     ssh
-      .execCommand("ls /var/lib/rancher/k3s/data/*/bin/*")
-      .then(res => res.stdout.includes("bin/bridge"))
+      .execCommand(
+        `ls /var/lib/rancher/k3s/data/*/bin/*; [ -d /var/lib/rancher/k3s/server ] && echo "server" && cat /var/lib/rancher/k3s/server/node-token`
+      )
+      .then(
+        res =>
+          (res.stdout.includes("server") && res.stdout.includes("::node:")) ||
+          res.stdout.includes("bin/bridge")
+      )
       .then(extracted =>
         extracted
           ? ssh
