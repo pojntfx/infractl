@@ -201,7 +201,7 @@ require("../lib/asHetznerCloudAction")({
     // Apply the cluster manager
     if (!commander.clusterToken) {
       const source = await clusters.writeManager(
-        clusterManagerNetworkNode.split("@")[1]
+        clusterManagerIp.split("@")[1]
       );
       await clusters.uploadManager({
         source,
@@ -230,9 +230,7 @@ require("../lib/asHetznerCloudAction")({
     const clusterConfig = await clusters.getConfig(clusterManagerNetworkNode);
     shell.mkdir("-p", `${process.env.HOME}/.kube`);
     fs.writeFileSync(`${process.env.HOME}/.kube/config`, clusterConfig);
-    // Apply the cluster router
-    await clusters.applyRouter();
-    // Apply the cluster storage
+    // // Apply the cluster storage
     await clusters.applyStorage();
     // Get the cluster nodes
     const clusterNodes = await clusters.getNodes({});

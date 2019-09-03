@@ -9,7 +9,6 @@ require("../lib/asHetznerCloudAction")({
   action: async (commander, cloud) => {
     const clusters = new Clusters();
     await clusters.deleteStorage();
-    await clusters.deleteRouter();
     await Promise.all(
       commander.args.map(node =>
         Promise.all([
