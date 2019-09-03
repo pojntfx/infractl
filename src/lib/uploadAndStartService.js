@@ -12,8 +12,8 @@ module.exports = async ({ name, source, target, reUpload, patchFunction }) =>
       withSSH(target, ssh =>
         ssh
           .execCommand(
-            `systemctl daemon-reload;
-systemctl enable ${name} --now;`
+            `sudo systemctl daemon-reload;
+sudo systemctl enable ${name} --now;`
           )
           .then(async () => {
             patchFunction && (await patchFunction(ssh));

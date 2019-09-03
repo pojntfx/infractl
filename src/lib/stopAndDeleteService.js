@@ -5,7 +5,7 @@ module.exports = async ({ target, name }) =>
     withSSH(target, ssh =>
       ssh
         .execCommand(
-          `systemctl disable ${name} --now; rm -f /etc/systemd/system/${name}; systemctl daemon-reload`
+          `sudo systemctl disable ${name} --now; sudo rm -f /etc/systemd/system/${name}; sudo systemctl daemon-reload`
         )
         .then(() => {
           ssh.dispose();
