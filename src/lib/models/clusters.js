@@ -117,9 +117,8 @@ Description=k3s kubernetes daemon (manager only)
 After=network.target
 
 [Service]
-ExecStart=/usr/local/bin/k3s server${additionalIp &&
-        " --tls-san " +
-          additionalIp} --disable-agent --no-flannel --no-deploy traefik --no-deploy servicelb
+ExecStart=/usr/local/bin/k3s server --flannel-iface wgoverlay${additionalIp &&
+        " --tls-san " + additionalIp} --disable-agent
 
 [Install]
 WantedBy=multi-user.target
@@ -147,9 +146,8 @@ Description=k3s kubernetes daemon (manager and worker)
 After=network.target
 
 [Service]
-ExecStart=/usr/local/bin/k3s server${additionalIp &&
-        " --tls-san " +
-          additionalIp} --no-flannel --no-deploy traefik --no-deploy servicelb
+ExecStart=/usr/local/bin/k3s server --flannel-iface wgoverlay${additionalIp &&
+        " --tls-san " + additionalIp}
 
 [Install]
 WantedBy=multi-user.target
@@ -177,7 +175,7 @@ Description=k3s kubernetes daemon (worker only)
 After=network.target
 
 [Service]
-ExecStart=/usr/local/bin/k3s agent --no-flannel --token ${clusterToken} --server https://${manager}:6443
+ExecStart=/usr/local/bin/k3s agent --flannel-iface wgoverlay --token ${clusterToken} --server https://${manager}:6443
 
 [Install]
 WantedBy=multi-user.target
