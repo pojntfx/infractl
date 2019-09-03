@@ -48,7 +48,15 @@ require("../lib/asHetznerCloudAction")({
       .then(({ id, name, status, ip, os, serverType, location }) => {
         withTable({
           preceedingText: "Node successfully applied:",
-          headers: ["ID", "NAME", "READY", "IP", "OS", "TYPE", "LOCATION"],
+          headers: [
+            "ID",
+            "NAME",
+            "READY",
+            "EXTERNAL-IP",
+            "OS",
+            "TYPE",
+            "LOCATION"
+          ],
           data: [[id, name, status === "running", ip, os, serverType, location]]
         }).then(table => console.log(table));
       });

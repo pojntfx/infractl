@@ -11,7 +11,15 @@ require("../lib/asHetznerCloudAction")({
     nodes.get(commander.args[0]).then(nodes =>
       nodes.list
         ? withTable({
-            headers: ["ID", "NAME", "READY", "IP", "OS", "TYPE", "LOCATION"],
+            headers: [
+              "ID",
+              "NAME",
+              "READY",
+              "EXTERNAL-IP",
+              "OS",
+              "TYPE",
+              "LOCATION"
+            ],
             data: nodes.data.servers.map(
               ({
                 id,

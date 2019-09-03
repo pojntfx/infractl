@@ -5,7 +5,7 @@ const YAML = require("yaml");
 const Clusters = require("../lib/models/clusters");
 
 require("../lib/asGenericAction")({
-  args: "[name]",
+  args: "[id]",
   options: [
     [
       "-c, --clusterconfig-path [kubeconfig]",
@@ -22,7 +22,7 @@ require("../lib/asGenericAction")({
       .then(nodes =>
         nodes.list
           ? withTable({
-              headers: ["NAME", "READY"],
+              headers: ["ID", "READY", "EXTERNAL-IP"],
               data: nodes.data.map(node => [
                 node.metadata.name,
                 JSON.stringify(
@@ -31,7 +31,10 @@ require("../lib/asGenericAction")({
                       condition => condition.type === "Ready"
                     ).status === "False"
                   )
-                )
+                ),
+                node.status.addresses.find(
+                  address => address.type === "InternalIP"
+                )["address"]
               ])
             }).then(table => console.log(table))
           : console.log(YAML.stringify(nodes.data, null, 4))
