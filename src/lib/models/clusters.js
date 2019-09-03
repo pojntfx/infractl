@@ -71,7 +71,7 @@ net.bridge.bridge-nf-call-iptables = 1
                   }).then(() =>
                     ssh
                       .execCommand(
-                        `sysctl --system;
+                        `sudo sysctl --system;
 sudo modprobe br_netfilter;
 sudo systemctl enable --now systemd-resolved;
 sudo systemctl restart systemd-resolved;
@@ -80,9 +80,9 @@ command -v yum && sudo yum install -y policycoreutils policycoreutils-python sel
 command -v apt && sudo apt install -y policycoreutils policycoreutils-python-utils selinux-basics selinux-policy-default auditd;
 command -v apt && sudo selinux-activate;
 command -v setenforce && sudo setenforce Permissive;
-systemctl disable firewalld --now;
+sudo systemctl disable firewalld --now;
 command -v ufw && sudo ufw allow 6443;
-sudo semanage fcontext -a -t bin_t /usr/local/bin/k3s; restorecon -v /usr/local/bin/k3s;
+sudo semanage fcontext -a -t bin_t /usr/local/bin/k3s; sudo restorecon -v /usr/local/bin/k3s;
 mkdir -p /opt/cni/bin; ln -s /var/lib/rancher/k3s/data/*/bin/* /opt/cni/bin;
 mkdir -p /opt/cni/bin; ln -s /var/lib/rancher/k3s/data/*/bin/* /opt/cni/bin;`
                       )
@@ -592,7 +592,7 @@ WantedBy=multi-user.target
       withSSH(target, ssh =>
         ssh
           .execCommand(
-            "rm -rf /etc/rancher; ip link del kube-bridge; ip link del dummy0; ip link del kube-dummy-if"
+            "sudo rm -rf /etc/rancher; ip link del kube-bridge; ip link del dummy0; ip link del kube-dummy-if"
           )
           .then(() => {
             ssh.dispose();
@@ -607,7 +607,7 @@ WantedBy=multi-user.target
       withSSH(target, ssh =>
         ssh
           .execCommand(
-            "umount /var/lib/rancher/k3s/agent/kubelet/pods/*/volumes/kubernetes.io~secret/*; rm -rf /var/lib/rancher; rm -rf ${HOME}/.rancher; rm -rf /var/lib/cni; rm -rf /opt/cni; rm -rf /var/lib/kube-router"
+            "sudo umount /var/lib/rancher/k3s/agent/kubelet/pods/*/volumes/kubernetes.io~secret/*; sudo rm -rf /var/lib/rancher; sudo rm -rf ${HOME}/.rancher; sudo rm -rf /var/lib/cni; sudo rm -rf /opt/cni; sudo rm -rf /var/lib/kube-router"
           )
           .then(() => {
             ssh.dispose();

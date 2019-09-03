@@ -58,9 +58,9 @@ net.ipv4.conf.all.proxy_arp = 1
                   }).then(() =>
                     ssh
                       .execCommand(
-                        `sysctl --system;
-modprobe wireguard;
-systemctl disable firewalld --now;
+                        `sudo sysctl --system;
+sudo modprobe wireguard;
+sudo systemctl disable firewalld --now;
 command -v ufw && sudo ufw allow 51820;
 command -v ufw && sudo ufw allow 7946;`
                       )
@@ -231,7 +231,7 @@ WantedBy=multi-user.target
   async deleteData(target) {
     return new Promise(resolve =>
       withSSH(target, ssh =>
-        ssh.execCommand("rm -rf /var/lib/wesher").then(() => {
+        ssh.execCommand("sudo rm -rf /var/lib/wesher").then(() => {
           ssh.dispose();
           resolve(target);
         })
