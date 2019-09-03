@@ -191,12 +191,14 @@ WantedBy=multi-user.target
                             node.PubKey,
                             node.Name,
                             true,
+                            node.Addr,
                             node.OverlayAddr.IP
                           ])) ||
                         nodesWithOnlineStatus.push([
                           node.PubKey,
                           node.Name,
                           false,
+                          node.Addr,
                           node.OverlayAddr.IP
                         ])
                     )
@@ -206,8 +208,9 @@ WantedBy=multi-user.target
                 ssh.execCommand(`hostname`).then(res2 =>
                   nodesWithOnlineStatus.unshift([
                     "NOT AVAILABLE (YOU ARE QUERYING VIA THIS NODE)",
-                    res2.stdout,
+                    res2.stdout.replace("\n", ""),
                     true,
+                    node.split("@")[1],
                     res.stdout
                       .split("wgoverlay")[1]
                       .split("inet")[1]

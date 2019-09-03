@@ -16,7 +16,7 @@ require("../lib/asGenericAction")({
       .then(nodes =>
         nodes.list
           ? withTable({
-              headers: ["ID", "NAME", "READY", "IP"],
+              headers: ["ID", "NAME", "READY", "EXTERNAL-IP", "INTERNAL-IP"],
               data: nodes.data
             }).then(table => console.log(table))
           : console.log(nodes.data)
