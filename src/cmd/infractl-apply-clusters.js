@@ -160,7 +160,7 @@ require("../lib/asHetznerCloudAction")({
     for (node of sshableInternetNodes) {
       const localNetworkNodeIp = (await networks.getNode({
         node
-      })).data[0][3];
+      })).data[0][4];
       if (node === networkManagerIp) {
         networkManagerNetworkNode = `${
           node.split("@")[0]
@@ -176,6 +176,8 @@ require("../lib/asHetznerCloudAction")({
         )
       )
     );
+    const clusterManagerIp = networkManagerIp;
+    const clusterManagerNetworkNode = networkManagerNetworkNode;
     // Apply the cluster binaries
     const clusters = new Clusters();
     const clusterBinarySource = await clusters.downloadBinary({});
@@ -199,22 +201,22 @@ require("../lib/asHetznerCloudAction")({
     // Apply the cluster manager
     if (!commander.clusterToken) {
       const source = await clusters.writeManager(
-        networkManagerNetworkNode.split("@")[1]
+        clusterManagerNetworkNode.split("@")[1]
       );
       await clusters.uploadManager({
         source,
-        target: networkManagerNetworkNode
+        target: clusterManagerNetworkNode
       });
     }
     // Get the cluster token
-    const clusterToken = await clusters.getToken(networkManagerNetworkNode);
+    const clusterToken = await clusters.getToken(clusterManagerNetworkNode);
     // Apply the cluster workers
-    const clusterWorkerTargets = networkManagerNetworkNode
-      ? sshableNetworkNodes.filter(node => node !== networkManagerNetworkNode)
+    const clusterWorkerTargets = clusterManagerNetworkNode
+      ? sshableNetworkNodes.filter(node => node !== clusterManagerNetworkNode)
       : sshableNetworkNodes.filter((_, index) => index !== 0);
     const clusterWorkerSource = await clusters.writeWorker({
       clusterToken,
-      manager: networkManagerNetworkNode.split("@")[1]
+      manager: clusterManagerNetworkNode.split("@")[1]
     });
     await Promise.all(
       clusterWorkerTargets.map(node =>
@@ -225,7 +227,7 @@ require("../lib/asHetznerCloudAction")({
       )
     );
     // Get the cluster config
-    const clusterConfig = await clusters.getConfig(networkManagerNetworkNode);
+    const clusterConfig = await clusters.getConfig(clusterManagerNetworkNode);
     shell.mkdir("-p", `${process.env.HOME}/.kube`);
     fs.writeFileSync(`${process.env.HOME}/.kube/config`, clusterConfig);
     // Apply the cluster router
@@ -235,7 +237,14 @@ require("../lib/asHetznerCloudAction")({
     // Get the cluster nodes
     const clusterNodes = await clusters.getNodes({});
     withTable({
-      headers: ["NAME", "READY"],
+      preceedingText: `Cluster successfully applied:
+Networkmanager (EXTERNAL-IP): ${networkManagerIp}
+Networkmanager (INTERNAL-IP): ${networkManagerNetworkNode}
+Networktoken: ${networkToken}
+Clustermanager (EXTERNAL-IP): ${clusterManagerIp}
+Clustermanager (INTERNAL-IP): ${clusterManagerNetworkNode}
+Clustertoken: ${clusterToken}`,
+      headers: ["ID", "READY", "EXTERNAL-IP"],
       data: clusterNodes.data.map(node => [
         node.metadata.name,
         JSON.stringify(
@@ -243,7 +252,10 @@ require("../lib/asHetznerCloudAction")({
             node.status.conditions.find(condition => condition.type === "Ready")
               .status === "False"
           )
-        )
+        ),
+        node.status.addresses.find(address => address.type === "InternalIP")[
+          "address"
+        ]
       ])
     }).then(table => console.log(table));
   }

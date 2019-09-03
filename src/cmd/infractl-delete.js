@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 require("../lib/asVerb")([
+  ["clusters", "Delete clusters", "cluster"],
   ["clusterstorages", "Delete cluster storage", "clusterstorage"],
   ["clusterrouters", "Delete cluster router", "clusterrouter"],
   ["clusterworkers", "Delete cluster worker(s)", "clusterworker"],
