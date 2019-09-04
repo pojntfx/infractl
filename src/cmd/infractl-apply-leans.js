@@ -4,6 +4,7 @@ const Logger = require("../lib/lean/logger");
 const Downloader = require("../lib/lean/downloader");
 const Uploader = require("../lib/lean/uploader");
 const Permissioner = require("../lib/lean/permissioner");
+const Kernelr = require("../lib/lean/kernelr");
 const Servicer = require("../lib/lean/servicer");
 const Cryptographer = require("../lib/lean/cryptographer");
 
@@ -98,6 +99,31 @@ require("../lib/asGenericAction")({
           `${node}:/usr/local/bin/wesher`,
           "+x"
         );
+      })
+    );
+    await logger.divide();
+
+    // Create network kernel config
+    const kernelr = new Kernelr();
+    await logger.log(localhost, "Creating network kernel config");
+    const networkKernelConfig = await kernelr.createConfig(
+      ["net.ipv4.ip_forward = 1", "net.ipv4.conf.all.proxy_arp = 1"],
+      "/tmp/sysctl.conf"
+    );
+
+    // Upload network kernel config
+    await Promise.all(
+      allNodes.map(async node => {
+        await logger.log(node, "Uploading network kernel config");
+        return uploader.upload(networkKernelConfig, `${node}:/etc/sysctl.conf`);
+      })
+    );
+
+    // Apply network kernel config
+    await Promise.all(
+      allNodes.map(async node => {
+        await logger.log(node, "Applying network kernel config");
+        return kernelr.applyConfig(`${node}:/etc/sysctl.conf`);
       })
     );
     await logger.divide();

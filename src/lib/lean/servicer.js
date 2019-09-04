@@ -28,7 +28,7 @@ WantedBy=multi-user.target
       username: destination.split("@")[0],
       agent: process.env.SSH_AUTH_SOCK
     });
-    await ssh.execCommand("systemctl daemon-reload");
+    await ssh.execCommand("sudo systemctl daemon-reload");
     ssh.dispose();
     return true;
   }
