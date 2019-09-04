@@ -7,6 +7,7 @@ const Permissioner = require("../lib/lean/permissioner");
 const Kernelr = require("../lib/lean/kernelr");
 const Servicer = require("../lib/lean/servicer");
 const Cryptographer = require("../lib/lean/cryptographer");
+const IPer = require("../lib/lean/iper");
 
 require("../lib/asGenericAction")({
   args: "<user@ip> [otherTargets...]",
@@ -16,9 +17,9 @@ require("../lib/asGenericAction")({
     const localhost = `${process.env.USER}@${process.env.HOSTNAME}`;
 
     // Get nodes
-    await logger.log(localhost, "Creating data model");
     const networkManagerNode = commander.args[0];
     const networkWorkerNodes = commander.args.filter((_, index) => index !== 0);
+    await logger.log(localhost, "Creating node data model");
     const allNodes = [networkManagerNode, ...networkWorkerNodes];
     await logger.divide();
 
@@ -41,13 +42,16 @@ require("../lib/asGenericAction")({
     // Stop network manager service
     const servicer = new Servicer();
     await logger.log(networkManagerNode, "Stopping network manager service");
-    await servicer.stopService(networkManagerNode, "network-manager.service");
+    await servicer.disableService(
+      networkManagerNode,
+      "network-manager.service"
+    );
 
     // Stop network worker service
     await Promise.all(
       networkWorkerNodes.map(async node => {
         await logger.log(node, "Stopping network worker service");
-        return servicer.stopService(node, "network-worker.service");
+        return servicer.disableService(node, "network-worker.service");
       })
     );
     await logger.divide();
@@ -177,7 +181,7 @@ require("../lib/asGenericAction")({
     await Promise.all(
       allNodes.map(async node => {
         await logger.log(node, "Stopping firewall service");
-        return servicer.stopService(node, "firewalld.service");
+        return servicer.disableService(node, "firewalld.service");
       })
     );
 
@@ -191,14 +195,67 @@ require("../lib/asGenericAction")({
 
     // Start network manager service
     await logger.log(networkManagerNode, "Starting network manager service");
-    await servicer.startService(networkManagerNode, "network-manager.service");
+    await servicer.enableService(networkManagerNode, "network-manager.service");
 
     // Start network worker service
     await Promise.all(
       networkWorkerNodes.map(async node => {
         await logger.log(node, "Starting network worker service");
-        return servicer.startService(node, "network-worker.service");
+        return servicer.enableService(node, "network-worker.service");
       })
     );
+    await logger.divide();
+
+    // Get network manager node in network
+    const iper = new IPer();
+    await logger.log(
+      networkManagerNode,
+      "Getting network manager node in network"
+    );
+    await servicer.waitForService(
+      networkManagerNode,
+      "network-manager.service",
+      1000
+    );
+    await iper.waitForInterface(networkManagerNode, "wgoverlay", 1000);
+    const networkManagerNodeInNetworkInterface = await iper.getInterface(
+      networkManagerNode,
+      "wgoverlay"
+    );
+    const networkManagerNodeInNetwork = `${networkManagerNode.split("@")[0]}@${
+      networkManagerNodeInNetworkInterface.ip
+    }`;
+
+    // Get network worker nodes in network
+    const networkWorkerNodesInNetwork = [];
+    await Promise.all(
+      networkWorkerNodes.map(async node => {
+        await logger.log(node, "Getting network worker node in network");
+        await servicer.waitForService(node, "network-worker.service", 1000);
+        await iper.waitForInterface(node, "wgoverlay", 1000);
+        const networkWorkerNodeInNetworkInterface = await iper.getInterface(
+          node,
+          "wgoverlay"
+        );
+        const networkWorkerNodeInNetwork = `${node.split("@")[0]}@${
+          networkWorkerNodeInNetworkInterface.ip
+        }`;
+        networkWorkerNodesInNetwork.push(networkWorkerNodeInNetwork);
+        return true;
+      })
+    );
+
+    // Create data model of network
+    await logger.log(localhost, "Creating network node data model");
+    const allNodesInNetwork = [
+      networkManagerNodeInNetwork,
+      ...networkWorkerNodesInNetwork
+    ];
+    console.log(
+      networkManagerNodeInNetwork,
+      networkWorkerNodesInNetwork,
+      allNodesInNetwork
+    );
+    await logger.divide();
   }
 });
