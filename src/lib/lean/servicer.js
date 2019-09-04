@@ -33,7 +33,7 @@ WantedBy=multi-user.target
     return true;
   }
 
-  async startService(destination, name) {
+  async enableService(destination, name) {
     const ssh = new SSH();
     await ssh.connect({
       host: destination.split("@")[1].split(":")[0],
@@ -45,15 +45,44 @@ WantedBy=multi-user.target
     return true;
   }
 
-  async stopService(destination, name) {
+  async disableService(destination, name) {
     const ssh = new SSH();
     await ssh.connect({
       host: destination.split("@")[1].split(":")[0],
       username: destination.split("@")[0],
       agent: process.env.SSH_AUTH_SOCK
     });
-    await ssh.execCommand(`sudo systemctl stop ${name}`);
+    await ssh.execCommand(`sudo systemctl disable ${name} --now`);
     ssh.dispose();
     return true;
+  }
+
+  async getServiceStatus(destination, name) {
+    const ssh = new SSH();
+    await ssh.connect({
+      host: destination.split("@")[1].split(":")[0],
+      username: destination.split("@")[0],
+      agent: process.env.SSH_AUTH_SOCK
+    });
+    const service = await ssh.execCommand(`sudo systemctl status ${name}`);
+    ssh.dispose();
+    return service.stdout.includes("Active: active (running)");
+  }
+
+  async waitForService(destination, name, interval) {
+    const serviceStatus = await this.getServiceStatus(destination, name);
+    return new Promise(resolve => {
+      if (serviceStatus) {
+        resolve(true);
+      } else {
+        setTimeout(
+          () =>
+            this.waitForService(destination, name, interval).then(() =>
+              resolve(true)
+            ),
+          interval
+        );
+      }
+    });
   }
 };
