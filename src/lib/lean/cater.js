@@ -1,17 +1,17 @@
-const SSH = require("node-ssh");
+const SSHer = require("./ssher");
 
 module.exports = class {
   async getFileContent(destination, asJSON) {
-    const ssh = new SSH();
-    await ssh.connect({
-      host: destination.split("@")[1].split(":")[0],
-      username: destination.split("@")[0],
-      agent: process.env.SSH_AUTH_SOCK
-    });
-    const fileContent = await ssh.execCommand(
-      `cat ${destination.split("@")[1].split(":")[1]}`
-    );
-    ssh.dispose();
-    return asJSON ? JSON.parse(fileContent.stdout) : fileContent.stdout;
+    const ssher = new SSHer(destination.split(":")[0]);
+    const fileContent = "";
+    if (ssher.isLocal) {
+      fileContent = ssher.shell.cat(destination.split(":")[1]);
+    } else {
+      const fileContentRaw = await ssher.execCommand(
+        `cat ${destination.split("@")[1].split(":")[1]}`
+      );
+      fileContent = fileContentRaw.stdout;
+    }
+    return asJSON ? JSON.parse(fileContent) : fileContent;
   }
 };

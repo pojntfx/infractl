@@ -1,5 +1,5 @@
 const fs = require("fs");
-const SSH = require("node-ssh");
+const SSHer = require("./ssher");
 
 module.exports = class {
   async createConfig(variables, destination) {
@@ -11,16 +11,8 @@ module.exports = class {
   }
 
   async applyConfig(destination) {
-    const ssh = new SSH();
-    await ssh.connect({
-      host: destination.split("@")[1].split(":")[0],
-      username: destination.split("@")[0],
-      agent: process.env.SSH_AUTH_SOCK
-    });
-    await ssh.execCommand(
-      `sudo sysctl -p ${destination.split("@")[1].split(":")[1]}`
-    );
-    ssh.dispose();
+    const ssher = new SSHer(destination.split(":")[0]);
+    await ssher.execCommand(`sudo sysctl -p ${destination.split(":")[1]}`);
     return true;
   }
 };

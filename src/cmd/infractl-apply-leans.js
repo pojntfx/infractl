@@ -39,18 +39,18 @@ require("../lib/asGenericAction")({
     );
     await logger.divide();
 
-    // Stop network manager service
+    // Disable network manager service
     const servicer = new Servicer();
-    await logger.log(networkManagerNode, "Stopping network manager service");
+    await logger.log(networkManagerNode, "Disabling network manager service");
     await servicer.disableService(
       networkManagerNode,
       "network-manager.service"
     );
 
-    // Stop network worker service
+    // Disable network worker service
     await Promise.all(
       networkWorkerNodes.map(async node => {
-        await logger.log(node, "Stopping network worker service");
+        await logger.log(node, "Disabling network worker service");
         return servicer.disableService(node, "network-worker.service");
       })
     );
@@ -177,10 +177,10 @@ require("../lib/asGenericAction")({
     );
     await logger.divide();
 
-    // Stop firewall service
+    // Disable firewall service
     await Promise.all(
       allNodes.map(async node => {
-        await logger.log(node, "Stopping firewall service");
+        await logger.log(node, "Disabling firewall service");
         return servicer.disableService(node, "firewalld.service");
       })
     );
@@ -193,14 +193,14 @@ require("../lib/asGenericAction")({
       })
     );
 
-    // Start network manager service
-    await logger.log(networkManagerNode, "Starting network manager service");
+    // Enable network manager service
+    await logger.log(networkManagerNode, "Enabling network manager service");
     await servicer.enableService(networkManagerNode, "network-manager.service");
 
-    // Start network worker service
+    // Enable network worker service
     await Promise.all(
       networkWorkerNodes.map(async node => {
-        await logger.log(node, "Starting network worker service");
+        await logger.log(node, "Enabling network worker service");
         return servicer.enableService(node, "network-worker.service");
       })
     );
