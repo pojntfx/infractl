@@ -4,6 +4,7 @@ const Logger = require("../lib/lean/logger");
 const Downloader = require("../lib/lean/downloader");
 const OSer = require("../lib/lean/oser");
 const Uploader = require("../lib/lean/uploader");
+const Packager = require("../lib/lean/packager");
 const Permissioner = require("../lib/lean/permissioner");
 const Kernelr = require("../lib/lean/kernelr");
 const Servicer = require("../lib/lean/servicer");
@@ -24,31 +25,135 @@ require("../lib/asGenericAction")({
     const allNodes = [networkManagerNode, ...networkWorkerNodes];
     await logger.divide();
 
-    // Download network core binary
-    const downloader = new Downloader();
-    await logger.log(localhost, "Download network core binary");
-    const networkDriverBinarySource = await downloader.download(
-      "https://nx904.your-next.cloud/s/9JSS9BsQEQTEW8E/download",
-      "/tmp/wireguard-go"
-    );
-
-    // Download network interface binary
-    await logger.log(localhost, "Download network interface binary");
-    const networkInterfaceBinarySource = await downloader.download(
-      "https://nx904.your-next.cloud/s/NLk8NdCPf4GqkZ9/download",
-      "/tmp/wesher"
-    );
-    await logger.divide();
-
     // Get nodes' operating system
     const oser = new OSer();
+    const nodeOperatingSystems = [];
     await Promise.all(
       allNodes.map(async node => {
         await logger.log(node, "Getting node's operating system");
         const nodeOS = await oser.getOS(node);
+        nodeOperatingSystems.push([node, nodeOS]);
         return true;
       })
     );
+    await logger.divide();
+
+    // Download binaries
+    const downloader = new Downloader();
+    const networkBinarySources = {};
+    const downloadDebianBinaries = nodeOperatingSystems.find(
+      ([_, os]) => os === "debian"
+    );
+    const debianBinarySources = {};
+    const downloadCentOSBinaries = nodeOperatingSystems.find(
+      ([_, os]) => os === "centos"
+    );
+    const centosBinarySources = {};
+    await Promise.all([
+      logger
+        .log(localhost, "Downloading network core binary")
+        .then(() =>
+          downloader.download(
+            "https://nx904.your-next.cloud/s/9JSS9BsQEQTEW8E/download",
+            "/tmp/wireguard-go"
+          )
+        )
+        .then(
+          destination =>
+            (networkBinarySources.networkDriverBinarySource = destination)
+        ),
+      logger
+        .log(localhost, "Downloading network interface binary")
+        .then(() =>
+          downloader.download(
+            "https://nx904.your-next.cloud/s/NLk8NdCPf4GqkZ9/download",
+            "/tmp/wesher"
+          )
+        )
+        .then(
+          destination =>
+            (networkBinarySources.networkInterfaceBinarySource = destination)
+        ),
+      downloadDebianBinaries &&
+        logger
+          .log(localhost, "Downloading firewall binary")
+          .then(() =>
+            downloader.download(
+              "https://nx904.your-next.cloud/s/oZWcXHQEXB8qYb6/download",
+              "/tmp/iptables.deb"
+            )
+          )
+          .then(
+            destination =>
+              (debianBinarySources.firewallBinarySource = destination)
+          ),
+      downloadDebianBinaries &&
+        logger
+          .log(localhost, "Downloading new firewall library")
+          .then(() =>
+            downloader.download(
+              "https://nx904.your-next.cloud/s/zCyzZH8QLwwxnwT/download",
+              "/tmp/libnetfilter.deb"
+            )
+          )
+          .then(
+            destination =>
+              (debianBinarySources.firewallNewLibrarySource = destination)
+          ),
+      downloadDebianBinaries &&
+        logger
+          .log(localhost, "Downloading legacy firewall library")
+          .then(() =>
+            downloader.download(
+              "https://nx904.your-next.cloud/s/KKjjwJtGtYftkQ8/download",
+              "/tmp/libxtables.deb"
+            )
+          )
+          .then(
+            destination =>
+              (debianBinarySources.firewallLegacyLibrarySource = destination)
+          ),
+      downloadDebianBinaries &&
+        logger
+          .log(localhost, "Downloading firewall support library 1")
+          .then(() =>
+            downloader.download(
+              "https://nx904.your-next.cloud/s/WqGePH7oPAgPT5r/download",
+              "/tmp/libmnl.deb"
+            )
+          )
+          .then(
+            destination =>
+              (debianBinarySources.firewallSupportLibrary1Source = destination)
+          ),
+      downloadDebianBinaries &&
+        logger
+          .log(localhost, "Downloading firewall support library 2")
+          .then(() =>
+            downloader.download(
+              "https://nx904.your-next.cloud/s/59y8EabfWrnb2Hb/download",
+              "/tmp/libnfnetlink0.deb"
+            )
+          )
+          .then(
+            destination =>
+              (debianBinarySources.firewallSupportLibrary2Source = destination)
+          ),
+      downloadDebianBinaries &&
+        logger
+          .log(localhost, "Downloading firewall support library 3")
+          .then(() =>
+            downloader.download(
+              "https://nx904.your-next.cloud/s/Ew87MxWMRB3CcDG/download",
+              "/tmp/libnftnl11.deb"
+            )
+          )
+          .then(
+            destination =>
+              (debianBinarySources.firewallSupportLibrary3Source = destination)
+          )
+    ]);
+    await logger.divide();
 
     // Disable network manager service
     const servicer = new Servicer();
@@ -67,27 +172,156 @@ require("../lib/asGenericAction")({
     );
     await logger.divide();
 
-    // Upload network core binary
+    // Upload binaries
     const uploader = new Uploader();
+    const networkBinaryDestinations = allNodes.map(() => ({}));
+    const debianBinaryDestinations = allNodes.map(() => ({}));
+    const centosBinaryDestinations = allNodes.map(() => ({}));
     await Promise.all(
-      allNodes.map(async node => {
-        await logger.log(node, "Uploading network core binary");
-        return uploader.upload(
-          networkDriverBinarySource,
-          `${node}:/usr/local/bin/wireguard-go`
+      allNodes.map((node, index) => {
+        const uploadDebianBinaries = nodeOperatingSystems.find(
+          ([debianNode, os]) => node === debianNode && os === "debian"
         );
+        const uploadCentOSBinaries = nodeOperatingSystems.find(
+          ([centOSNode, os]) => node === centOSNode && os === "centos"
+        );
+        return Promise.all([
+          logger
+            .log(node, "Uploading network core binary")
+            .then(() =>
+              uploader.upload(
+                networkBinarySources.networkDriverBinarySource,
+                `${node}:/usr/local/bin/wireguard-go`
+              )
+            )
+            .then(
+              destination =>
+                (networkBinaryDestinations[
+                  index
+                ].networkDriverBinaryDestination = destination)
+            ),
+          ,
+          logger
+            .log(node, "Uploading network interface binary")
+            .then(() =>
+              uploader.upload(
+                networkBinarySources.networkInterfaceBinarySource,
+                `${node}:/usr/local/bin/wesher`
+              )
+            )
+            .then(
+              destination =>
+                (networkBinaryDestinations[
+                  index
+                ].networkInterfaceBinaryDestination = destination)
+            ),
+          uploadDebianBinaries &&
+            logger
+              .log(node, "Uploading firewall binary")
+              .then(() =>
+                uploader.upload(
+                  debianBinarySources.firewallBinarySource,
+                  `${node}:/tmp/iptables.deb`
+                )
+              )
+              .then(
+                destination =>
+                  (debianBinaryDestinations[
+                    index
+                  ].firewallBinaryDestination = destination)
+              ),
+          uploadDebianBinaries &&
+            logger
+              .log(node, "Uploading new firewall library")
+              .then(() =>
+                uploader.upload(
+                  debianBinarySources.firewallNewLibrarySource,
+                  `${node}:/tmp/libnetfilter.deb`
+                )
+              )
+              .then(
+                destination =>
+                  (debianBinaryDestinations[
+                    index
+                  ].firewallNewLibraryDestination = destination)
+              ),
+          uploadDebianBinaries &&
+            logger
+              .log(node, "Uploading legacy firewall library")
+              .then(() =>
+                uploader.upload(
+                  debianBinarySources.firewallLegacyLibrarySource,
+                  `${node}:/tmp/libxtables.deb`
+                )
+              )
+              .then(
+                destination =>
+                  (debianBinaryDestinations[
+                    index
+                  ].firewallLegacyLibraryDestination = destination)
+              ),
+          uploadDebianBinaries &&
+            logger
+              .log(node, "Uploading firewall support library 1")
+              .then(() =>
+                uploader.upload(
+                  debianBinarySources.firewallSupportLibrary1Source,
+                  `${node}:/tmp/libmnl.deb`
+                )
+              )
+              .then(
+                destination =>
+                  (debianBinaryDestinations[
+                    index
+                  ].firewallSupportLibrary1Destination = destination)
+              ),
+          uploadDebianBinaries &&
+            logger
+              .log(node, "Uploading firewall support library 2")
+              .then(() =>
+                uploader.upload(
+                  debianBinarySources.firewallSupportLibrary2Source,
+                  `${node}:/tmp/libnfnetlink0.deb`
+                )
+              )
+              .then(
+                destination =>
+                  (debianBinaryDestinations[
+                    index
+                  ].firewallSupportLibrary2Destination = destination)
+              ),
+          uploadDebianBinaries &&
+            logger
+              .log(node, "Uploading firewall support library 3")
+              .then(() =>
+                uploader.upload(
+                  debianBinarySources.firewallSupportLibrary3Source,
+                  `${node}:/tmp/libnftnl11.deb`
+                )
+              )
+              .then(
+                destination =>
+                  (debianBinaryDestinations[
+                    index
+                  ].firewallSupportLibrary3Destination = destination)
+              )
+        ]);
       })
     );
+    await logger.divide();
 
-    // Upload network interface binary
+    // Install firewall binaries
+    const packager = new Packager();
     await Promise.all(
-      allNodes.map(async node => {
-        await logger.log(node, "Uploading network interface binary");
-        return uploader.upload(
-          networkInterfaceBinarySource,
-          `${node}:/usr/local/bin/wesher`
-        );
-      })
+      debianBinaryDestinations.map(d =>
+        Promise.all(
+          Object.keys(d).map(e =>
+            logger
+              .log(d[e].split(":")[0], "Installing firewall binary")
+              .then(() => packager.installDebianPackage(d[e]))
+          )
+        )
+      )
     );
     await logger.divide();
 
