@@ -112,16 +112,18 @@ require("../lib/asGenericAction")({
     const networkManagerServiceSource = await servicer.createService({
       description: "Overlay network daemon (manager and worker)",
       execStart: `/usr/local/bin/wesher --cluster-key ${networkToken}`,
+      environment: "WG_I_PREFER_BUGGY_USERSPACE_TO_POLISHED_KMOD=1",
       destination: "/tmp/network-manager.service"
     });
 
     // Create network worker service
     await logger.log(localhost, "Creating network worker service");
     const networkWorkerServiceSource = await servicer.createService({
-      description: "Overlay network daemon (manager and worker)",
+      description: "Overlay network daemon (worker only)",
       execStart: `/usr/local/bin/wesher --cluster-key ${networkToken} --join ${
         networkManagerNode.split("@")[1]
       }`,
+      environment: "WG_I_PREFER_BUGGY_USERSPACE_TO_POLISHED_KMOD=1",
       destination: "/tmp/network-worker.service"
     });
     await logger.divide();
@@ -144,6 +146,14 @@ require("../lib/asGenericAction")({
       })
     );
     await logger.divide();
+
+    // Reload services
+    await Promise.all(
+      allNodes.map(async node => {
+        await logger.log(node, "Reloading services");
+        await servicer.reloadServices(node);
+      })
+    );
 
     // Start network manager service
     await logger.log(networkManagerNode, "Starting network manager service");
