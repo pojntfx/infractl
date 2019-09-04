@@ -173,11 +173,19 @@ require("../lib/asGenericAction")({
     );
     await logger.divide();
 
+    // Stop firewall service
+    await Promise.all(
+      allNodes.map(async node => {
+        await logger.log(node, "Stopping firewall service");
+        return servicer.stopService(node, "firewalld.service");
+      })
+    );
+
     // Reload services
     await Promise.all(
       allNodes.map(async node => {
         await logger.log(node, "Reloading services");
-        await servicer.reloadServices(node);
+        return servicer.reloadServices(node);
       })
     );
 
