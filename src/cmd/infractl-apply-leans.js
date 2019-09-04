@@ -2,6 +2,7 @@
 
 const Logger = require("../lib/lean/logger");
 const Downloader = require("../lib/lean/downloader");
+const OSer = require("../lib/lean/oser");
 const Uploader = require("../lib/lean/uploader");
 const Permissioner = require("../lib/lean/permissioner");
 const Kernelr = require("../lib/lean/kernelr");
@@ -38,6 +39,16 @@ require("../lib/asGenericAction")({
       "/tmp/wesher"
     );
     await logger.divide();
+
+    // Get nodes' operating system
+    const oser = new OSer();
+    await Promise.all(
+      allNodes.map(async node => {
+        await logger.log(node, "Getting node's operating system");
+        const nodeOS = await oser.getOS(node);
+        return true;
+      })
+    );
 
     // Disable network manager service
     const servicer = new Servicer();
