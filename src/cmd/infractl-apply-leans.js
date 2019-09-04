@@ -2,6 +2,7 @@
 
 const Downloader = require("../lib/lean/downloader");
 const Uploader = require("../lib/lean/uploader");
+const Permissioner = require("../lib/lean/permissioner");
 
 require("../lib/asGenericAction")({
   args: "<user@ip> [otherTargets...]",
@@ -29,6 +30,18 @@ require("../lib/asGenericAction")({
     await uploader.upload(
       wesherSource,
       `${commander.args[0]}:/usr/local/bin/wesher`
+    );
+    // Set network binaries' permissions
+    const permissioner = new Permissioner();
+    console.log("[INFO] Set permissions for wireguard-go");
+    await permissioner.setPermissions(
+      `${commander.args[0]}:/usr/local/bin/wireguard-go`,
+      "+x"
+    );
+    console.log("[INFO] Set permissions for wesher");
+    await permissioner.setPermissions(
+      `${commander.args[0]}:/usr/local/bin/wesher`,
+      "+x"
     );
   }
 });
