@@ -301,14 +301,17 @@ require("../lib/asGenericAction")({
     await logger.log(localhost, "Creating network kernel config");
     const networkKernelConfig = await kernelr.createConfig(
       ["net.ipv4.ip_forward = 1", "net.ipv4.conf.all.proxy_arp = 1"],
-      await tmpFiler.getPath("sysctl.conf")
+      await tmpFiler.getPath("network.conf")
     );
 
     // Upload network kernel config
     await Promise.all(
       allNodes.map(async node => {
         await logger.log(node, "Uploading network kernel config");
-        return uploader.upload(networkKernelConfig, `${node}:/etc/sysctl.conf`);
+        return uploader.upload(
+          networkKernelConfig,
+          `${node}:/etc/network.conf`
+        );
       })
     );
 
@@ -316,7 +319,7 @@ require("../lib/asGenericAction")({
     await Promise.all(
       allNodes.map(async node => {
         await logger.log(node, "Applying network kernel config");
-        return kernelr.applyConfig(`${node}:/etc/sysctl.conf`);
+        return kernelr.applyConfig(`${node}:/etc/network.conf`);
       })
     );
     await logger.divide();
@@ -581,7 +584,8 @@ require("../lib/asGenericAction")({
     // Set cluster services to disable
     const clusterServicesToDisable = [
       "cluster-manager.service",
-      "cluster-worker.service"
+      "cluster-worker.service",
+      "systemd-resolved.service"
     ];
 
     // Disable cluster services
@@ -652,6 +656,36 @@ require("../lib/asGenericAction")({
           }
         }
       )
+    );
+    await logger.divide();
+
+    // Create cluster kernel config
+    await logger.log(localhost, "Creating cluster kernel config");
+    const clusterKernelConfig = await kernelr.createConfig(
+      [
+        "net.bridge.bridge-nf-call-ip6tables = 1",
+        "net.bridge.bridge-nf-call-iptables = 1"
+      ],
+      await tmpFiler.getPath("cluster.conf")
+    );
+
+    // Upload cluster kernel config
+    await Promise.all(
+      allNodesInNetworkForCluster.map(async ([node]) => {
+        await logger.log(node, "Uploading cluster kernel config");
+        return uploader.upload(
+          networkKernelConfig,
+          `${node}:/etc/cluster.conf`
+        );
+      })
+    );
+
+    // Apply cluster kernel config
+    await Promise.all(
+      allNodesInNetworkForCluster.map(async ([node]) => {
+        await logger.log(node, "Applying cluster kernel config");
+        return kernelr.applyConfig(`${node}:/etc/cluster.conf`);
+      })
     );
     await logger.divide();
 

@@ -71,7 +71,7 @@ net.bridge.bridge-nf-call-iptables = 1
                   }).then(() =>
                     ssh
                       .execCommand(
-                        `sudo sysctl --system;
+                        `sudo sysctl --system; 
 sudo modprobe br_netfilter;
 sudo systemctl enable --now systemd-resolved;
 sudo systemctl restart systemd-resolved;
