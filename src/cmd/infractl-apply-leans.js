@@ -47,6 +47,7 @@ require("../lib/asGenericAction")({
       nodeKeys,
       `${process.env.HOME}/.ssh/known_hosts`
     );
+    await logger.divide();
 
     // Get nodes' operating system
     const oser = new OSer();
@@ -413,6 +414,7 @@ require("../lib/asGenericAction")({
       networkManagerNodeInNetwork,
       ...networkWorkerNodesInNetwork
     ];
+    await logger.divide();
 
     // Set up network node access
     const networkNodeKeys = await Promise.all(
