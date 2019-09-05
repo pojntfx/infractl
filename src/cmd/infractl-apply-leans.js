@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 const Logger = require("../lib/lean/logger");
+const SSHer = require("../lib/lean/ssher");
 const TmpFiler = require("../lib/lean/tmpfiler");
 const Downloader = require("../lib/lean/downloader");
 const OSer = require("../lib/lean/oser");
@@ -25,6 +26,27 @@ require("../lib/asGenericAction")({
     await logger.log(localhost, "Creating node data model");
     const allNodes = [networkManagerNode, ...networkWorkerNodes];
     await logger.divide();
+
+    // Set up node access
+    const nodeKeys = await Promise.all(
+      allNodes.map(async node => {
+        await logger.log(node, "Setting up node access");
+        const isLocalSSHer = new SSHer(node);
+        if (isLocalSSHer.isLocal) {
+          return undefined;
+        } else {
+          const ssher = new SSHer(
+            `${process.env.USER}@${process.env.HOSTNAME}`
+          );
+          return ssher.getKey(node.split("@")[1]);
+        }
+      })
+    );
+    const localSSHer = new SSHer(`${process.env.USER}@${process.env.HOSTNAME}`);
+    await localSSHer.trustKeys(
+      nodeKeys,
+      `${process.env.HOME}/.ssh/known_hosts`
+    );
 
     // Get nodes' operating system
     const oser = new OSer();
@@ -391,6 +413,27 @@ require("../lib/asGenericAction")({
       networkManagerNodeInNetwork,
       ...networkWorkerNodesInNetwork
     ];
+
+    // Set up network node access
+    const networkNodeKeys = await Promise.all(
+      allNodesInNetwork.map(async node => {
+        await logger.log(node, "Setting up network node access");
+        const isLocalSSHer = new SSHer(node);
+        if (isLocalSSHer.isLocal) {
+          return undefined;
+        } else {
+          const ssher = new SSHer(
+            `${process.env.USER}@${process.env.HOSTNAME}`
+          );
+          return ssher.getKey(node.split("@")[1]);
+        }
+      })
+    );
+    await localSSHer.trustKeys(
+      networkNodeKeys,
+      `${process.env.HOME}/.ssh/known_hosts`
+    );
+
     console.log(
       networkManagerNodeInNetwork,
       networkWorkerNodesInNetwork,

@@ -1,5 +1,7 @@
 const SSH = require("node-ssh");
 const shell = require("shelljs");
+const fs = require("fs");
+const os = require("os");
 
 module.exports = class {
   constructor(connectionString) {
@@ -20,6 +22,17 @@ module.exports = class {
     } else {
       this.isLocal = false;
       this.shell = new SSH();
+    }
+
+    const localInterfaces = Object.keys(os.networkInterfaces());
+    const localIps = localInterfaces.map(
+      name =>
+        os
+          .networkInterfaces()
+          [name].find(subInterface => subInterface.family === "IPv4")["address"]
+    );
+    if (localIps.includes(this.hostname)) {
+      this.isLocal = true;
     }
   }
 
@@ -64,6 +77,29 @@ module.exports = class {
       );
       return true;
     }
+  }
+
+  async getKey(source) {
+    const newKey = await this.execCommand(`ssh-keyscan -t rsa ${source}`);
+    await this.dispose();
+    return newKey;
+  }
+
+  async trustKeys(newKeys, destination) {
+    const workingNewKeys = newKeys.filter(Boolean);
+    const rawTrustedKeys = await new Promise(resolve =>
+      fs.readFile(destination, "UTF8", (_, data) => resolve(data))
+    );
+    const trustedKeys = rawTrustedKeys
+      .split("\n")
+      .filter(
+        key =>
+          !workingNewKeys.find(newKey => newKey.includes(key.split(" ")[0]))
+      );
+    const newTrustedKeys = [...trustedKeys, ...workingNewKeys].join("\n");
+    return await new Promise(resolve =>
+      fs.writeFile(destination, newTrustedKeys, () => resolve(destination))
+    );
   }
 
   dispose() {
