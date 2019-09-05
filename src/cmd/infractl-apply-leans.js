@@ -141,6 +141,12 @@ require("../lib/asGenericAction")({
         "/tmp/libnfnetlink.rpm"
       ],
       [
+        "firewall support binary (CentOS)",
+        "https://nx904.your-next.cloud/s/ogfp5bN8fZr67Qw/download",
+        await tmpFiler.getPath("systemd-resolved.rpm"),
+        "/tmp/systemd-resolved.rpm"
+      ],
+      [
         "firewall support library (CentOS)",
         "https://nx904.your-storageshare.de/s/xp9F8bGQPCwrZ3k/download",
         await tmpFiler.getPath("libnetfilter_conntrack.rpm"),
@@ -430,7 +436,7 @@ require("../lib/asGenericAction")({
       networkManagerNodeInNetwork,
       ...networkWorkerNodesInNetwork
     ];
-    const allNodesForCluster = allNodesInNetwork.filter(node => {
+    const allNodesInNetworkForCluster = allNodesInNetwork.filter(node => {
       const ssher = new SSHer(node[2]);
       return !ssher.isLocal;
     });
@@ -464,10 +470,103 @@ require("../lib/asGenericAction")({
       networkNodeKeys,
       `${process.env.HOME}/.ssh/known_hosts`
     );
+    await logger.divide();
 
-    console.log(networkManagerNodeInNetwork);
-    console.log(networkWorkerNodesInNetwork);
-    console.log(allNodesInNetwork);
-    console.log(allNodesForCluster);
+    // Set all cluster binary download sources
+    const clusterBinaries = [
+      [
+        "universal",
+        [
+          [
+            "cluster binary",
+            "https://nx904.your-next.cloud/s/gdXAndMz547n9z7/download",
+            await tmpFiler.getPath("k3s"),
+            "/usr/local/k3s"
+          ]
+        ]
+      ],
+      [
+        "debian",
+        [
+          [
+            "storage binary (Debian)",
+            "https://nx904.your-next.cloud/s/Kg6ccPBzYSipEaS/download",
+            await tmpFiler.getPath("open-iscsi.deb"),
+            "/tmp/open-iscsi.deb"
+          ],
+          [
+            "storage library (Debian)",
+            "https://nx904.your-next.cloud/s/Krrqs8sBF4pDQZS/download",
+            await tmpFiler.getPath("libisns0.deb"),
+            "/tmp/libisns0.deb"
+          ]
+        ]
+      ],
+      [
+        "centos",
+        [
+          [
+            "storage binary (CentOS)",
+            "https://nx904.your-next.cloud/s/oFqwPAAPASSDLPo/download",
+            await tmpFiler.getPath("iscsi-initiator-utils.rpm"),
+            "/tmp/iscsi-initiator-utils.rpm"
+          ],
+          [
+            "storage library (CentOS)",
+            "https://nx904.your-next.cloud/s/tPpxfo4saQMBFy2/download",
+            await tmpFiler.getPath("iscsi-initiator-utils-iscsiuio.rpm"),
+            "/tmp/iscsi-initiator-utils-iscsiuio.rpm"
+          ],
+          [
+            "storage support binary (CentOS)",
+            "https://nx904.your-next.cloud/s/TyQ74Hn8Z6eKmHn/download",
+            await tmpFiler.getPath("python.rpm"),
+            "/tmp/python.rpm"
+          ],
+          [
+            "storage support library (CentOS)",
+            "https://nx904.your-next.cloud/s/T2NCxspMYkMxo2p/download",
+            await tmpFiler.getPath("python-libs.rpm"),
+            "/tmp/python-libs.rpm"
+          ]
+        ]
+      ]
+    ];
+
+    // Select the cluster binaries to download
+    const clusterBinariesToDownload = clusterBinaries
+      .filter(
+        target =>
+          target[0] === "universal" ||
+          (allNodesInNetworkForCluster.find(([_, os]) => os === "debian") &&
+            target[0] === "debian") ||
+          (allNodesInNetworkForCluster.find(([_, os]) => os === "centos") &&
+            target[0] === "centos")
+      )
+      .filter(Boolean);
+
+    // Download cluster binaries
+    const clusterBinariesToUpload = await Promise.all(
+      clusterBinariesToDownload
+        .reduce((a, b) => a.concat(b[1].map(binary => [...binary, b[0]])), [])
+        .map(
+          async ([
+            name,
+            source,
+            localDestination,
+            remoteDestination,
+            operatingSystem
+          ]) => {
+            await logger.log(localhost, `Downloading ${name}`);
+            const newSource = await downloader.download(
+              source,
+              localDestination
+            );
+            return [name, newSource, remoteDestination, operatingSystem];
+          }
+        )
+    );
+    console.log(clusterBinariesToUpload);
+    await logger.divide();
   }
 });
