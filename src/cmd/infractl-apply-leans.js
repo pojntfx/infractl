@@ -31,15 +31,15 @@ require("../lib/asGenericAction")({
     await Promise.all(
       allNodes.map(async node => {
         await logger.log(node, "Getting node's operating system");
-        const nodeOS = await oser.getOS(node);
-        nodeOperatingSystems.push([node, nodeOS]);
+        const nodeOperatingSystem = await oser.getOS(node);
+        nodeOperatingSystems.push([node, nodeOperatingSystem]);
         return true;
       })
     );
     await logger.divide();
 
     // Set binary download sources
-    const networkBinarySources = [
+    const networkBinaries = [
       [
         "network core binary",
         "https://nx904.your-next.cloud/s/9JSS9BsQEQTEW8E/download",
@@ -53,7 +53,7 @@ require("../lib/asGenericAction")({
         "/usr/local/bin/wesher"
       ]
     ];
-    const debianBinarySources = [
+    const debianFirewallBinaries = [
       [
         "firewall binary",
         "https://nx904.your-next.cloud/s/oZWcXHQEXB8qYb6/download",
@@ -91,26 +91,26 @@ require("../lib/asGenericAction")({
         "/tmp/libnftnl11.deb"
       ]
     ];
-    const centosBinarySources = [[]];
+    const centOSFirewallBinaries = [[]];
 
     // Check whether to download debian and/or centos packages
-    const downloadDebianBinaries = nodeOperatingSystems.find(
+    const downloadDebianFirewallBinaries = nodeOperatingSystems.find(
       ([_, os]) => os === "debian"
     );
-    const downloadCentOSBinaries = nodeOperatingSystems.find(
+    const downloadCentOSFirewallBinaries = nodeOperatingSystems.find(
       ([_, os]) => os === "centos"
     );
-    const binariesToDownloadSources = networkBinarySources
+    const binariesToDownload = networkBinaries
       .concat(
-        downloadDebianBinaries && debianBinarySources,
-        downloadCentOSBinaries && centosBinarySources
+        downloadDebianFirewallBinaries && debianFirewallBinaries,
+        downloadCentOSFirewallBinaries && centOSFirewallBinaries
       )
       .filter(Boolean);
 
     // Download binaries
     const downloader = new Downloader();
-    const binariesToUploadSources = await Promise.all(
-      binariesToDownloadSources.map(
+    const binariesToUpload = await Promise.all(
+      binariesToDownload.map(
         async ([name, source, destination, finalDestination]) => {
           await logger.log(localhost, `Downloading ${name}`);
           const newSource = await downloader.download(source, destination);
@@ -147,7 +147,7 @@ require("../lib/asGenericAction")({
 
     // Upload binaries
     const uploader = new Uploader();
-    const binariesToUploadSourcesWithDestination = (await Promise.all(
+    const binariesToInstall = await Promise.all(
       allNodes.map(async node => {
         const uploadDebianBinaries = nodeOperatingSystems.find(
           ([debianNode, os]) => node === debianNode && os === "debian"
@@ -155,15 +155,15 @@ require("../lib/asGenericAction")({
         const uploadCentOSBinaries = nodeOperatingSystems.find(
           ([centOSNode, os]) => node === centOSNode && os === "centos"
         );
-        return (await Promise.all(
-          binariesToUploadSources.map(async ([name, source, destination]) => {
+        return await Promise.all(
+          binariesToUpload.map(async ([name, source, destination]) => {
             if (
               (uploadDebianBinaries &&
-                debianBinarySources.find(
+                debianFirewallBinaries.find(
                   ([originalName]) => originalName === name
                 )) ||
               (uploadCentOSBinaries &&
-                centosBinarySources.find(
+                centOSFirewallBinaries.find(
                   ([originalName]) => originalName === name
                 ))
             ) {
@@ -172,34 +172,42 @@ require("../lib/asGenericAction")({
                 source,
                 `${node}:${destination}`
               );
-              return [name, newDestination, uploadDebianBinaries];
+              return [
+                name,
+                newDestination,
+                true,
+                uploadDebianBinaries ? true : false
+              ];
             } else if (
-              networkBinarySources.find(
-                ([originalName]) => originalName === name
-              )
+              networkBinaries.find(([originalName]) => originalName === name)
             ) {
               await logger.log(node, `Uploading ${name}`);
-              await uploader.upload(source, `${node}:${destination}`);
+              const newDestination = await uploader.upload(
+                source,
+                `${node}:${destination}`
+              );
               // These need not be installed as packages
-              return undefined;
+              return [name, newDestination, false, undefined];
             }
           })
-        )).filter(Boolean);
+        );
       })
-    )).filter(Boolean);
+    );
     await logger.divide();
 
     // Install firewall binaries
     const packager = new Packager();
     await Promise.all(
-      binariesToUploadSourcesWithDestination.map(node =>
+      binariesToInstall.map(node =>
         Promise.all(
-          node.map(async ([name, destination, debianPackage]) => {
-            await logger.log(destination.split(":")[0], `Installing ${name}`);
-            return debianPackage
-              ? await packager.installDebianPackage(destination)
-              : await packager.installCentOSPackage(destination);
-          })
+          node
+            .filter(([_, _2, shouldBeInstalled]) => shouldBeInstalled)
+            .map(async ([name, destination, _, isDebianPackage]) => {
+              await logger.log(destination.split(":")[0], `Installing ${name}`);
+              return isDebianPackage
+                ? await packager.installDebianPackage(destination)
+                : await packager.installCentOSPackage(destination);
+            })
         )
       )
     );
@@ -208,27 +216,19 @@ require("../lib/asGenericAction")({
     // Set network core binary's permissions
     const permissioner = new Permissioner();
     await Promise.all(
-      allNodes.map(async node => {
-        await logger.log(node, "Setting permissions for network core binary");
-        return permissioner.setPermissions(
-          `${node}:/usr/local/bin/wireguard-go`,
-          "+x"
-        );
-      })
-    );
-
-    // Set network interface binary's permissions
-    await Promise.all(
-      allNodes.map(async node => {
-        await logger.log(
-          node,
-          "Setting permissions for network interface binary"
-        );
-        return permissioner.setPermissions(
-          `${node}:/usr/local/bin/wesher`,
-          "+x"
-        );
-      })
+      binariesToInstall.map(node =>
+        Promise.all(
+          node
+            .filter(([_, _2, shouldBeInstalled]) => !shouldBeInstalled)
+            .map(async ([name, destination]) => {
+              await logger.log(
+                destination.split(":")[0],
+                `Setting permissions for ${name}`
+              );
+              return permissioner.setPermissions(destination, "+x");
+            })
+        )
+      )
     );
     await logger.divide();
 
@@ -373,6 +373,5 @@ require("../lib/asGenericAction")({
       networkWorkerNodesInNetwork,
       allNodesInNetwork
     );
-    await logger.divide();
   }
 });
