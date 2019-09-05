@@ -42,56 +42,75 @@ require("../lib/asGenericAction")({
     const networkBinaries = [
       [
         "network core binary",
-        "https://nx904.your-next.cloud/s/9JSS9BsQEQTEW8E/download",
+        "https://nx904.your-storageshare.de/s/9JSS9BsQEQTEW8E/download",
         "/tmp/wireguard-go",
         "/usr/local/bin/wireguard-go"
       ],
       [
         "network interface binary",
-        "https://nx904.your-next.cloud/s/NLk8NdCPf4GqkZ9/download",
+        "https://nx904.your-storageshare.de/s/NLk8NdCPf4GqkZ9/download",
         "/tmp/wesher",
         "/usr/local/bin/wesher"
       ]
     ];
     const debianFirewallBinaries = [
       [
-        "firewall binary",
-        "https://nx904.your-next.cloud/s/oZWcXHQEXB8qYb6/download",
+        "firewall binary (Debian)",
+        "https://nx904.your-storageshare.de/s/oZWcXHQEXB8qYb6/download",
         "/tmp/iptables.deb",
         "/tmp/iptables.deb"
       ],
       [
-        "new firewall library",
-        "https://nx904.your-next.cloud/s/zCyzZH8QLwwxnwT/download",
+        "new firewall library (Debian)",
+        "https://nx904.your-storageshare.de/s/zCyzZH8QLwwxnwT/download",
         "/tmp/libnetfilter.deb",
         "/tmp/libnetfilter.deb"
       ],
       [
-        "legacy firewall library",
-        "https://nx904.your-next.cloud/s/KKjjwJtGtYftkQ8/download",
+        "legacy firewall library (Debian)",
+        "https://nx904.your-storageshare.de/s/KKjjwJtGtYftkQ8/download",
         "/tmp/libxtables.deb",
         "/tmp/libxtables.deb"
       ],
       [
-        "firewall support library 1",
-        "https://nx904.your-next.cloud/s/WqGePH7oPAgPT5r/download",
+        "firewall support library 1 (Debian)",
+        "https://nx904.your-storageshare.de/s/WqGePH7oPAgPT5r/download",
         "/tmp/libmnl.deb",
         "/tmp/libmnl.deb"
       ],
       [
-        "firewall support library 2",
-        "https://nx904.your-next.cloud/s/59y8EabfWrnb2Hb/download",
+        "firewall support library 2 (Debian)",
+        "https://nx904.your-storageshare.de/s/59y8EabfWrnb2Hb/download",
         "/tmp/libnfnetlink0.deb",
         "/tmp/libnfnetlink0.deb"
       ],
       [
-        "firewall support library 3",
-        "https://nx904.your-next.cloud/s/Ew87MxWMRB3CcDG/download",
+        "firewall support library 3 (Debian)",
+        "https://nx904.your-storageshare.de/s/Ew87MxWMRB3CcDG/download",
         "/tmp/libnftnl11.deb",
         "/tmp/libnftnl11.deb"
       ]
     ];
-    const centOSFirewallBinaries = [[]];
+    const centOSFirewallBinaries = [
+      [
+        "firewall binary (CentOS)",
+        "https://nx904.your-storageshare.de/s/jkidqgeCMbmijmY/download",
+        "/tmp/iptables.rpm",
+        "/tmp/iptables.rpm"
+      ],
+      [
+        "firewall library (CentOS)",
+        "https://nx904.your-storageshare.de/s/tnZaE4mojcokAWA/download",
+        "/tmp/libnfnetlink.rpm",
+        "/tmp/libnfnetlink.rpm"
+      ],
+      [
+        "firewall support library (CentOS)",
+        "https://nx904.your-storageshare.de/s/xp9F8bGQPCwrZ3k/download",
+        "/tmp/libnetfilter_conntrack.rpm",
+        "/tmp/libnetfilter_conntrack.rpm"
+      ]
+    ];
 
     // Check whether to download debian and/or centos packages
     const downloadDebianFirewallBinaries = nodeOperatingSystems.find(
@@ -201,6 +220,7 @@ require("../lib/asGenericAction")({
       binariesToInstall.map(node =>
         Promise.all(
           node
+            .filter(Boolean)
             .filter(([_, _2, shouldBeInstalled]) => shouldBeInstalled)
             .map(async ([name, destination, _, isDebianPackage]) => {
               await logger.log(destination.split(":")[0], `Installing ${name}`);
@@ -219,6 +239,7 @@ require("../lib/asGenericAction")({
       binariesToInstall.map(node =>
         Promise.all(
           node
+            .filter(Boolean)
             .filter(([_, _2, shouldBeInstalled]) => !shouldBeInstalled)
             .map(async ([name, destination]) => {
               await logger.log(
