@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 const Logger = require("../lib/lean/logger");
+const Pinger = require("../lib/lean/pinger");
 const SSHer = require("../lib/lean/ssher");
 const TmpFiler = require("../lib/lean/tmpfiler");
 const Downloader = require("../lib/lean/downloader");
@@ -25,6 +26,16 @@ require("../lib/asGenericAction")({
     const networkWorkerNodes = commander.args.filter((_, index) => index !== 0);
     await logger.log(localhost, "Creating node data model");
     const allNodes = [networkManagerNode, ...networkWorkerNodes];
+    await logger.divide();
+
+    // Wait for node connectivity
+    const pinger = new Pinger();
+    await Promise.all(
+      allNodes.map(async node => {
+        await logger.log(node, "Waiting for node connectivity");
+        return await pinger.waitForNode(`${node.split("@")[1]}:22`, 1000);
+      })
+    );
     await logger.divide();
 
     // Set up node access
@@ -414,6 +425,15 @@ require("../lib/asGenericAction")({
       networkManagerNodeInNetwork,
       ...networkWorkerNodesInNetwork
     ];
+    await logger.divide();
+
+    // Wait for node connectivity
+    await Promise.all(
+      allNodesInNetwork.map(async node => {
+        await logger.log(node, "Waiting for network node connectivity");
+        return await pinger.waitForNode(`${node.split("@")[1]}:22`, 1000);
+      })
+    );
     await logger.divide();
 
     // Set up network node access
