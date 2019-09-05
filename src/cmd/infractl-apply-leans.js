@@ -142,7 +142,7 @@ require("../lib/asGenericAction")({
       ],
       [
         "firewall support binary (CentOS)",
-        "https://nx904.your-next.cloud/s/ogfp5bN8fZr67Qw/download",
+        "https://nx904.your-storageshare.de/s/ogfp5bN8fZr67Qw/download",
         await tmpFiler.getPath("systemd-resolved.rpm"),
         "/tmp/systemd-resolved.rpm"
       ],
@@ -479,7 +479,7 @@ require("../lib/asGenericAction")({
         [
           [
             "cluster binary",
-            "https://nx904.your-next.cloud/s/gdXAndMz547n9z7/download",
+            "https://nx904.your-storageshare.de/s/gdXAndMz547n9z7/download",
             await tmpFiler.getPath("k3s"),
             "/usr/local/k3s"
           ]
@@ -489,14 +489,14 @@ require("../lib/asGenericAction")({
         "debian",
         [
           [
-            "storage binary (Debian)",
-            "https://nx904.your-next.cloud/s/Kg6ccPBzYSipEaS/download",
+            "storage binary",
+            "https://nx904.your-storageshare.de/s/Kg6ccPBzYSipEaS/download",
             await tmpFiler.getPath("open-iscsi.deb"),
             "/tmp/open-iscsi.deb"
           ],
           [
-            "storage library (Debian)",
-            "https://nx904.your-next.cloud/s/Krrqs8sBF4pDQZS/download",
+            "storage library",
+            "https://nx904.your-storageshare.de/s/Krrqs8sBF4pDQZS/download",
             await tmpFiler.getPath("libisns0.deb"),
             "/tmp/libisns0.deb"
           ]
@@ -506,26 +506,26 @@ require("../lib/asGenericAction")({
         "centos",
         [
           [
-            "storage binary (CentOS)",
-            "https://nx904.your-next.cloud/s/oFqwPAAPASSDLPo/download",
+            "storage binary",
+            "https://nx904.your-storageshare.de/s/oFqwPAAPASSDLPo/download",
             await tmpFiler.getPath("iscsi-initiator-utils.rpm"),
             "/tmp/iscsi-initiator-utils.rpm"
           ],
           [
-            "storage library (CentOS)",
-            "https://nx904.your-next.cloud/s/tPpxfo4saQMBFy2/download",
+            "storage library",
+            "https://nx904.your-storageshare.de/s/tPpxfo4saQMBFy2/download",
             await tmpFiler.getPath("iscsi-initiator-utils-iscsiuio.rpm"),
             "/tmp/iscsi-initiator-utils-iscsiuio.rpm"
           ],
           [
-            "storage support binary (CentOS)",
-            "https://nx904.your-next.cloud/s/TyQ74Hn8Z6eKmHn/download",
+            "storage support binary",
+            "https://nx904.your-storageshare.de/s/TyQ74Hn8Z6eKmHn/download",
             await tmpFiler.getPath("python.rpm"),
             "/tmp/python.rpm"
           ],
           [
-            "storage support library (CentOS)",
-            "https://nx904.your-next.cloud/s/T2NCxspMYkMxo2p/download",
+            "storage support library",
+            "https://nx904.your-storageshare.de/s/T2NCxspMYkMxo2p/download",
             await tmpFiler.getPath("python-libs.rpm"),
             "/tmp/python-libs.rpm"
           ]
@@ -557,7 +557,10 @@ require("../lib/asGenericAction")({
             remoteDestination,
             operatingSystem
           ]) => {
-            await logger.log(localhost, `Downloading ${name}`);
+            await logger.log(
+              localhost,
+              `Downloading ${name} (${operatingSystem})`
+            );
             const newSource = await downloader.download(
               source,
               localDestination
@@ -566,7 +569,34 @@ require("../lib/asGenericAction")({
           }
         )
     );
-    console.log(clusterBinariesToUpload);
     await logger.divide();
+
+    // Upload cluster binaries
+    const clusterBinariesToInstall = await Promise.all(
+      allNodesInNetworkForCluster
+        .map(([node, nodeOperatingSystem]) =>
+          clusterBinariesToUpload
+            .filter(
+              binary =>
+                nodeOperatingSystem === binary[3] || binary[3] === "universal"
+            )
+            .map(([name, source, destination, binaryOperatingSystem]) => [
+              name,
+              source,
+              `${node}:${destination}`,
+              binaryOperatingSystem
+            ])
+        )
+        .reduce((a, b) => a.concat(b), [])
+        .map(async ([name, source, destination, operatingSystem]) => {
+          await logger.log(
+            destination.split(":")[0],
+            `Uploading ${name} (${operatingSystem})`
+          );
+          const newSource = await uploader.upload(source, destination);
+          return [name, newSource, operatingSystem];
+        })
+    );
+    console.log(clusterBinariesToInstall);
   }
 });
