@@ -30,13 +30,13 @@ WantedBy=multi-user.target
   async enableService(destination, name) {
     const ssher = new SSHer(destination);
     await ssher.execCommand(`sudo systemctl enable ${name} --now`);
-    return true;
+    return `${destination}:${name}`;
   }
 
   async disableService(destination, name) {
     const ssher = new SSHer(destination);
     await ssher.execCommand(`sudo systemctl disable ${name} --now`);
-    return true;
+    return `${destination}:${name}`;
   }
 
   async getServiceStatus(destination, name) {
