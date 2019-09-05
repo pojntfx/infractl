@@ -472,8 +472,8 @@ require("../lib/asGenericAction")({
     );
     await logger.divide();
 
-    // Set all cluster binary download sources
-    const clusterBinaries = [
+    // Set all cluster file download sources
+    const clusterFiles = [
       [
         "universal",
         [
@@ -489,13 +489,13 @@ require("../lib/asGenericAction")({
         "debian",
         [
           [
-            "storage binary",
+            "storage binary package",
             "https://nx904.your-storageshare.de/s/Kg6ccPBzYSipEaS/download",
             await tmpFiler.getPath("open-iscsi.deb"),
             "/tmp/open-iscsi.deb"
           ],
           [
-            "storage library",
+            "storage library package",
             "https://nx904.your-storageshare.de/s/Krrqs8sBF4pDQZS/download",
             await tmpFiler.getPath("libisns0.deb"),
             "/tmp/libisns0.deb"
@@ -506,25 +506,25 @@ require("../lib/asGenericAction")({
         "centos",
         [
           [
-            "storage binary",
+            "storage binary package",
             "https://nx904.your-storageshare.de/s/oFqwPAAPASSDLPo/download",
             await tmpFiler.getPath("iscsi-initiator-utils.rpm"),
             "/tmp/iscsi-initiator-utils.rpm"
           ],
           [
-            "storage library",
+            "storage library package",
             "https://nx904.your-storageshare.de/s/tPpxfo4saQMBFy2/download",
             await tmpFiler.getPath("iscsi-initiator-utils-iscsiuio.rpm"),
             "/tmp/iscsi-initiator-utils-iscsiuio.rpm"
           ],
           [
-            "storage support binary",
+            "storage support binary package",
             "https://nx904.your-storageshare.de/s/TyQ74Hn8Z6eKmHn/download",
             await tmpFiler.getPath("python.rpm"),
             "/tmp/python.rpm"
           ],
           [
-            "storage support library",
+            "storage support library package",
             "https://nx904.your-storageshare.de/s/T2NCxspMYkMxo2p/download",
             await tmpFiler.getPath("python-libs.rpm"),
             "/tmp/python-libs.rpm"
@@ -533,8 +533,8 @@ require("../lib/asGenericAction")({
       ]
     ];
 
-    // Select the cluster binaries to download
-    const clusterBinariesToDownload = clusterBinaries
+    // Select the cluster files to download
+    const clusterFilesToDownload = clusterFiles
       .filter(
         target =>
           target[0] === "universal" ||
@@ -545,9 +545,9 @@ require("../lib/asGenericAction")({
       )
       .filter(Boolean);
 
-    // Download cluster binaries
-    const clusterBinariesToUpload = await Promise.all(
-      clusterBinariesToDownload
+    // Download cluster files
+    const clusterFilesToUpload = await Promise.all(
+      clusterFilesToDownload
         .reduce((a, b) => a.concat(b[1].map(binary => [...binary, b[0]])), [])
         .map(
           async ([
@@ -571,11 +571,11 @@ require("../lib/asGenericAction")({
     );
     await logger.divide();
 
-    // Upload cluster binaries
-    const clusterBinariesToInstall = await Promise.all(
+    // Upload cluster files
+    const clusterFilesToInstall = await Promise.all(
       allNodesInNetworkForCluster
         .map(([node, nodeOperatingSystem]) =>
-          clusterBinariesToUpload
+          clusterFilesToUpload
             .filter(
               binary =>
                 nodeOperatingSystem === binary[3] || binary[3] === "universal"
@@ -597,6 +597,29 @@ require("../lib/asGenericAction")({
           return [name, newSource, operatingSystem];
         })
     );
-    console.log(clusterBinariesToInstall);
+    await logger.divide();
+
+    // Install cluster files
+    await Promise.all(
+      clusterFilesToInstall.map(
+        async ([name, destination, operatingSystem]) => {
+          const node = destination.split(":")[0];
+          if (operatingSystem === "universal") {
+            await logger.log(
+              node,
+              `Setting permissions for ${name} (${operatingSystem})`
+            );
+            return permissioner.setPermissions(destination, "+x");
+          } else if (operatingSystem === "debian") {
+            await logger.log(node, `Installing ${name} (${operatingSystem})`);
+            return packager.installDebianPackage(destination);
+          } else {
+            await logger.log(node, `Installing ${name} (${operatingSystem})`);
+            return packager.installCentOSPackage(destination);
+          }
+        }
+      )
+    );
+    console.log(clusterFilesToInstall);
   }
 });
