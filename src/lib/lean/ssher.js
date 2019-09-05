@@ -55,21 +55,6 @@ module.exports = class {
     }
   }
 
-  async chmod(destination, permissions) {
-    if (this.isLocal) {
-      return await this.shell.chmod(permissions, destination.split(":")[1]);
-    } else {
-      await this.shell.connect({
-        host: this.hostname,
-        username: this.user,
-        agent: process.env.SSH_AUTH_SOCK
-      });
-      return await this.execCommand(
-        `chmod ${permissions} ${destination.split(":")[1]}`
-      );
-    }
-  }
-
   dispose() {
     if (!this.isLocal) {
       this.shell.dispose();
