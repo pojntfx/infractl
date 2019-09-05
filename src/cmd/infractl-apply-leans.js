@@ -13,6 +13,7 @@ const Kernelr = require("../lib/lean/kernelr");
 const Servicer = require("../lib/lean/servicer");
 const Cryptographer = require("../lib/lean/cryptographer");
 const IPer = require("../lib/lean/iper");
+const Modprober = require("../lib/lean/modprober");
 const Clusterer = require("../lib/lean/clusterer");
 
 require("../lib/asGenericAction")({
@@ -140,12 +141,6 @@ require("../lib/asGenericAction")({
         "https://nx904.your-storageshare.de/s/tnZaE4mojcokAWA/download",
         await tmpFiler.getPath("libnfnetlink.rpm"),
         "/tmp/libnfnetlink.rpm"
-      ],
-      [
-        "firewall support binary (CentOS)",
-        "https://nx904.your-storageshare.de/s/ogfp5bN8fZr67Qw/download",
-        await tmpFiler.getPath("systemd-resolved.rpm"),
-        "/tmp/systemd-resolved.rpm"
       ],
       [
         "firewall support library (CentOS)",
@@ -538,6 +533,12 @@ require("../lib/asGenericAction")({
             "https://nx904.your-storageshare.de/s/T2NCxspMYkMxo2p/download",
             await tmpFiler.getPath("python-libs.rpm"),
             "/tmp/python-libs.rpm"
+          ],
+          [
+            "cluster networking support binary package",
+            "https://nx904.your-storageshare.de/s/ogfp5bN8fZr67Qw/download",
+            await tmpFiler.getPath("systemd-resolved.rpm"),
+            "/tmp/systemd-resolved.rpm"
           ]
         ]
       ]
@@ -674,7 +675,7 @@ require("../lib/asGenericAction")({
       allNodesInNetworkForCluster.map(async ([node]) => {
         await logger.log(node, "Uploading cluster kernel config");
         return uploader.upload(
-          networkKernelConfig,
+          clusterKernelConfig,
           `${node}:/etc/cluster.conf`
         );
       })
@@ -685,6 +686,16 @@ require("../lib/asGenericAction")({
       allNodesInNetworkForCluster.map(async ([node]) => {
         await logger.log(node, "Applying cluster kernel config");
         return kernelr.applyConfig(`${node}:/etc/cluster.conf`);
+      })
+    );
+    await logger.divide();
+
+    // Load br_netfilter module
+    const modprober = new Modprober();
+    await Promise.all(
+      allNodesInNetworkForCluster.map(async ([node]) => {
+        await logger.log(node, "Loading br_netfilter kernel module");
+        return modprober.modprobe(node, "br_netfilter");
       })
     );
     await logger.divide();
@@ -714,6 +725,15 @@ require("../lib/asGenericAction")({
     // Reload services on cluster manager node
     await logger.log(clusterManagerNodeInNetwork[0], "Reloading services");
     await servicer.reloadServices(clusterManagerNodeInNetwork[0]);
+
+    // Enable systemd-resolved service on all cluster nodes
+    await Promise.all(
+      allNodesInNetworkForCluster.map(async ([node]) => {
+        await logger.log(node, "Enabling systemd-resolved.service service");
+        await servicer.enableService(node, "systemd-resolved.service");
+      })
+    );
+    await logger.divide();
 
     // Enable cluster manager service on cluster manager node
     await logger.log(
