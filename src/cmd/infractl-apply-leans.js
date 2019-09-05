@@ -436,10 +436,6 @@ require("../lib/asGenericAction")({
       networkManagerNodeInNetwork,
       ...networkWorkerNodesInNetwork
     ];
-    const allNodesInNetworkForCluster = allNodesInNetwork.filter(node => {
-      const ssher = new SSHer(node[2]);
-      return !ssher.isLocal;
-    });
     await logger.divide();
 
     // Wait for node connectivity
@@ -472,6 +468,16 @@ require("../lib/asGenericAction")({
     );
     await logger.divide();
 
+    // Create data model of cluster
+    await logger.log(localhost, "Creating cluster node data model");
+    const clusterManagerNodeInNetwork = networkManagerNodeInNetwork;
+    const allNodesInNetworkForCluster = allNodesInNetwork.filter(node => {
+      const ssher1 = new SSHer(node[0]);
+      const ssher2 = new SSHer(node[2]);
+      return !ssher1.isLocal && !ssher2.isLocal;
+    });
+    await logger.divide();
+
     // Set all cluster file download sources
     const clusterFiles = [
       [
@@ -489,13 +495,13 @@ require("../lib/asGenericAction")({
         "debian",
         [
           [
-            "storage binary package",
+            "cluster storage binary package",
             "https://nx904.your-storageshare.de/s/Kg6ccPBzYSipEaS/download",
             await tmpFiler.getPath("open-iscsi.deb"),
             "/tmp/open-iscsi.deb"
           ],
           [
-            "storage library package",
+            "cluster storage library package",
             "https://nx904.your-storageshare.de/s/Krrqs8sBF4pDQZS/download",
             await tmpFiler.getPath("libisns0.deb"),
             "/tmp/libisns0.deb"
@@ -506,25 +512,25 @@ require("../lib/asGenericAction")({
         "centos",
         [
           [
-            "storage binary package",
+            "cluster storage binary package",
             "https://nx904.your-storageshare.de/s/oFqwPAAPASSDLPo/download",
             await tmpFiler.getPath("iscsi-initiator-utils.rpm"),
             "/tmp/iscsi-initiator-utils.rpm"
           ],
           [
-            "storage library package",
+            "cluster storage library package",
             "https://nx904.your-storageshare.de/s/tPpxfo4saQMBFy2/download",
             await tmpFiler.getPath("iscsi-initiator-utils-iscsiuio.rpm"),
             "/tmp/iscsi-initiator-utils-iscsiuio.rpm"
           ],
           [
-            "storage support binary package",
+            "cluster storage support binary package",
             "https://nx904.your-storageshare.de/s/TyQ74Hn8Z6eKmHn/download",
             await tmpFiler.getPath("python.rpm"),
             "/tmp/python.rpm"
           ],
           [
-            "storage support library package",
+            "cluster storage support library package",
             "https://nx904.your-storageshare.de/s/T2NCxspMYkMxo2p/download",
             await tmpFiler.getPath("python-libs.rpm"),
             "/tmp/python-libs.rpm"
@@ -646,6 +652,29 @@ require("../lib/asGenericAction")({
         }
       )
     );
-    console.log(clusterFilesToInstall);
+    await logger.divide();
+
+    // Create cluster manager service
+    await logger.log(localhost, "Creating cluster manager service");
+    const clusterManagerServiceSource = await servicer.createService({
+      description: "Cluster daemon (manager only)",
+      execStart: `/usr/local/bin/k3s server --flannel-iface wgoverlay --tls-san ${
+        clusterManagerNodeInNetwork[2].split("@")[1]
+      } --disable-agent`,
+      destination: await tmpFiler.getPath("cluster-manager.service")
+    });
+    await logger.divide();
+
+    // Upload cluster manager service
+    await logger.log(
+      clusterManagerNodeInNetwork[0],
+      "Uploading cluster manager service"
+    );
+    await uploader.upload(
+      clusterManagerServiceSource,
+      `${
+        clusterManagerNodeInNetwork[0]
+      }:/etc/systemd/system/cluster-manager.service`
+    );
   }
 });

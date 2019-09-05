@@ -11,7 +11,7 @@ Description=${description}
 After=network.target
 
 [Service]
-ExecStart=${execStart}${environment && `\nEnvironment=${environment}`}
+ExecStart=${execStart}${environment ? `\nEnvironment=${environment}` : ""}
 
 [Install]
 WantedBy=multi-user.target
