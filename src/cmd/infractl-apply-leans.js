@@ -21,7 +21,7 @@ require("../lib/asGenericAction")({
     const logger = new Logger();
     const localhost = `${process.env.USER}@${process.env.HOSTNAME}`;
 
-    // Get nodes
+    // Get nodes (here one could "plug in" the (`hetznersshkeys`, `hetznernodes`) or (`ctpfsshkeys`, `ctpfnodes`) actions)
     const networkManagerNode = commander.args[0];
     const networkWorkerNodes = commander.args.filter((_, index) => index !== 0);
     await logger.log(localhost, "Creating node data model");
@@ -396,9 +396,13 @@ require("../lib/asGenericAction")({
       networkManagerNode,
       "wgoverlay"
     );
-    const networkManagerNodeInNetwork = `${networkManagerNode.split("@")[0]}@${
-      networkManagerNodeInNetworkInterface.ip
-    }`;
+    const networkManagerNodeInNetwork = [
+      `${networkManagerNode.split("@")[0]}@${
+        networkManagerNodeInNetworkInterface.ip
+      }`,
+      nodeOperatingSystems.find(([osNode]) => networkManagerNode === osNode)[1],
+      networkManagerNode
+    ];
 
     // Get network worker nodes in network
     const networkWorkerNodesInNetwork = [];
@@ -411,10 +415,11 @@ require("../lib/asGenericAction")({
           node,
           "wgoverlay"
         );
-        const networkWorkerNodeInNetwork = `${node.split("@")[0]}@${
-          networkWorkerNodeInNetworkInterface.ip
-        }`;
-        networkWorkerNodesInNetwork.push(networkWorkerNodeInNetwork);
+        networkWorkerNodesInNetwork.push([
+          `${node.split("@")[0]}@${networkWorkerNodeInNetworkInterface.ip}`,
+          nodeOperatingSystems.find(([osNode]) => node === osNode)[1],
+          node
+        ]);
         return true;
       })
     );
@@ -425,11 +430,15 @@ require("../lib/asGenericAction")({
       networkManagerNodeInNetwork,
       ...networkWorkerNodesInNetwork
     ];
+    const allNodesForCluster = allNodesInNetwork.filter(node => {
+      const ssher = new SSHer(node[2]);
+      return !ssher.isLocal;
+    });
     await logger.divide();
 
     // Wait for node connectivity
     await Promise.all(
-      allNodesInNetwork.map(async node => {
+      allNodesInNetwork.map(async ([node]) => {
         await logger.log(node, "Waiting for network node connectivity");
         return await pinger.waitForNode(`${node.split("@")[1]}:22`, 1000);
       })
@@ -438,7 +447,7 @@ require("../lib/asGenericAction")({
 
     // Set up network node access
     const networkNodeKeys = await Promise.all(
-      allNodesInNetwork.map(async node => {
+      allNodesInNetwork.map(async ([node]) => {
         await logger.log(node, "Setting up network node access");
         const isLocalSSHer = new SSHer(node);
         if (isLocalSSHer.isLocal) {
@@ -456,10 +465,9 @@ require("../lib/asGenericAction")({
       `${process.env.HOME}/.ssh/known_hosts`
     );
 
-    console.log(
-      networkManagerNodeInNetwork,
-      networkWorkerNodesInNetwork,
-      allNodesInNetwork
-    );
+    console.log(networkManagerNodeInNetwork);
+    console.log(networkWorkerNodesInNetwork);
+    console.log(allNodesInNetwork);
+    console.log(allNodesForCluster);
   }
 });
