@@ -571,6 +571,32 @@ require("../lib/asGenericAction")({
     );
     await logger.divide();
 
+    // Set cluster services to disable
+    const clusterServicesToDisable = [
+      "cluster-manager.service",
+      "cluster-worker.service"
+    ];
+
+    // Disable cluster services
+    const clusterServicesToEnable = await Promise.all(
+      clusterServicesToDisable
+        .map(service =>
+          allNodesInNetworkForCluster.map(([node]) => `${node}:${service}`)
+        )
+        .reduce((a, b) => a.concat(b), [])
+        .map(async destination => {
+          await logger.log(
+            destination.split(":")[0],
+            `Disabling ${destination.split(":")[1]} service`
+          );
+          return await servicer.disableService(
+            destination.split(":")[0],
+            destination.split(":")[1]
+          );
+        })
+    );
+    await logger.divide();
+
     // Upload cluster files
     const clusterFilesToInstall = await Promise.all(
       allNodesInNetworkForCluster
