@@ -25,12 +25,15 @@ module.exports = class {
     }
 
     const localInterfaces = Object.keys(os.networkInterfaces());
-    const localIps = localInterfaces.map(
-      name =>
-        os
-          .networkInterfaces()
-          [name].find(subInterface => subInterface.family === "IPv4")["address"]
-    );
+    const localIps = localInterfaces.map(name => {
+      const localNetworkInterfaces = os.networkInterfaces();
+      const localNetworkInterface = localNetworkInterfaces[name].find(
+        subInterface => subInterface.family === "IPv4"
+      );
+      return (
+        (localNetworkInterface && localNetworkInterface.address) || undefined
+      );
+    });
     if (localIps.includes(this.hostname)) {
       this.isLocal = true;
     }
