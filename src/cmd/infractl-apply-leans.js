@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 const Logger = require("../lib/lean/logger");
+const TmpFiler = require("../lib/lean/tmpfiler");
 const Downloader = require("../lib/lean/downloader");
 const OSer = require("../lib/lean/oser");
 const Uploader = require("../lib/lean/uploader");
@@ -39,17 +40,18 @@ require("../lib/asGenericAction")({
     await logger.divide();
 
     // Set binary download sources
+    const tmpFiler = new TmpFiler();
     const networkBinaries = [
       [
         "network core binary",
         "https://nx904.your-storageshare.de/s/9JSS9BsQEQTEW8E/download",
-        "/tmp/wireguard-go",
+        await tmpFiler.getPath("wireguard-go"),
         "/usr/local/bin/wireguard-go"
       ],
       [
         "network interface binary",
         "https://nx904.your-storageshare.de/s/NLk8NdCPf4GqkZ9/download",
-        "/tmp/wesher",
+        await tmpFiler.getPath("wesher"),
         "/usr/local/bin/wesher"
       ]
     ];
@@ -57,37 +59,37 @@ require("../lib/asGenericAction")({
       [
         "firewall binary (Debian)",
         "https://nx904.your-storageshare.de/s/oZWcXHQEXB8qYb6/download",
-        "/tmp/iptables.deb",
+        await tmpFiler.getPath("iptables.deb"),
         "/tmp/iptables.deb"
       ],
       [
         "new firewall library (Debian)",
         "https://nx904.your-storageshare.de/s/zCyzZH8QLwwxnwT/download",
-        "/tmp/libnetfilter.deb",
+        await tmpFiler.getPath("libnetfilter.deb"),
         "/tmp/libnetfilter.deb"
       ],
       [
         "legacy firewall library (Debian)",
         "https://nx904.your-storageshare.de/s/KKjjwJtGtYftkQ8/download",
-        "/tmp/libxtables.deb",
+        await tmpFiler.getPath("libxtables.deb"),
         "/tmp/libxtables.deb"
       ],
       [
         "firewall support library 1 (Debian)",
         "https://nx904.your-storageshare.de/s/WqGePH7oPAgPT5r/download",
-        "/tmp/libmnl.deb",
+        await tmpFiler.getPath("libmnl.deb"),
         "/tmp/libmnl.deb"
       ],
       [
         "firewall support library 2 (Debian)",
         "https://nx904.your-storageshare.de/s/59y8EabfWrnb2Hb/download",
-        "/tmp/libnfnetlink0.deb",
+        await tmpFiler.getPath("libnfnetlink0.deb"),
         "/tmp/libnfnetlink0.deb"
       ],
       [
         "firewall support library 3 (Debian)",
         "https://nx904.your-storageshare.de/s/Ew87MxWMRB3CcDG/download",
-        "/tmp/libnftnl11.deb",
+        await tmpFiler.getPath("libnftnl11.deb"),
         "/tmp/libnftnl11.deb"
       ]
     ];
@@ -95,19 +97,19 @@ require("../lib/asGenericAction")({
       [
         "firewall binary (CentOS)",
         "https://nx904.your-storageshare.de/s/jkidqgeCMbmijmY/download",
-        "/tmp/iptables.rpm",
+        await tmpFiler.getPath("iptables.rpm"),
         "/tmp/iptables.rpm"
       ],
       [
         "firewall library (CentOS)",
         "https://nx904.your-storageshare.de/s/tnZaE4mojcokAWA/download",
-        "/tmp/libnfnetlink.rpm",
+        await tmpFiler.getPath("libnfnetlink.rpm"),
         "/tmp/libnfnetlink.rpm"
       ],
       [
         "firewall support library (CentOS)",
         "https://nx904.your-storageshare.de/s/xp9F8bGQPCwrZ3k/download",
-        "/tmp/libnetfilter_conntrack.rpm",
+        await tmpFiler.getPath("libnetfilter_conntrack.rpm"),
         "/tmp/libnetfilter_conntrack.rpm"
       ]
     ];
@@ -258,7 +260,7 @@ require("../lib/asGenericAction")({
     await logger.log(localhost, "Creating network kernel config");
     const networkKernelConfig = await kernelr.createConfig(
       ["net.ipv4.ip_forward = 1", "net.ipv4.conf.all.proxy_arp = 1"],
-      "/tmp/sysctl.conf"
+      await tmpFiler.getPath("sysctl.conf")
     );
 
     // Upload network kernel config
@@ -289,7 +291,7 @@ require("../lib/asGenericAction")({
       description: "Overlay network daemon (manager and worker)",
       execStart: `/usr/local/bin/wesher --cluster-key ${networkToken}`,
       environment: "WG_I_PREFER_BUGGY_USERSPACE_TO_POLISHED_KMOD=1",
-      destination: "/tmp/network-manager.service"
+      destination: await tmpFiler.getPath("network-manager.service")
     });
 
     // Create network worker service
@@ -300,7 +302,7 @@ require("../lib/asGenericAction")({
         networkManagerNode.split("@")[1]
       }`,
       environment: "WG_I_PREFER_BUGGY_USERSPACE_TO_POLISHED_KMOD=1",
-      destination: "/tmp/network-worker.service"
+      destination: await tmpFiler.getPath("network-worker.service")
     });
     await logger.divide();
 
