@@ -13,6 +13,7 @@ const Kernelr = require("../lib/lean/kernelr");
 const Servicer = require("../lib/lean/servicer");
 const Cryptographer = require("../lib/lean/cryptographer");
 const IPer = require("../lib/lean/iper");
+const Clusterer = require("../lib/lean/clusterer");
 
 require("../lib/asGenericAction")({
   args: "<user@ip> [otherTargets...]",
@@ -663,7 +664,6 @@ require("../lib/asGenericAction")({
       } --disable-agent`,
       destination: await tmpFiler.getPath("cluster-manager.service")
     });
-    await logger.divide();
 
     // Upload cluster manager service
     await logger.log(
@@ -676,5 +676,34 @@ require("../lib/asGenericAction")({
         clusterManagerNodeInNetwork[0]
       }:/etc/systemd/system/cluster-manager.service`
     );
+
+    // Reload services on cluster manager node
+    await logger.log(clusterManagerNodeInNetwork[0], "Reloading services");
+    await servicer.reloadServices(clusterManagerNodeInNetwork[0]);
+
+    // Enable cluster manager service on cluster manager node
+    await logger.log(
+      clusterManagerNodeInNetwork[0],
+      "Enabling cluster-manager.service service"
+    );
+    await servicer.enableService(
+      clusterManagerNodeInNetwork[0],
+      "cluster-manager.service"
+    );
+    await logger.divide();
+
+    // Get cluster token
+    await logger.log(clusterManagerNodeInNetwork[0], "Getting cluster token");
+    const clusterer = new Clusterer();
+    await servicer.waitForService(
+      clusterManagerNodeInNetwork[0],
+      "cluster-manager.service",
+      1000
+    );
+    await clusterer.waitForClusterToken(clusterManagerNodeInNetwork[0], 1000);
+    const clusterToken = await clusterer.getClusterToken(
+      clusterManagerNodeInNetwork[0]
+    );
+    console.log(clusterToken);
   }
 });
