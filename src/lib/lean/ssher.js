@@ -26,7 +26,7 @@ module.exports = class {
   async execCommand(command) {
     return new Promise(async resolve => {
       if (this.isLocal) {
-        resolve(this.shell.exec(command));
+        resolve(this.shell.exec(command, { silent: true }));
       } else {
         await this.shell.connect({
           host: this.hostname,
@@ -42,7 +42,7 @@ module.exports = class {
 
   async putFile(source, destination) {
     if (this.isLocal) {
-      return this.shell.cp(source, destination);
+      return await this.shell.cp(source, destination);
     } else {
       await this.shell.connect({
         host: this.hostname,
@@ -52,6 +52,21 @@ module.exports = class {
       await this.shell.putFile(source, destination);
       this.dispose();
       return true;
+    }
+  }
+
+  async chmod(destination, permissions) {
+    if (this.isLocal) {
+      return await this.shell.chmod(permissions, destination.split(":")[1]);
+    } else {
+      await this.shell.connect({
+        host: this.hostname,
+        username: this.user,
+        agent: process.env.SSH_AUTH_SOCK
+      });
+      return await this.execCommand(
+        `chmod ${permissions} ${destination.split(":")[1]}`
+      );
     }
   }
 
