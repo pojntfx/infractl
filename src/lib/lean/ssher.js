@@ -65,9 +65,9 @@ module.exports = class {
         username: this.user,
         agent: process.env.SSH_AUTH_SOCK
       });
-      await this.shell.putFile(source, destination);
+      const res = await this.shell.putFile(source, destination);
       this.dispose();
-      return true;
+      return res;
     }
   }
 
@@ -75,10 +75,9 @@ module.exports = class {
     if (this.isLocal) {
       return await this.shell.chmod(permissions, destination.split(":")[1]);
     } else {
-      await this.execCommand(
+      return await this.execCommand(
         `chmod ${permissions} ${destination.split(":")[1]}`
       );
-      return true;
     }
   }
 

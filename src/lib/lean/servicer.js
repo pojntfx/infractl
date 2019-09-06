@@ -23,8 +23,7 @@ WantedBy=multi-user.target
 
   async reloadServices(destination) {
     const ssher = new SSHer(destination);
-    await ssher.execCommand("sudo systemctl daemon-reload");
-    return true;
+    return await ssher.execCommand("sudo systemctl daemon-reload");
   }
 
   async enableService(destination, name) {

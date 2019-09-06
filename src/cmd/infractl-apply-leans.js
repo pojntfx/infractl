@@ -472,7 +472,7 @@ require("../lib/asGenericAction")({
           const ssher = new SSHer(
             `${process.env.USER}@${process.env.HOSTNAME}`
           );
-          return ssher.getKey(node.split("@")[1]);
+          return await ssher.getKey(node.split("@")[1]);
         }
       })
     );
@@ -506,7 +506,7 @@ require("../lib/asGenericAction")({
             "cluster binary",
             "https://nx904.your-storageshare.de/s/gdXAndMz547n9z7/download",
             await tmpFiler.getPath("k3s"),
-            "/usr/local/k3s"
+            "/usr/local/bin/k3s"
           ]
         ]
       ],
@@ -703,13 +703,13 @@ require("../lib/asGenericAction")({
               node,
               `Setting permissions for ${name} (${operatingSystem})`
             );
-            return permissioner.setPermissions(destination, "+x");
+            return await permissioner.setPermissions(destination, "+x");
           } else if (operatingSystem === "debian") {
             await logger.log(node, `Installing ${name} (${operatingSystem})`);
-            return packager.installDebianPackage(destination);
+            return await packager.installDebianPackage(destination);
           } else {
             await logger.log(node, `Installing ${name} (${operatingSystem})`);
-            return packager.installCentOSPackage(destination);
+            return await packager.installCentOSPackage(destination);
           }
         }
       )
@@ -743,7 +743,7 @@ require("../lib/asGenericAction")({
     await Promise.all(
       allNodesInNetworkForCluster.map(async ([node]) => {
         await logger.log(node, "Uploading cluster kernel config");
-        return uploader.upload(
+        return await uploader.upload(
           clusterKernelConfig,
           `${node}:/etc/cluster.conf`
         );
@@ -755,7 +755,7 @@ require("../lib/asGenericAction")({
     await Promise.all(
       allNodesInNetworkForCluster.map(async ([node]) => {
         await logger.log(node, "Applying cluster kernel config");
-        return kernelr.applyConfig(`${node}:/etc/cluster.conf`);
+        return await kernelr.applyConfig(`${node}:/etc/cluster.conf`);
       })
     );
     await logger.divide();
@@ -765,7 +765,7 @@ require("../lib/asGenericAction")({
     await Promise.all(
       allNodesInNetworkForCluster.map(async ([node]) => {
         await logger.log(node, "Loading br_netfilter kernel module");
-        return modprober.modprobe(node, "br_netfilter");
+        return await modprober.modprobe(node, "br_netfilter");
       })
     );
     await logger.divide();
@@ -883,7 +883,7 @@ require("../lib/asGenericAction")({
     await clusterer.waitForClusterConfig(clusterManagerNodeInNetwork[0]);
     const clusterConfig = await clusterer.getClusterConfig(
       clusterManagerNodeInNetwork[0],
-      clusterManagerNodeInNetwork[2]
+      clusterManagerNodeInNetwork[2].split("@")[1]
     );
 
     // Log the data
