@@ -337,7 +337,7 @@ require("../lib/asGenericAction")({
     await logger.log(localhost, "Creating network manager service");
     const networkManagerServiceSource = await servicer.createService({
       description: "Overlay network daemon (manager and worker)",
-      execStart: `/usr/local/bin/wesher --cluster-key ${networkToken}`,
+      execStart: `/usr/bin/sh -c "/usr/local/bin/wireguard-go wgoverlay && /usr/local/bin/wesher --cluster-key ${networkToken}"`,
       environment: "WG_I_PREFER_BUGGY_USERSPACE_TO_POLISHED_KMOD=1",
       destination: await tmpFiler.getPath("network-manager.service")
     });
@@ -347,9 +347,9 @@ require("../lib/asGenericAction")({
     await logger.log(localhost, "Creating network worker service");
     const networkWorkerServiceSource = await servicer.createService({
       description: "Overlay network daemon (worker only)",
-      execStart: `/usr/local/bin/wesher --cluster-key ${networkToken} --join ${
+      execStart: `/usr/bin/sh -c "/usr/local/bin/wireguard-go wgoverlay && /usr/local/bin/wesher --cluster-key ${networkToken} --join ${
         networkManagerNode.split("@")[1]
-      }`,
+      }"`,
       environment: "WG_I_PREFER_BUGGY_USERSPACE_TO_POLISHED_KMOD=1",
       destination: await tmpFiler.getPath("network-worker.service")
     });
