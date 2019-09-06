@@ -70,8 +70,7 @@ require("../lib/asGenericAction")({
       allNodes.map(async node => {
         await logger.log(node, "Getting node's operating system");
         const nodeOperatingSystem = await oser.getOS(node);
-        nodeOperatingSystems.push([node, nodeOperatingSystem]);
-        return true;
+        return nodeOperatingSystems.push([node, nodeOperatingSystem]);
       })
     );
     await logger.divide();
@@ -172,7 +171,7 @@ require("../lib/asGenericAction")({
         async ([name, source, destination, finalDestination]) => {
           await logger.log(localhost, `Downloading ${name}`);
           const newSource = await downloader.download(source, destination);
-          return [name, newSource, finalDestination];
+          return await Promise.all([name, newSource, finalDestination]);
         }
       )
     );
@@ -235,12 +234,12 @@ require("../lib/asGenericAction")({
                 source,
                 `${node}:${destination}`
               );
-              return [
+              return Promise.all([
                 name,
                 newDestination,
                 true,
                 uploadDebianBinaries ? true : false
-              ];
+              ]);
             } else if (
               networkBinaries.find(([originalName]) => originalName === name)
             ) {
@@ -250,7 +249,7 @@ require("../lib/asGenericAction")({
                 `${node}:${destination}`
               );
               // These need not be installed as packages
-              return [name, newDestination, false, undefined];
+              return Promise.all([name, newDestination, false, undefined]);
             }
           })
         );
@@ -434,12 +433,11 @@ require("../lib/asGenericAction")({
           node,
           "wgoverlay"
         );
-        networkWorkerNodesInNetwork.push([
+        return networkWorkerNodesInNetwork.push([
           `${node.split("@")[0]}@${networkWorkerNodeInNetworkInterface.ip}`,
           nodeOperatingSystems.find(([osNode]) => node === osNode)[1],
           node
         ]);
-        return true;
       })
     );
     await logger.divide();
@@ -632,7 +630,12 @@ require("../lib/asGenericAction")({
               source,
               localDestination
             );
-            return [name, newSource, remoteDestination, operatingSystem];
+            return Promise.all([
+              name,
+              newSource,
+              remoteDestination,
+              operatingSystem
+            ]);
           }
         )
     );
@@ -688,31 +691,64 @@ require("../lib/asGenericAction")({
             `Uploading ${name} (${operatingSystem})`
           );
           const newSource = await uploader.upload(source, destination);
-          return [name, newSource, operatingSystem];
+          return await Promise.all([name, newSource, operatingSystem]);
         })
     );
     await logger.divide();
 
+    // Re-order the cluster files by nodes
+    const clusterFilesToInstallByNodes = clusterFilesToInstall
+      .reduce(
+        (allFiles, file) =>
+          allFiles.find(node =>
+            node[0] !== ""
+              ? node[0].split(":")[0] === file[1].split(":")[0]
+              : false
+          )
+            ? allFiles.map(localNode =>
+                localNode[0].split(":")[0] === file[1].split(":")[0]
+                  ? [localNode[0], [...localNode[1], file]]
+                  : localNode
+              )
+            : [...allFiles, [file[1].split(":")[0], [file]]],
+        [["", [""]]]
+      )
+      .filter(node => node[0] !== "");
+
     // Install cluster files
     await Promise.all(
-      clusterFilesToInstall.map(
-        async ([name, destination, operatingSystem]) => {
-          const node = destination.split(":")[0];
-          if (operatingSystem === "universal") {
-            await logger.log(
-              node,
-              `Setting permissions for ${name} (${operatingSystem})`
-            );
-            return await permissioner.setPermissions(destination, "+x");
-          } else if (operatingSystem === "debian") {
-            await logger.log(node, `Installing ${name} (${operatingSystem})`);
-            return await packager.installDebianPackage(destination);
-          } else {
-            await logger.log(node, `Installing ${name} (${operatingSystem})`);
-            return await packager.installCentOSPackage(destination);
+      clusterFilesToInstallByNodes.map(async ([node, files]) => {
+        const universalFiles = files.filter(file => file[2] === "universal");
+        const debianFiles = files.filter(file => file[2] === "debian");
+        const centOSFiles = files.filter(file => file[2] === "centos");
+
+        if (universalFiles.length > 0) {
+          await Promise.all(
+            universalFiles.map(async ([name, destination, operatingSystem]) => {
+              await logger.log(
+                node,
+                `Setting permissions for ${name} (${operatingSystem})`
+              );
+              return await permissioner.setPermissions(destination, "+x");
+            })
+          );
+        }
+        // The following ones can't be installed in parallel; `dpkg` and `rpm` use lock files
+        if (debianFiles.length > 0) {
+          for (file of debianFiles) {
+            await logger.log(node, `Installing ${file[0]} (${file[2]})`);
+            await packager.installDebianPackage(file[1]);
           }
         }
-      )
+        if (centOSFiles.length > 0) {
+          for (file of centOSFiles) {
+            await logger.log(node, `Installing ${file[0]} (${file[2]})`);
+            await packager.installCentOSPackage(file[1]);
+          }
+        }
+
+        return true;
+      })
     );
     await logger.divide();
 
