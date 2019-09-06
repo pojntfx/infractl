@@ -8,6 +8,7 @@ const Downloader = require("../lib/lean/downloader");
 const OSer = require("../lib/lean/oser");
 const Uploader = require("../lib/lean/uploader");
 const Packager = require("../lib/lean/packager");
+const SELinuxer = require("../lib/lean/selinuxer");
 const Permissioner = require("../lib/lean/permissioner");
 const Kernelr = require("../lib/lean/kernelr");
 const Servicer = require("../lib/lean/servicer");
@@ -504,6 +505,24 @@ require("../lib/asGenericAction")({
             "https://nx904.your-storageshare.de/s/Krrqs8sBF4pDQZS/download",
             await tmpFiler.getPath("libisns0.deb"),
             "/tmp/libisns0.deb"
+          ],
+          [
+            "cluster permissions support binary package 1",
+            "https://nx904.your-storageshare.de/s/aERy6BMdra4tP2G/download",
+            await tmpFiler.getPath("selinux-utils.deb"),
+            "/tmp/selinux-utils.deb"
+          ],
+          [
+            "cluster permissions support library",
+            "https://nx904.your-storageshare.de/s/9GaS9Yq3TYNfnN8/download",
+            await tmpFiler.getPath("policycoreutils.deb"),
+            "/tmp/policycoreutils.deb"
+          ],
+          [
+            "cluster permissions support binary package 2",
+            "https://nx904.your-storageshare.de/s/saGYDs4es29JHWo/download",
+            await tmpFiler.getPath("policycoreutils-python-utils.deb"),
+            "/tmp/policycoreutils-python-utils.deb"
           ]
         ]
       ],
@@ -539,6 +558,24 @@ require("../lib/asGenericAction")({
             "https://nx904.your-storageshare.de/s/ogfp5bN8fZr67Qw/download",
             await tmpFiler.getPath("systemd-resolved.rpm"),
             "/tmp/systemd-resolved.rpm"
+          ],
+          [
+            "cluster permissions support binary package 1",
+            "https://nx904.your-storageshare.de/s/YcHkNXssFMT9nRX/download",
+            await tmpFiler.getPath("libselinux-utils.rpm"),
+            "/tmp/libselinux-utils.rpm"
+          ],
+          [
+            "cluster permissions support library",
+            "https://nx904.your-storageshare.de/s/XFMA9gdxPtGyry8/download",
+            await tmpFiler.getPath("policycoreutils.rpm"),
+            "/tmp/policycoreutils.rpm"
+          ],
+          [
+            "cluster permissions support binary package 2",
+            "https://nx904.your-storageshare.de/s/DXY454aSrzSi8JB/download",
+            await tmpFiler.getPath("policycoreutils-python.rpm"),
+            "/tmp/policycoreutils-python.rpm"
           ]
         ]
       ]
@@ -657,6 +694,18 @@ require("../lib/asGenericAction")({
           }
         }
       )
+    );
+    await logger.divide();
+
+    // Set SELinux context
+    const selinuxer = new SELinuxer();
+    await Promise.all(
+      allNodesInNetworkForCluster.map(async ([node]) => {
+        await logger.log(node, "Setting SELinux context");
+        await selinuxer.setenforce(node, "Permissive");
+        await selinuxer.semanage(`${node}:/usr/local/bin/k3s`);
+        return await selinuxer.restorecon(`${node}:/usr/local/bin/k3s`);
+      })
     );
     await logger.divide();
 
