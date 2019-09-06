@@ -38,18 +38,20 @@ module.exports = class {
       const rawInterface = await ssher.execCommand(`ip addr show ${name}`);
       return {
         name,
-        ip: rawInterface
-          .split("inet")[1]
-          .split("/")[0]
-          .replace(" ", "")
+        ip:
+          rawInterface.split("inet")[1] &&
+          rawInterface
+            .split("inet")[1]
+            .split("/")[0]
+            .replace(" ", "")
       };
     }
   }
 
   async waitForInterface(destination, name, interval) {
-    const allInterfaces = await this.getAllInterfaces(destination);
+    const interfaceToWaitFor = await this.getInterface(destination, name);
     return new Promise(resolve => {
-      if (allInterfaces.includes(name)) {
+      if (interfaceToWaitFor.ip) {
         resolve(true);
       } else {
         setTimeout(
