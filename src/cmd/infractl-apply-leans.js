@@ -182,22 +182,27 @@ require("../lib/asGenericAction")({
     const servicer = new Servicer();
     await Promise.all(
       allNodes.map(async node => {
-        await logger.log(node, "Disabling firewall service");
+        await logger.log(node, "Disabling firewalld.service service");
         return servicer.disableService(node, "firewalld.service");
       })
     );
+    await logger.divide();
 
     // Disable network manager service
-    await logger.log(networkManagerNode, "Disabling network manager service");
+    await logger.log(
+      networkManagerNode,
+      "Disabling network-manager.service service"
+    );
     await servicer.disableService(
       networkManagerNode,
       "network-manager.service"
     );
+    await logger.divide();
 
     // Disable network worker service
     await Promise.all(
       networkWorkerNodes.map(async node => {
-        await logger.log(node, "Disabling network worker service");
+        await logger.log(node, "Disabling network-worker.service service");
         return servicer.disableService(node, "network-worker.service");
       })
     );
@@ -299,6 +304,7 @@ require("../lib/asGenericAction")({
       ["net.ipv4.ip_forward = 1", "net.ipv4.conf.all.proxy_arp = 1"],
       await tmpFiler.getPath("network.conf")
     );
+    await logger.divide();
 
     // Upload network kernel config
     await Promise.all(
@@ -310,6 +316,7 @@ require("../lib/asGenericAction")({
         );
       })
     );
+    await logger.divide();
 
     // Apply network kernel config
     await Promise.all(
@@ -324,6 +331,7 @@ require("../lib/asGenericAction")({
     const cryptographer = new Cryptographer();
     await logger.log(localhost, "Creating network token");
     const networkToken = await cryptographer.getRandomString(32);
+    await logger.divide();
 
     // Create network manager service
     await logger.log(localhost, "Creating network manager service");
@@ -333,6 +341,7 @@ require("../lib/asGenericAction")({
       environment: "WG_I_PREFER_BUGGY_USERSPACE_TO_POLISHED_KMOD=1",
       destination: await tmpFiler.getPath("network-manager.service")
     });
+    await logger.divide();
 
     // Create network worker service
     await logger.log(localhost, "Creating network worker service");
@@ -352,6 +361,7 @@ require("../lib/asGenericAction")({
       networkManagerServiceSource,
       `${networkManagerNode}:/etc/systemd/system/network-manager.service`
     );
+    await logger.divide();
 
     // Upload network worker service
     await Promise.all(
@@ -372,10 +382,12 @@ require("../lib/asGenericAction")({
         return servicer.reloadServices(node);
       })
     );
+    await logger.divide();
 
     // Enable network manager service
     await logger.log(networkManagerNode, "Enabling network manager service");
     await servicer.enableService(networkManagerNode, "network-manager.service");
+    await logger.divide();
 
     // Enable network worker service
     await Promise.all(
@@ -409,6 +421,7 @@ require("../lib/asGenericAction")({
       nodeOperatingSystems.find(([osNode]) => networkManagerNode === osNode)[1],
       networkManagerNode
     ];
+    await logger.divide();
 
     // Get network worker nodes in network
     const networkWorkerNodesInNetwork = [];
@@ -429,6 +442,7 @@ require("../lib/asGenericAction")({
         return true;
       })
     );
+    await logger.divide();
 
     // Create data model of network
     await logger.log(localhost, "Creating network node data model");
@@ -632,7 +646,7 @@ require("../lib/asGenericAction")({
     ];
 
     // Disable cluster services
-    const clusterServicesToEnable = await Promise.all(
+    await Promise.all(
       clusterServicesToDisable
         .map(service =>
           allNodesInNetworkForCluster.map(([node]) => `${node}:${service}`)
@@ -723,6 +737,7 @@ require("../lib/asGenericAction")({
       ],
       await tmpFiler.getPath("cluster.conf")
     );
+    await logger.divide();
 
     // Upload cluster kernel config
     await Promise.all(
@@ -734,6 +749,7 @@ require("../lib/asGenericAction")({
         );
       })
     );
+    await logger.divide();
 
     // Apply cluster kernel config
     await Promise.all(
@@ -763,6 +779,7 @@ require("../lib/asGenericAction")({
       } --disable-agent`,
       destination: await tmpFiler.getPath("cluster-manager.service")
     });
+    await logger.divide();
 
     // Upload cluster manager service
     await logger.log(
@@ -775,16 +792,22 @@ require("../lib/asGenericAction")({
         clusterManagerNodeInNetwork[0]
       }:/etc/systemd/system/cluster-manager.service`
     );
+    await logger.divide();
 
-    // Reload services on cluster manager node
-    await logger.log(clusterManagerNodeInNetwork[0], "Reloading services");
-    await servicer.reloadServices(clusterManagerNodeInNetwork[0]);
+    // Reload services on all cluster nodes
+    await Promise.all(
+      allNodesInNetworkForCluster.map(async ([node]) => {
+        await logger.log(node, "Reloading services");
+        return await servicer.reloadServices(node);
+      })
+    );
+    await logger.divide();
 
     // Enable systemd-resolved service on all cluster nodes
     await Promise.all(
       allNodesInNetworkForCluster.map(async ([node]) => {
         await logger.log(node, "Enabling systemd-resolved.service service");
-        await servicer.enableService(node, "systemd-resolved.service");
+        return await servicer.enableService(node, "systemd-resolved.service");
       })
     );
     await logger.divide();
@@ -812,6 +835,46 @@ require("../lib/asGenericAction")({
     const clusterToken = await clusterer.getClusterToken(
       clusterManagerNodeInNetwork[0]
     );
-    console.log(clusterToken);
+    await logger.divide();
+
+    // Create cluster worker service
+    await logger.log(localhost, "Creating cluster worker service");
+    const clusterWorkerServiceSource = await servicer.createService({
+      description: "Cluster daemon (worker only)",
+      execStart: `/usr/local/bin/k3s agent --flannel-iface wgoverlay --token ${clusterToken} --server https://${
+        clusterManagerNodeInNetwork[0].split("@")[1]
+      }:6443`,
+      destination: await tmpFiler.getPath("cluster-worker.service")
+    });
+    await logger.divide();
+
+    // Upload cluster worker service
+    await Promise.all(
+      clusterWorkerNodesInNetwork.map(async ([node]) => {
+        await logger.log(node, "Uploading cluster worker service");
+        return await uploader.upload(
+          clusterWorkerServiceSource,
+          `${node}:/etc/systemd/system/cluster-worker.service`
+        );
+      })
+    );
+    await logger.divide();
+
+    // Reload services on cluster worker nodes
+    await Promise.all(
+      clusterWorkerNodesInNetwork.map(async ([node]) => {
+        await logger.log(node, "Reloading services");
+        return await servicer.reloadServices(node);
+      })
+    );
+    await logger.divide();
+
+    // Enable cluster worker service on cluster worker nodes
+    await Promise.all(
+      clusterWorkerNodesInNetwork.map(async ([node]) => {
+        await logger.log(node, "Enabling cluster-worker.service service");
+        return await servicer.enableService(node, "cluster-worker.service");
+      })
+    );
   }
 });
