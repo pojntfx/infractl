@@ -476,6 +476,11 @@ require("../lib/asGenericAction")({
       const ssher2 = new SSHer(node[2]);
       return !ssher1.isLocal && !ssher2.isLocal;
     });
+    const clusterWorkerNodesInNetwork = allNodesInNetworkForCluster.filter(
+      node =>
+        networkManagerNodeInNetwork[0] !== node[0] &&
+        networkManagerNodeInNetwork[2] !== node[2]
+    );
     await logger.divide();
 
     // Set all cluster file download sources
