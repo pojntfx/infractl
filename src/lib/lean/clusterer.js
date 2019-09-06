@@ -24,4 +24,29 @@ module.exports = class {
       }
     });
   }
+
+  async getClusterConfig(destination, ip) {
+    const cater = new Cater();
+    const rawClusterConfig = await cater.getFileContent(
+      `${destination}:/etc/rancher/k3s/k3s.yaml`
+    );
+    return rawClusterConfig.replace(/localhost/g, ip);
+  }
+
+  async waitForClusterConfig(destination, interval) {
+    const clusterConfig = await this.getClusterConfig(destination);
+    return new Promise(resolve => {
+      if (clusterConfig) {
+        resolve(true);
+      } else {
+        setTimeout(
+          () =>
+            this.waitForClusterConfig(destination, interval).then(() =>
+              resolve(true)
+            ),
+          interval
+        );
+      }
+    });
+  }
 };

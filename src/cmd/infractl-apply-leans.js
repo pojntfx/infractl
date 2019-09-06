@@ -878,13 +878,22 @@ require("../lib/asGenericAction")({
     );
     await logger.divide();
 
+    // Get cluster config from cluster manager node
+    await logger.log(clusterManagerNodeInNetwork[0], "Getting cluster config");
+    await clusterer.waitForClusterConfig(clusterManagerNodeInNetwork[0]);
+    const clusterConfig = await clusterer.getClusterConfig(
+      clusterManagerNodeInNetwork[0],
+      clusterManagerNodeInNetwork[2]
+    );
+
+    // Log the data
     await logger.logData(
       "NETWORK_MANAGER_NODE_PUBLIC",
-      networkManagerNodeInNetwork[0]
+      networkManagerNodeInNetwork[2]
     );
     await logger.logData(
       "NETWORK_MANAGER_NODE_PRIVATE",
-      networkManagerNodeInNetwork[2]
+      networkManagerNodeInNetwork[0]
     );
     await logger.logData("NETWORK_TOKEN", networkToken);
     await logger.logData(
@@ -896,5 +905,6 @@ require("../lib/asGenericAction")({
       clusterManagerNodeInNetwork[0]
     );
     await logger.logData("CLUSTER_TOKEN", clusterToken);
+    await logger.logData("CLUSTER_CONFIG", clusterConfig);
   }
 });
