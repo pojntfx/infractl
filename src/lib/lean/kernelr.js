@@ -12,7 +12,8 @@ module.exports = class {
 
   async applyConfig(destination) {
     const ssher = new SSHer(destination.split(":")[0]);
-    await ssher.execCommand(`sudo sysctl -p ${destination.split(":")[1]}`);
-    return true;
+    return await ssher.execCommand(
+      `sudo sysctl -p ${destination.split(":")[1]}`
+    );
   }
 };
