@@ -514,31 +514,31 @@ require("../lib/asGenericAction")({
         "debian",
         [
           [
-            "cluster storage binary package",
+            "cluster storage package 1",
             "https://nx904.your-storageshare.de/s/Kg6ccPBzYSipEaS/download",
             await tmpFiler.getPath("open-iscsi.deb"),
             "/tmp/open-iscsi.deb"
           ],
           [
-            "cluster storage library package",
+            "cluster storage package 2",
             "https://nx904.your-storageshare.de/s/Krrqs8sBF4pDQZS/download",
             await tmpFiler.getPath("libisns0.deb"),
             "/tmp/libisns0.deb"
           ],
           [
-            "cluster permissions support binary package 1",
+            "cluster permissions package 1",
             "https://nx904.your-storageshare.de/s/aERy6BMdra4tP2G/download",
             await tmpFiler.getPath("selinux-utils.deb"),
             "/tmp/selinux-utils.deb"
           ],
           [
-            "cluster permissions support library",
+            "cluster permissions package 2",
             "https://nx904.your-storageshare.de/s/9GaS9Yq3TYNfnN8/download",
             await tmpFiler.getPath("policycoreutils.deb"),
             "/tmp/policycoreutils.deb"
           ],
           [
-            "cluster permissions support binary package 2",
+            "cluster permissions package 3",
             "https://nx904.your-storageshare.de/s/saGYDs4es29JHWo/download",
             await tmpFiler.getPath("policycoreutils-python-utils.deb"),
             "/tmp/policycoreutils-python-utils.deb"
@@ -549,49 +549,49 @@ require("../lib/asGenericAction")({
         "centos",
         [
           [
-            "cluster storage binary package",
+            "cluster storage package 1",
             "https://nx904.your-storageshare.de/s/oFqwPAAPASSDLPo/download",
             await tmpFiler.getPath("iscsi-initiator-utils.rpm"),
             "/tmp/iscsi-initiator-utils.rpm"
           ],
           [
-            "cluster storage library package",
+            "cluster storage package 2",
             "https://nx904.your-storageshare.de/s/tPpxfo4saQMBFy2/download",
             await tmpFiler.getPath("iscsi-initiator-utils-iscsiuio.rpm"),
             "/tmp/iscsi-initiator-utils-iscsiuio.rpm"
           ],
           [
-            "cluster storage support binary package",
+            "cluster storage package 3",
             "https://nx904.your-storageshare.de/s/TyQ74Hn8Z6eKmHn/download",
             await tmpFiler.getPath("python.rpm"),
             "/tmp/python.rpm"
           ],
           [
-            "cluster storage support library package",
+            "cluster storage package 4",
             "https://nx904.your-storageshare.de/s/T2NCxspMYkMxo2p/download",
             await tmpFiler.getPath("python-libs.rpm"),
             "/tmp/python-libs.rpm"
           ],
           [
-            "cluster networking support binary package",
+            "cluster networking package",
             "https://nx904.your-storageshare.de/s/ogfp5bN8fZr67Qw/download",
             await tmpFiler.getPath("systemd-resolved.rpm"),
             "/tmp/systemd-resolved.rpm"
           ],
           [
-            "cluster permissions support binary package 1",
+            "cluster permissions package 1",
             "https://nx904.your-storageshare.de/s/YcHkNXssFMT9nRX/download",
             await tmpFiler.getPath("libselinux-utils.rpm"),
             "/tmp/libselinux-utils.rpm"
           ],
           [
-            "cluster permissions support library",
+            "cluster permissions package 2",
             "https://nx904.your-storageshare.de/s/XFMA9gdxPtGyry8/download",
             await tmpFiler.getPath("policycoreutils.rpm"),
             "/tmp/policycoreutils.rpm"
           ],
           [
-            "cluster permissions support binary package 2",
+            "cluster permissions package 3",
             "https://nx904.your-storageshare.de/s/DXY454aSrzSi8JB/download",
             await tmpFiler.getPath("policycoreutils-python.rpm"),
             "/tmp/policycoreutils-python.rpm"
@@ -876,5 +876,25 @@ require("../lib/asGenericAction")({
         return await servicer.enableService(node, "cluster-worker.service");
       })
     );
+    await logger.divide();
+
+    await logger.logData(
+      "NETWORK_MANAGER_NODE_PUBLIC",
+      networkManagerNodeInNetwork[0]
+    );
+    await logger.logData(
+      "NETWORK_MANAGER_NODE_PRIVATE",
+      networkManagerNodeInNetwork[2]
+    );
+    await logger.logData("NETWORK_TOKEN", networkToken);
+    await logger.logData(
+      "CLUSTER_MANAGER_NODE_PUBLIC",
+      clusterManagerNodeInNetwork[2]
+    );
+    await logger.logData(
+      "CLUSTER_MANAGER_NODE_PRIVATE",
+      clusterManagerNodeInNetwork[0]
+    );
+    await logger.logData("CLUSTER_TOKEN", clusterToken);
   }
 });
