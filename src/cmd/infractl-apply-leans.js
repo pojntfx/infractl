@@ -735,6 +735,9 @@ require("../lib/asGenericAction")({
       clusterManagerNodeInNetwork[0],
       "Uploading cluster storage manifest"
     );
+    await uploader.createDirectory(
+      `${clusterManagerNodeInNetwork[0]}:/var/lib/rancher/k3s/server/manifests`
+    );
     await uploader.upload(
       `${__dirname}/../lib/lean/storageFile.yaml`,
       `${

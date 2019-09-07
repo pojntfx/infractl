@@ -71,6 +71,14 @@ module.exports = class {
     }
   }
 
+  async mkdir(destination) {
+    if (this.isLocal) {
+      return await this.shell.mkdir("-p", destination.split(":")[1]);
+    } else {
+      return await this.execCommand(`mkdir -p ${destination.split(":")[1]}`);
+    }
+  }
+
   async chmod(destination, permissions) {
     if (this.isLocal) {
       return await this.shell.chmod(permissions, destination.split(":")[1]);
