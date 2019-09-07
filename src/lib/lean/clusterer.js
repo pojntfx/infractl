@@ -30,7 +30,7 @@ module.exports = class {
     const rawClusterConfig = await cater.getFileContent(
       `${destination}:/etc/rancher/k3s/k3s.yaml`
     );
-    return rawClusterConfig.replace(/localhost/g, ip);
+    return rawClusterConfig.replace(/127\.0\.0\.1/g, ip);
   }
 
   async waitForClusterConfig(destination, interval) {
