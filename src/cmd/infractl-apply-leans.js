@@ -24,17 +24,23 @@ require("../lib/asGenericAction")({
     const logger = new Logger();
     const localhost = `${process.env.USER}@${process.env.HOSTNAME}`;
 
-    // Get nodes (here one could "plug in" the (`hetznersshkeys`, `hetznernodes`) or (`ctpfsshkeys`, `ctpfnodes`) actions)
-    const networkManagerNode = commander.args[0];
-    const networkWorkerNodes = commander.args.filter((_, index) => index !== 0);
-    await logger.log(localhost, "Creating node data model");
-    const allNodes = [networkManagerNode, ...networkWorkerNodes];
+    // Create initial data model
+    // Here one could "plug in" the (`hetznersshkeys`, `hetznernodes`) or (`ctpfsshkeys`, `ctpfnodes`) actions)
+    await logger.log(localhost, "Creating initial node data model");
+    const networkManagerNodeSimple = commander.args[0];
+    const networkWorkerNodesSimple = commander.args.filter(
+      (_, index) => index !== 0
+    );
+    const allNodesSimple = [
+      networkManagerNodeSimple,
+      ...networkWorkerNodesSimple
+    ];
     await logger.divide();
 
     // Wait for node connectivity
     const pinger = new Pinger();
     await Promise.all(
-      allNodes.map(async node => {
+      allNodesSimple.map(async node => {
         await logger.log(node, "Waiting for node connectivity");
         return await pinger.waitForNode(`${node.split("@")[1]}:22`, 1000);
       })
@@ -43,7 +49,7 @@ require("../lib/asGenericAction")({
 
     // Set up node access
     const nodeKeys = await Promise.all(
-      allNodes.map(async node => {
+      allNodesSimple.map(async node => {
         await logger.log(node, "Setting up node access");
         const isLocalSSHer = new SSHer(node);
         if (isLocalSSHer.isLocal) {
@@ -67,7 +73,7 @@ require("../lib/asGenericAction")({
     const oser = new OSer();
     const nodeOperatingSystems = [];
     await Promise.all(
-      allNodes.map(async node => {
+      allNodesSimple.map(async node => {
         await logger.log(node, "Getting node's operating system");
         const nodeOperatingSystem = await oser.getOS(node);
         return nodeOperatingSystems.push([node, nodeOperatingSystem]);
@@ -75,224 +81,264 @@ require("../lib/asGenericAction")({
     );
     await logger.divide();
 
-    // Set binary download sources
+    // Create advanced node data model
+    await logger.log(localhost, "Creating advanced node data model");
+    const networkManagerNode = [
+      networkManagerNodeSimple,
+      nodeOperatingSystems.find(
+        ([operatingSystemNode]) =>
+          operatingSystemNode === networkManagerNodeSimple
+      )[1]
+    ];
+    const networkWorkerNodes = networkWorkerNodesSimple.map(node => [
+      node,
+      nodeOperatingSystems.find(
+        ([operatingSystemNode]) => operatingSystemNode === node
+      )[1]
+    ]);
+    const allNodes = [networkManagerNode, ...networkWorkerNodes];
+    await logger.divide();
+
+    // Set all network file download sources
     const tmpFiler = new TmpFiler();
-    const networkBinaries = [
+    const networkFiles = [
       [
-        "network core binary",
-        "https://nx904.your-storageshare.de/s/9JSS9BsQEQTEW8E/download",
-        await tmpFiler.getPath("wireguard-go"),
-        "/usr/local/bin/wireguard-go"
+        "universal",
+        [
+          [
+            "network binary 1",
+            "https://nx904.your-storageshare.de/s/9JSS9BsQEQTEW8E/download",
+            await tmpFiler.getPath("wireguard-go"),
+            "/usr/local/bin/wireguard-go"
+          ],
+          [
+            "network binary 2",
+            "https://nx904.your-storageshare.de/s/NLk8NdCPf4GqkZ9/download",
+            await tmpFiler.getPath("wesher"),
+            "/usr/local/bin/wesher"
+          ]
+        ]
       ],
       [
-        "network interface binary",
-        "https://nx904.your-storageshare.de/s/NLk8NdCPf4GqkZ9/download",
-        await tmpFiler.getPath("wesher"),
-        "/usr/local/bin/wesher"
-      ]
-    ];
-    const debianFirewallBinaries = [
-      [
-        "firewall binary (Debian)",
-        "https://nx904.your-storageshare.de/s/oZWcXHQEXB8qYb6/download",
-        await tmpFiler.getPath("iptables.deb"),
-        "/tmp/iptables.deb"
+        "debian",
+        [
+          [
+            "network firewall package 1",
+            "https://nx904.your-storageshare.de/s/oZWcXHQEXB8qYb6/download",
+            await tmpFiler.getPath("iptables.deb"),
+            "/tmp/iptables.deb"
+          ],
+          [
+            "network firewall package 2",
+            "https://nx904.your-storageshare.de/s/zCyzZH8QLwwxnwT/download",
+            await tmpFiler.getPath("libnetfilter.deb"),
+            "/tmp/libnetfilter.deb"
+          ],
+          [
+            "network firewall package 3",
+            "https://nx904.your-storageshare.de/s/KKjjwJtGtYftkQ8/download",
+            await tmpFiler.getPath("libxtables.deb"),
+            "/tmp/libxtables.deb"
+          ],
+          [
+            "network firewall package 4",
+            "https://nx904.your-storageshare.de/s/WqGePH7oPAgPT5r/download",
+            await tmpFiler.getPath("libmnl.deb"),
+            "/tmp/libmnl.deb"
+          ],
+          [
+            "network firewall package 5",
+            "https://nx904.your-storageshare.de/s/59y8EabfWrnb2Hb/download",
+            await tmpFiler.getPath("libnfnetlink0.deb"),
+            "/tmp/libnfnetlink0.deb"
+          ],
+          [
+            "network firewall package 6",
+            "https://nx904.your-storageshare.de/s/Ew87MxWMRB3CcDG/download",
+            await tmpFiler.getPath("libnftnl11.deb"),
+            "/tmp/libnftnl11.deb"
+          ]
+        ]
       ],
       [
-        "new firewall library (Debian)",
-        "https://nx904.your-storageshare.de/s/zCyzZH8QLwwxnwT/download",
-        await tmpFiler.getPath("libnetfilter.deb"),
-        "/tmp/libnetfilter.deb"
-      ],
-      [
-        "legacy firewall library (Debian)",
-        "https://nx904.your-storageshare.de/s/KKjjwJtGtYftkQ8/download",
-        await tmpFiler.getPath("libxtables.deb"),
-        "/tmp/libxtables.deb"
-      ],
-      [
-        "firewall support library 1 (Debian)",
-        "https://nx904.your-storageshare.de/s/WqGePH7oPAgPT5r/download",
-        await tmpFiler.getPath("libmnl.deb"),
-        "/tmp/libmnl.deb"
-      ],
-      [
-        "firewall support library 2 (Debian)",
-        "https://nx904.your-storageshare.de/s/59y8EabfWrnb2Hb/download",
-        await tmpFiler.getPath("libnfnetlink0.deb"),
-        "/tmp/libnfnetlink0.deb"
-      ],
-      [
-        "firewall support library 3 (Debian)",
-        "https://nx904.your-storageshare.de/s/Ew87MxWMRB3CcDG/download",
-        await tmpFiler.getPath("libnftnl11.deb"),
-        "/tmp/libnftnl11.deb"
-      ]
-    ];
-    const centOSFirewallBinaries = [
-      [
-        "firewall binary (CentOS)",
-        "https://nx904.your-storageshare.de/s/jkidqgeCMbmijmY/download",
-        await tmpFiler.getPath("iptables.rpm"),
-        "/tmp/iptables.rpm"
-      ],
-      [
-        "firewall library (CentOS)",
-        "https://nx904.your-storageshare.de/s/tnZaE4mojcokAWA/download",
-        await tmpFiler.getPath("libnfnetlink.rpm"),
-        "/tmp/libnfnetlink.rpm"
-      ],
-      [
-        "firewall support library (CentOS)",
-        "https://nx904.your-storageshare.de/s/xp9F8bGQPCwrZ3k/download",
-        await tmpFiler.getPath("libnetfilter_conntrack.rpm"),
-        "/tmp/libnetfilter_conntrack.rpm"
+        "centos",
+        [
+          [
+            "network firewall package 1",
+            "https://nx904.your-storageshare.de/s/jkidqgeCMbmijmY/download",
+            await tmpFiler.getPath("iptables.rpm"),
+            "/tmp/iptables.rpm"
+          ],
+          [
+            "network firewall package 2",
+            "https://nx904.your-storageshare.de/s/tnZaE4mojcokAWA/download",
+            await tmpFiler.getPath("libnfnetlink.rpm"),
+            "/tmp/libnfnetlink.rpm"
+          ],
+          [
+            "network firewall package 3",
+            "https://nx904.your-storageshare.de/s/xp9F8bGQPCwrZ3k/download",
+            await tmpFiler.getPath("libnetfilter_conntrack.rpm"),
+            "/tmp/libnetfilter_conntrack.rpm"
+          ]
+        ]
       ]
     ];
 
-    // Check whether to download debian and/or centos packages
-    const downloadDebianFirewallBinaries = nodeOperatingSystems.find(
-      ([_, os]) => os === "debian"
-    );
-    const downloadCentOSFirewallBinaries = nodeOperatingSystems.find(
-      ([_, os]) => os === "centos"
-    );
-    const binariesToDownload = networkBinaries
-      .concat(
-        downloadDebianFirewallBinaries && debianFirewallBinaries,
-        downloadCentOSFirewallBinaries && centOSFirewallBinaries
+    // Select the network files to download
+    const networkFilesToDownload = networkFiles
+      .filter(
+        target =>
+          target[0] === "universal" ||
+          (allNodes.find(([_, os]) => os === "debian") &&
+            target[0] === "debian") ||
+          (allNodes.find(([_, os]) => os === "centos") &&
+            target[0] === "centos")
       )
       .filter(Boolean);
 
-    // Download binaries
+    // Download network files
     const downloader = new Downloader();
-    const binariesToUpload = await Promise.all(
-      binariesToDownload.map(
-        async ([name, source, destination, finalDestination]) => {
-          await logger.log(localhost, `Downloading ${name}`);
-          const newSource = await downloader.download(source, destination);
-          return await Promise.all([name, newSource, finalDestination]);
-        }
-      )
+    const networkFilesToUpload = await Promise.all(
+      networkFilesToDownload
+        .reduce((a, b) => a.concat(b[1].map(binary => [...binary, b[0]])), [])
+        .map(
+          async ([
+            name,
+            source,
+            localDestination,
+            remoteDestination,
+            operatingSystem
+          ]) => {
+            await logger.log(
+              localhost,
+              `Downloading ${name} (${operatingSystem})`
+            );
+            const newSource = await downloader.download(
+              source,
+              localDestination
+            );
+            return Promise.all([
+              name,
+              newSource,
+              remoteDestination,
+              operatingSystem
+            ]);
+          }
+        )
     );
     await logger.divide();
 
-    // Disable firewall service
+    // Set network services to disable
+    const networkServicesToDisable = [
+      "firewalld.service",
+      "network-manager.service",
+      "network-worker.service"
+    ];
+
+    // Disable network services
     const servicer = new Servicer();
     await Promise.all(
-      allNodes.map(async node => {
-        await logger.log(node, "Disabling firewalld.service service");
-        return servicer.disableService(node, "firewalld.service");
-      })
+      networkServicesToDisable
+        .map(service => allNodes.map(([node]) => `${node}:${service}`))
+        .reduce((a, b) => a.concat(b), [])
+        .map(async destination => {
+          await logger.log(
+            destination.split(":")[0],
+            `Disabling ${destination.split(":")[1]} service`
+          );
+          return await servicer.disableService(
+            destination.split(":")[0],
+            destination.split(":")[1]
+          );
+        })
     );
     await logger.divide();
 
-    // Disable network manager service
-    await logger.log(
-      networkManagerNode,
-      "Disabling network-manager.service service"
-    );
-    await servicer.disableService(
-      networkManagerNode,
-      "network-manager.service"
-    );
-    await logger.divide();
-
-    // Disable network worker service
-    await Promise.all(
-      networkWorkerNodes.map(async node => {
-        await logger.log(node, "Disabling network-worker.service service");
-        return servicer.disableService(node, "network-worker.service");
-      })
-    );
-    await logger.divide();
-
-    // Upload binaries
+    // Upload network files
     const uploader = new Uploader();
-    const binariesToInstall = await Promise.all(
-      allNodes.map(async node => {
-        const uploadDebianBinaries = nodeOperatingSystems.find(
-          ([debianNode, os]) => node === debianNode && os === "debian"
-        );
-        const uploadCentOSBinaries = nodeOperatingSystems.find(
-          ([centOSNode, os]) => node === centOSNode && os === "centos"
-        );
-        return await Promise.all(
-          binariesToUpload.map(async ([name, source, destination]) => {
-            if (
-              (uploadDebianBinaries &&
-                debianFirewallBinaries.find(
-                  ([originalName]) => originalName === name
-                )) ||
-              (uploadCentOSBinaries &&
-                centOSFirewallBinaries.find(
-                  ([originalName]) => originalName === name
-                ))
-            ) {
-              await logger.log(node, `Uploading ${name}`);
-              const newDestination = await uploader.upload(
-                source,
-                `${node}:${destination}`
-              );
-              return Promise.all([
-                name,
-                newDestination,
-                true,
-                uploadDebianBinaries ? true : false
-              ]);
-            } else if (
-              networkBinaries.find(([originalName]) => originalName === name)
-            ) {
-              await logger.log(node, `Uploading ${name}`);
-              const newDestination = await uploader.upload(
-                source,
-                `${node}:${destination}`
-              );
-              // These need not be installed as packages
-              return Promise.all([name, newDestination, false, undefined]);
-            }
-          })
-        );
-      })
-    );
-    await logger.divide();
-
-    // Install firewall binaries
-    const packager = new Packager();
-    await Promise.all(
-      binariesToInstall.map(node =>
-        Promise.all(
-          node
-            .filter(Boolean)
-            .filter(([_, _2, shouldBeInstalled]) => shouldBeInstalled)
-            .map(async ([name, destination, _, isDebianPackage]) => {
-              await logger.log(destination.split(":")[0], `Installing ${name}`);
-              return isDebianPackage
-                ? await packager.installDebianPackage(destination)
-                : await packager.installCentOSPackage(destination);
-            })
+    const networkFilesToInstall = await Promise.all(
+      allNodes
+        .map(([node, nodeOperatingSystem]) =>
+          networkFilesToUpload
+            .filter(
+              binary =>
+                nodeOperatingSystem === binary[3] || binary[3] === "universal"
+            )
+            .map(([name, source, destination, binaryOperatingSystem]) => [
+              name,
+              source,
+              `${node}:${destination}`,
+              binaryOperatingSystem
+            ])
         )
-      )
+        .reduce((a, b) => a.concat(b), [])
+        .map(async ([name, source, destination, operatingSystem]) => {
+          await logger.log(
+            destination.split(":")[0],
+            `Uploading ${name} (${operatingSystem})`
+          );
+          const newSource = await uploader.upload(source, destination);
+          return await Promise.all([name, newSource, operatingSystem]);
+        })
     );
     await logger.divide();
 
-    // Set network core binary's permissions
+    // Re-order the network files by nodes
+    const networkFilesToInstallByNodes = networkFilesToInstall
+      .reduce(
+        (allFiles, file) =>
+          allFiles.find(node =>
+            node[0] !== ""
+              ? node[0].split(":")[0] === file[1].split(":")[0]
+              : false
+          )
+            ? allFiles.map(localNode =>
+                localNode[0].split(":")[0] === file[1].split(":")[0]
+                  ? [localNode[0], [...localNode[1], file]]
+                  : localNode
+              )
+            : [...allFiles, [file[1].split(":")[0], [file]]],
+        [["", [""]]]
+      )
+      .filter(node => node[0] !== "");
+
+    // Install network files
+    const packager = new Packager();
     const permissioner = new Permissioner();
     await Promise.all(
-      binariesToInstall.map(node =>
-        Promise.all(
-          node
-            .filter(Boolean)
-            .filter(([_, _2, shouldBeInstalled]) => !shouldBeInstalled)
-            .map(async ([name, destination]) => {
+      networkFilesToInstallByNodes.map(async ([node, files]) => {
+        const universalFiles = files.filter(file => file[2] === "universal");
+        const debianFiles = files.filter(file => file[2] === "debian");
+        const centOSFiles = files.filter(file => file[2] === "centos");
+
+        if (universalFiles.length > 0) {
+          await Promise.all(
+            universalFiles.map(async ([name, destination, operatingSystem]) => {
               await logger.log(
-                destination.split(":")[0],
-                `Setting permissions for ${name}`
+                node,
+                `Setting permissions for ${name} (${operatingSystem})`
               );
-              return permissioner.setPermissions(destination, "+x");
+              return await permissioner.setPermissions(destination, "+x");
             })
-        )
-      )
+          );
+        }
+        // The following ones can't be installed in parallel; `dpkg` and `rpm` use lock files
+        if (debianFiles.length > 0) {
+          for (file of debianFiles) {
+            await logger.log(node, `Installing ${file[0]} (${file[2]})`);
+            await packager.installDebianPackage(file[1]);
+          }
+        }
+        if (centOSFiles.length > 0) {
+          for (file of centOSFiles) {
+            await logger.log(node, `Installing ${file[0]} (${file[2]})`);
+            await packager.installCentOSPackage(file[1]);
+          }
+        }
+
+        return true;
+      })
     );
     await logger.divide();
 
@@ -307,9 +353,9 @@ require("../lib/asGenericAction")({
 
     // Upload network kernel config
     await Promise.all(
-      allNodes.map(async node => {
+      allNodes.map(async ([node]) => {
         await logger.log(node, "Uploading network kernel config");
-        return uploader.upload(
+        return await uploader.upload(
           networkKernelConfig,
           `${node}:/etc/network.conf`
         );
@@ -319,9 +365,9 @@ require("../lib/asGenericAction")({
 
     // Apply network kernel config
     await Promise.all(
-      allNodes.map(async node => {
+      allNodes.map(async ([node]) => {
         await logger.log(node, "Applying network kernel config");
-        return kernelr.applyConfig(`${node}:/etc/network.conf`);
+        return await kernelr.applyConfig(`${node}:/etc/network.conf`);
       })
     );
     await logger.divide();
@@ -347,7 +393,7 @@ require("../lib/asGenericAction")({
     const networkWorkerServiceSource = await servicer.createService({
       description: "Overlay network daemon (worker only)",
       execStart: `/usr/bin/sh -c "/usr/local/bin/wireguard-go wgoverlay && /usr/local/bin/wesher --cluster-key ${networkToken} --join ${
-        networkManagerNode.split("@")[1]
+        networkManagerNode[0].split("@")[1]
       }"`,
       environment: "WG_I_PREFER_BUGGY_USERSPACE_TO_POLISHED_KMOD=1",
       destination: await tmpFiler.getPath("network-worker.service")
@@ -355,16 +401,19 @@ require("../lib/asGenericAction")({
     await logger.divide();
 
     // Upload network manager service
-    await logger.log(networkManagerNode, "Uploading network manager service");
+    await logger.log(
+      networkManagerNode[0],
+      "Uploading network manager service"
+    );
     await uploader.upload(
       networkManagerServiceSource,
-      `${networkManagerNode}:/etc/systemd/system/network-manager.service`
+      `${networkManagerNode[0]}:/etc/systemd/system/network-manager.service`
     );
     await logger.divide();
 
     // Upload network worker service
     await Promise.all(
-      networkWorkerNodes.map(async node => {
+      networkWorkerNodes.map(async ([node]) => {
         await logger.log(node, "Uploading network worker service");
         return uploader.upload(
           networkWorkerServiceSource,
@@ -376,7 +425,7 @@ require("../lib/asGenericAction")({
 
     // Reload services
     await Promise.all(
-      allNodes.map(async node => {
+      allNodes.map(async ([node]) => {
         await logger.log(node, "Reloading services");
         return servicer.reloadServices(node);
       })
@@ -384,13 +433,16 @@ require("../lib/asGenericAction")({
     await logger.divide();
 
     // Enable network manager service
-    await logger.log(networkManagerNode, "Enabling network manager service");
-    await servicer.enableService(networkManagerNode, "network-manager.service");
+    await logger.log(networkManagerNode[0], "Enabling network manager service");
+    await servicer.enableService(
+      networkManagerNode[0],
+      "network-manager.service"
+    );
     await logger.divide();
 
     // Enable network worker service
     await Promise.all(
-      networkWorkerNodes.map(async node => {
+      networkWorkerNodes.map(async ([node]) => {
         await logger.log(node, "Enabling network worker service");
         return servicer.enableService(node, "network-worker.service");
       })
@@ -400,32 +452,32 @@ require("../lib/asGenericAction")({
     // Get network manager node in network
     const iper = new IPer();
     await logger.log(
-      networkManagerNode,
+      networkManagerNode[0],
       "Getting network manager node in network"
     );
     await servicer.waitForService(
-      networkManagerNode,
+      networkManagerNode[0],
       "network-manager.service",
       1000
     );
-    await iper.waitForInterface(networkManagerNode, "wgoverlay", 1000);
+    await iper.waitForInterface(networkManagerNode[0], "wgoverlay", 1000);
     const networkManagerNodeInNetworkInterface = await iper.getInterface(
-      networkManagerNode,
+      networkManagerNode[0],
       "wgoverlay"
     );
     const networkManagerNodeInNetwork = [
-      `${networkManagerNode.split("@")[0]}@${
+      `${networkManagerNode[0].split("@")[0]}@${
         networkManagerNodeInNetworkInterface.ip
       }`,
-      nodeOperatingSystems.find(([osNode]) => networkManagerNode === osNode)[1],
-      networkManagerNode
+      networkManagerNode[1],
+      networkManagerNode[0]
     ];
     await logger.divide();
 
     // Get network worker nodes in network
     const networkWorkerNodesInNetwork = [];
     await Promise.all(
-      networkWorkerNodes.map(async node => {
+      networkWorkerNodes.map(async ([node]) => {
         await logger.log(node, "Getting network worker node in network");
         await servicer.waitForService(node, "network-worker.service", 1000);
         await iper.waitForInterface(node, "wgoverlay", 1000);
@@ -752,18 +804,6 @@ require("../lib/asGenericAction")({
     );
     await logger.divide();
 
-    // Set SELinux context
-    const selinuxer = new SELinuxer();
-    await Promise.all(
-      allNodesInNetworkForCluster.map(async ([node]) => {
-        await logger.log(node, "Setting SELinux context");
-        await selinuxer.setenforce(node, "Permissive");
-        await selinuxer.semanage(`${node}:/usr/local/bin/k3s`);
-        return await selinuxer.restorecon(`${node}:/usr/local/bin/k3s`);
-      })
-    );
-    await logger.divide();
-
     // Create cluster kernel config
     await logger.log(localhost, "Creating cluster kernel config");
     const clusterKernelConfig = await kernelr.createConfig(
@@ -802,6 +842,18 @@ require("../lib/asGenericAction")({
       allNodesInNetworkForCluster.map(async ([node]) => {
         await logger.log(node, "Loading br_netfilter kernel module");
         return await modprober.modprobe(node, "br_netfilter");
+      })
+    );
+    await logger.divide();
+
+    // Set SELinux context
+    const selinuxer = new SELinuxer();
+    await Promise.all(
+      allNodesInNetworkForCluster.map(async ([node]) => {
+        await logger.log(node, "Setting SELinux context");
+        await selinuxer.setenforce(node, "Permissive");
+        await selinuxer.semanage(`${node}:/usr/local/bin/k3s`);
+        return await selinuxer.restorecon(`${node}:/usr/local/bin/k3s`);
       })
     );
     await logger.divide();
