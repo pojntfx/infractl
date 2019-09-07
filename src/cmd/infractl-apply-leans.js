@@ -3,11 +3,13 @@
 const Logger = require("../lib/lean/logger");
 const Pinger = require("../lib/lean/pinger");
 const SSHer = require("../lib/lean/ssher");
+const networkFilesRaw = require("../lib/lean/networkFiles.json");
 const TmpFiler = require("../lib/lean/tmpfiler");
 const Downloader = require("../lib/lean/downloader");
 const OSer = require("../lib/lean/oser");
 const Uploader = require("../lib/lean/uploader");
 const Packager = require("../lib/lean/packager");
+const clusterFilesRaw = require("../lib/lean/clusterFiles.json");
 const SELinuxer = require("../lib/lean/selinuxer");
 const Permissioner = require("../lib/lean/permissioner");
 const Kernelr = require("../lib/lean/kernelr");
@@ -101,89 +103,21 @@ require("../lib/asGenericAction")({
 
     // Set all network file download sources
     const tmpFiler = new TmpFiler();
-    const networkFiles = [
-      [
-        "universal",
-        [
-          [
-            "network binary 1",
-            "https://nx904.your-storageshare.de/s/9JSS9BsQEQTEW8E/download",
-            await tmpFiler.getPath("wireguard-go"),
-            "/usr/local/bin/wireguard-go"
-          ],
-          [
-            "network binary 2",
-            "https://nx904.your-storageshare.de/s/NLk8NdCPf4GqkZ9/download",
-            await tmpFiler.getPath("wesher"),
-            "/usr/local/bin/wesher"
-          ]
-        ]
-      ],
-      [
-        "debian",
-        [
-          [
-            "network firewall package 1",
-            "https://nx904.your-storageshare.de/s/oZWcXHQEXB8qYb6/download",
-            await tmpFiler.getPath("iptables.deb"),
-            "/tmp/iptables.deb"
-          ],
-          [
-            "network firewall package 2",
-            "https://nx904.your-storageshare.de/s/zCyzZH8QLwwxnwT/download",
-            await tmpFiler.getPath("libnetfilter.deb"),
-            "/tmp/libnetfilter.deb"
-          ],
-          [
-            "network firewall package 3",
-            "https://nx904.your-storageshare.de/s/KKjjwJtGtYftkQ8/download",
-            await tmpFiler.getPath("libxtables.deb"),
-            "/tmp/libxtables.deb"
-          ],
-          [
-            "network firewall package 4",
-            "https://nx904.your-storageshare.de/s/WqGePH7oPAgPT5r/download",
-            await tmpFiler.getPath("libmnl.deb"),
-            "/tmp/libmnl.deb"
-          ],
-          [
-            "network firewall package 5",
-            "https://nx904.your-storageshare.de/s/59y8EabfWrnb2Hb/download",
-            await tmpFiler.getPath("libnfnetlink0.deb"),
-            "/tmp/libnfnetlink0.deb"
-          ],
-          [
-            "network firewall package 6",
-            "https://nx904.your-storageshare.de/s/Ew87MxWMRB3CcDG/download",
-            await tmpFiler.getPath("libnftnl11.deb"),
-            "/tmp/libnftnl11.deb"
-          ]
-        ]
-      ],
-      [
-        "centos",
-        [
-          [
-            "network firewall package 1",
-            "https://nx904.your-storageshare.de/s/jkidqgeCMbmijmY/download",
-            await tmpFiler.getPath("iptables.rpm"),
-            "/tmp/iptables.rpm"
-          ],
-          [
-            "network firewall package 2",
-            "https://nx904.your-storageshare.de/s/tnZaE4mojcokAWA/download",
-            await tmpFiler.getPath("libnfnetlink.rpm"),
-            "/tmp/libnfnetlink.rpm"
-          ],
-          [
-            "network firewall package 3",
-            "https://nx904.your-storageshare.de/s/xp9F8bGQPCwrZ3k/download",
-            await tmpFiler.getPath("libnetfilter_conntrack.rpm"),
-            "/tmp/libnetfilter_conntrack.rpm"
-          ]
-        ]
-      ]
-    ];
+    const networkFiles = await Promise.all(
+      networkFilesRaw.map(async fileType => [
+        fileType[0],
+        await Promise.all(
+          fileType[1].map(
+            async ([name, source, localDestination, remoteDestination]) => [
+              name,
+              source,
+              await tmpFiler.getPath(localDestination),
+              remoteDestination
+            ]
+          )
+        )
+      ])
+    );
 
     // Select the network files to download
     const networkFilesToDownload = networkFiles
@@ -548,107 +482,21 @@ require("../lib/asGenericAction")({
     await logger.divide();
 
     // Set all cluster file download sources
-    const clusterFiles = [
-      [
-        "universal",
-        [
-          [
-            "cluster binary",
-            "https://nx904.your-storageshare.de/s/gdXAndMz547n9z7/download",
-            await tmpFiler.getPath("k3s"),
-            "/usr/local/bin/k3s"
-          ]
-        ]
-      ],
-      [
-        "debian",
-        [
-          [
-            "cluster storage package 1",
-            "https://nx904.your-storageshare.de/s/Kg6ccPBzYSipEaS/download",
-            await tmpFiler.getPath("open-iscsi.deb"),
-            "/tmp/open-iscsi.deb"
-          ],
-          [
-            "cluster storage package 2",
-            "https://nx904.your-storageshare.de/s/Krrqs8sBF4pDQZS/download",
-            await tmpFiler.getPath("libisns0.deb"),
-            "/tmp/libisns0.deb"
-          ],
-          [
-            "cluster permissions package 1",
-            "https://nx904.your-storageshare.de/s/aERy6BMdra4tP2G/download",
-            await tmpFiler.getPath("selinux-utils.deb"),
-            "/tmp/selinux-utils.deb"
-          ],
-          [
-            "cluster permissions package 2",
-            "https://nx904.your-storageshare.de/s/9GaS9Yq3TYNfnN8/download",
-            await tmpFiler.getPath("policycoreutils.deb"),
-            "/tmp/policycoreutils.deb"
-          ],
-          [
-            "cluster permissions package 3",
-            "https://nx904.your-storageshare.de/s/saGYDs4es29JHWo/download",
-            await tmpFiler.getPath("policycoreutils-python-utils.deb"),
-            "/tmp/policycoreutils-python-utils.deb"
-          ]
-        ]
-      ],
-      [
-        "centos",
-        [
-          [
-            "cluster storage package 1",
-            "https://nx904.your-storageshare.de/s/oFqwPAAPASSDLPo/download",
-            await tmpFiler.getPath("iscsi-initiator-utils.rpm"),
-            "/tmp/iscsi-initiator-utils.rpm"
-          ],
-          [
-            "cluster storage package 2",
-            "https://nx904.your-storageshare.de/s/tPpxfo4saQMBFy2/download",
-            await tmpFiler.getPath("iscsi-initiator-utils-iscsiuio.rpm"),
-            "/tmp/iscsi-initiator-utils-iscsiuio.rpm"
-          ],
-          [
-            "cluster storage package 3",
-            "https://nx904.your-storageshare.de/s/TyQ74Hn8Z6eKmHn/download",
-            await tmpFiler.getPath("python.rpm"),
-            "/tmp/python.rpm"
-          ],
-          [
-            "cluster storage package 4",
-            "https://nx904.your-storageshare.de/s/T2NCxspMYkMxo2p/download",
-            await tmpFiler.getPath("python-libs.rpm"),
-            "/tmp/python-libs.rpm"
-          ],
-          [
-            "cluster networking package",
-            "https://nx904.your-storageshare.de/s/ogfp5bN8fZr67Qw/download",
-            await tmpFiler.getPath("systemd-resolved.rpm"),
-            "/tmp/systemd-resolved.rpm"
-          ],
-          [
-            "cluster permissions package 1",
-            "https://nx904.your-storageshare.de/s/YcHkNXssFMT9nRX/download",
-            await tmpFiler.getPath("libselinux-utils.rpm"),
-            "/tmp/libselinux-utils.rpm"
-          ],
-          [
-            "cluster permissions package 2",
-            "https://nx904.your-storageshare.de/s/XFMA9gdxPtGyry8/download",
-            await tmpFiler.getPath("policycoreutils.rpm"),
-            "/tmp/policycoreutils.rpm"
-          ],
-          [
-            "cluster permissions package 3",
-            "https://nx904.your-storageshare.de/s/DXY454aSrzSi8JB/download",
-            await tmpFiler.getPath("policycoreutils-python.rpm"),
-            "/tmp/policycoreutils-python.rpm"
-          ]
-        ]
-      ]
-    ];
+    const clusterFiles = await Promise.all(
+      clusterFilesRaw.map(async fileType => [
+        fileType[0],
+        await Promise.all(
+          fileType[1].map(
+            async ([name, source, localDestination, remoteDestination]) => [
+              name,
+              source,
+              await tmpFiler.getPath(localDestination),
+              remoteDestination
+            ]
+          )
+        )
+      ])
+    );
 
     // Select the cluster files to download
     const clusterFilesToDownload = clusterFiles
