@@ -730,6 +730,19 @@ require("../lib/asGenericAction")({
     );
     await logger.divide();
 
+    // Upload cluster storage manifest
+    await logger.log(
+      clusterManagerNodeInNetwork[0],
+      "Uploading cluster storage manifest"
+    );
+    await uploader.upload(
+      `${__dirname}/../lib/lean/storageFile.yaml`,
+      `${
+        clusterManagerNodeInNetwork[0]
+      }:/var/lib/rancher/k3s/server/manifests/storageFile.yaml`
+    );
+    await logger.divide();
+
     // Reload services on all cluster nodes
     await Promise.all(
       allNodesInNetworkForCluster.map(async ([node]) => {
