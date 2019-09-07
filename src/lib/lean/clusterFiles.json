@@ -1,0 +1,101 @@
+[
+  [
+    "universal",
+    [
+      [
+        "cluster binary",
+        "https://nx904.your-storageshare.de/s/gdXAndMz547n9z7/download",
+        "k3s",
+        "/usr/local/bin/k3s"
+      ]
+    ]
+  ],
+  [
+    "debian",
+    [
+      [
+        "cluster storage package 1",
+        "https://nx904.your-storageshare.de/s/Kg6ccPBzYSipEaS/download",
+        "open-iscsi.deb",
+        "/tmp/open-iscsi.deb"
+      ],
+      [
+        "cluster storage package 2",
+        "https://nx904.your-storageshare.de/s/Krrqs8sBF4pDQZS/download",
+        "libisns0.deb",
+        "/tmp/libisns0.deb"
+      ],
+      [
+        "cluster permissions package 1",
+        "https://nx904.your-storageshare.de/s/aERy6BMdra4tP2G/download",
+        "selinux-utils.deb",
+        "/tmp/selinux-utils.deb"
+      ],
+      [
+        "cluster permissions package 2",
+        "https://nx904.your-storageshare.de/s/9GaS9Yq3TYNfnN8/download",
+        "policycoreutils.deb",
+        "/tmp/policycoreutils.deb"
+      ],
+      [
+        "cluster permissions package 3",
+        "https://nx904.your-storageshare.de/s/saGYDs4es29JHWo/download",
+        "policycoreutils-python-utils.deb",
+        "/tmp/policycoreutils-python-utils.deb"
+      ]
+    ]
+  ],
+  [
+    "centos",
+    [
+      [
+        "cluster storage package 1",
+        "https://nx904.your-storageshare.de/s/oFqwPAAPASSDLPo/download",
+        "iscsi-initiator-utils.rpm",
+        "/tmp/iscsi-initiator-utils.rpm"
+      ],
+      [
+        "cluster storage package 2",
+        "https://nx904.your-storageshare.de/s/tPpxfo4saQMBFy2/download",
+        "iscsi-initiator-utils-iscsiuio.rpm",
+        "/tmp/iscsi-initiator-utils-iscsiuio.rpm"
+      ],
+      [
+        "cluster storage package 3",
+        "https://nx904.your-storageshare.de/s/TyQ74Hn8Z6eKmHn/download",
+        "python.rpm",
+        "/tmp/python.rpm"
+      ],
+      [
+        "cluster storage package 4",
+        "https://nx904.your-storageshare.de/s/T2NCxspMYkMxo2p/download",
+        "python-libs.rpm",
+        "/tmp/python-libs.rpm"
+      ],
+      [
+        "cluster networking package",
+        "https://nx904.your-storageshare.de/s/ogfp5bN8fZr67Qw/download",
+        "systemd-resolved.rpm",
+        "/tmp/systemd-resolved.rpm"
+      ],
+      [
+        "cluster permissions package 1",
+        "https://nx904.your-storageshare.de/s/YcHkNXssFMT9nRX/download",
+        "libselinux-utils.rpm",
+        "/tmp/libselinux-utils.rpm"
+      ],
+      [
+        "cluster permissions package 2",
+        "https://nx904.your-storageshare.de/s/XFMA9gdxPtGyry8/download",
+        "policycoreutils.rpm",
+        "/tmp/policycoreutils.rpm"
+      ],
+      [
+        "cluster permissions package 3",
+        "https://nx904.your-storageshare.de/s/DXY454aSrzSi8JB/download",
+        "policycoreutils-python.rpm",
+        "/tmp/policycoreutils-python.rpm"
+      ]
+    ]
+  ]
+]
