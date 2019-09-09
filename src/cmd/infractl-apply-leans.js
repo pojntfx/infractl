@@ -257,7 +257,7 @@ require("../lib/asGenericAction")({
                 node,
                 `Setting permissions for ${name} (${operatingSystem})`
               );
-              return await permissioner.setPermissions(destination, "+x");
+              return await permissioner.setPermissions(destination, "+x", true);
             })
           );
         }
@@ -640,7 +640,7 @@ require("../lib/asGenericAction")({
                 node,
                 `Setting permissions for ${name} (${operatingSystem})`
               );
-              return await permissioner.setPermissions(destination, "+x");
+              return await permissioner.setPermissions(destination, "+x", true);
             })
           );
         }
