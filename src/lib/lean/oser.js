@@ -8,6 +8,8 @@ module.exports = class {
       .split("\n")
       .find(line => line[0] === "I" && line[1] == "D")
       .split("=")[1]
-      .replace(/\"/g, "");
+      .replace(/\"/g, "")
+      .replace("ubuntu", "debian") // Alias the two; we care about `dpkg` and `rpm` here
+      .replace("fedora", "centos");
   }
 };
