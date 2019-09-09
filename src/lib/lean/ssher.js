@@ -2,14 +2,16 @@ const SSH = require("node-ssh");
 const shell = require("shelljs");
 const fs = require("fs");
 const os = require("os");
+const Hostnamer = require("./hostnamer");
 
 module.exports = class {
   constructor(connectionString) {
     this.user = connectionString.split("@")[0];
     this.hostname = connectionString.split("@")[1];
 
+    const hostnamer = new Hostnamer();
     const localUser = process.env.USER;
-    const localHostname = process.env.HOSTNAME;
+    const localHostname = hostnamer.getHostname();
     const localAlternativeHostname = "localhost";
 
     if (
