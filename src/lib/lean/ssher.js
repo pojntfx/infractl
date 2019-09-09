@@ -56,7 +56,7 @@ module.exports = class {
     });
   }
 
-  async putFile(source, destination) {
+  async putFile(source, destination, withSudo) {
     if (this.isLocal) {
       return await this.shell.cp(source, destination);
     } else {
@@ -65,17 +65,30 @@ module.exports = class {
         username: this.user,
         agent: process.env.SSH_AUTH_SOCK
       });
-      const res = await this.shell.putFile(source, destination);
+      let res = {};
+      if (withSudo) {
+        const filePath = destination.split("/");
+        const fileName = filePath[filePath.length - 1];
+        const temporaryDestination = `/tmp/${fileName}`;
+        await this.shell.putFile(source, temporaryDestination);
+        res = await this.shell.exec(
+          `sudo mv ${temporaryDestination} ${destination}`
+        );
+      } else {
+        res = await this.shell.putFile(source, destination);
+      }
       this.dispose();
       return res;
     }
   }
 
-  async mkdir(destination) {
+  async mkdir(destination, withSudo) {
     if (this.isLocal) {
       return await this.shell.mkdir("-p", destination.split(":")[1]);
     } else {
-      return await this.execCommand(`mkdir -p ${destination.split(":")[1]}`);
+      return await this.execCommand(
+        `${withSudo ? "sudo" : ""} mkdir -p ${destination.split(":")[1]}`
+      );
     }
   }
 
@@ -84,7 +97,7 @@ module.exports = class {
       return await this.shell.chmod(permissions, destination.split(":")[1]);
     } else {
       return await this.execCommand(
-        `chmod ${permissions} ${destination.split(":")[1]}`
+        `sudo chmod ${permissions} ${destination.split(":")[1]}`
       );
     }
   }

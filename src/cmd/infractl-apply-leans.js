@@ -212,7 +212,11 @@ require("../lib/asGenericAction")({
             destination.split(":")[0],
             `Uploading ${name} (${operatingSystem})`
           );
-          const newSource = await uploader.upload(source, destination);
+          const newSource = await uploader.upload(
+            source,
+            destination,
+            operatingSystem === "universal"
+          );
           return await Promise.all([name, newSource, operatingSystem]);
         })
     );
@@ -291,7 +295,8 @@ require("../lib/asGenericAction")({
         await logger.log(node, "Uploading network kernel config");
         return await uploader.upload(
           networkKernelConfig,
-          `${node}:/etc/network.conf`
+          `${node}:/etc/network.conf`,
+          true
         );
       })
     );
@@ -341,7 +346,8 @@ require("../lib/asGenericAction")({
     );
     await uploader.upload(
       networkManagerServiceSource,
-      `${networkManagerNode[0]}:/etc/systemd/system/network-manager.service`
+      `${networkManagerNode[0]}:/etc/systemd/system/network-manager.service`,
+      true
     );
     await logger.divide();
 
@@ -351,7 +357,8 @@ require("../lib/asGenericAction")({
         await logger.log(node, "Uploading network worker service");
         return uploader.upload(
           networkWorkerServiceSource,
-          `${node}:/etc/systemd/system/network-worker.service`
+          `${node}:/etc/systemd/system/network-worker.service`,
+          true
         );
       })
     );
@@ -590,7 +597,11 @@ require("../lib/asGenericAction")({
             destination.split(":")[0],
             `Uploading ${name} (${operatingSystem})`
           );
-          const newSource = await uploader.upload(source, destination);
+          const newSource = await uploader.upload(
+            source,
+            destination,
+            operatingSystem === "universal"
+          );
           return await Promise.all([name, newSource, operatingSystem]);
         })
     );
@@ -669,7 +680,8 @@ require("../lib/asGenericAction")({
         await logger.log(node, "Uploading cluster kernel config");
         return await uploader.upload(
           clusterKernelConfig,
-          `${node}:/etc/cluster.conf`
+          `${node}:/etc/cluster.conf`,
+          true
         );
       })
     );
@@ -726,7 +738,8 @@ require("../lib/asGenericAction")({
       clusterManagerServiceSource,
       `${
         clusterManagerNodeInNetwork[0]
-      }:/etc/systemd/system/cluster-manager.service`
+      }:/etc/systemd/system/cluster-manager.service`,
+      true
     );
     await logger.divide();
 
@@ -736,13 +749,15 @@ require("../lib/asGenericAction")({
       "Uploading cluster storage manifest"
     );
     await uploader.createDirectory(
-      `${clusterManagerNodeInNetwork[0]}:/var/lib/rancher/k3s/server/manifests`
+      `${clusterManagerNodeInNetwork[0]}:/var/lib/rancher/k3s/server/manifests`,
+      true
     );
     await uploader.upload(
       `${__dirname}/../lib/lean/storageFile.yaml`,
       `${
         clusterManagerNodeInNetwork[0]
-      }:/var/lib/rancher/k3s/server/manifests/storageFile.yaml`
+      }:/var/lib/rancher/k3s/server/manifests/storageFile.yaml`,
+      true
     );
     await logger.divide();
 
@@ -806,7 +821,8 @@ require("../lib/asGenericAction")({
         await logger.log(node, "Uploading cluster worker service");
         return await uploader.upload(
           clusterWorkerServiceSource,
-          `${node}:/etc/systemd/system/cluster-worker.service`
+          `${node}:/etc/systemd/system/cluster-worker.service`,
+          true
         );
       })
     );
