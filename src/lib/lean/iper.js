@@ -25,15 +25,22 @@ module.exports = class {
     const ssher = new SSHer(destination);
     if (ssher.isLocal) {
       const localNetworkInterfaces = os.networkInterfaces();
-      const localNetworkInterface = localNetworkInterfaces[name].find(
-        subInterface => subInterface.family === "IPv4"
-      );
-      const ip =
-        (localNetworkInterface && localNetworkInterface.address) || undefined;
-      return {
-        name,
-        ip
-      };
+      if (localNetworkInterfaces[name]) {
+        const localNetworkInterface = localNetworkInterfaces[name].find(
+          subInterface => subInterface.family === "IPv4"
+        );
+        const ip =
+          (localNetworkInterface && localNetworkInterface.address) || undefined;
+        return {
+          name,
+          ip
+        };
+      } else {
+        return {
+          name,
+          ip: undefined
+        };
+      }
     } else {
       const rawInterface = await ssher.execCommand(`ip addr show ${name}`);
       return {
