@@ -4,14 +4,17 @@
   "description": "A simple CLI to manage infrastructure for k3s clusters",
   "main": "src/cmd/infractl",
   "scripts": {
-    "build": "chmod +x ./src/cmd/* && pkg . -t node10-linux,node10-macos,node10-win --out-path dist",
+    "build": "chmod +x ./src/cmd/* && pkg . -t node12-linux,node12-macos,node12-win --out-path dist",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "bin": {
     "infractl": "src/cmd/infractl"
   },
   "pkg": {
-    "scripts": "src/**/*.js"
+    "scripts": "src/**/*.js",
+    "assets": [
+      "src/lean/storageFile.yaml"
+    ]
   },
   "author": "Felicitas Pojtinger <felicitas@pojtinger.com>",
   "license": "AGPL-3.0",
