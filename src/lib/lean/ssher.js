@@ -58,7 +58,11 @@ module.exports = class {
 
   async putFile(source, destination, withSudo) {
     if (this.isLocal) {
-      return await this.shell.cp(source, destination);
+      if (withSudo) {
+        return await this.shell.exec(`sudo cp ${source} ${destination}`);
+      } else {
+        return await this.shell.cp(source, destination);
+      }
     } else {
       await this.shell.connect({
         host: this.hostname,
@@ -83,7 +87,7 @@ module.exports = class {
   }
 
   async mkdir(destination, withSudo) {
-    if (this.isLocal) {
+    if (this.isLocal && !withSudo) {
       return await this.shell.mkdir("-p", destination.split(":")[1]);
     } else {
       return await this.execCommand(
@@ -92,8 +96,8 @@ module.exports = class {
     }
   }
 
-  async chmod(destination, permissions) {
-    if (this.isLocal) {
+  async chmod(destination, permissions, withSudo) {
+    if (this.isLocal && !withSudo) {
       return await this.shell.chmod(permissions, destination.split(":")[1]);
     } else {
       return await this.execCommand(
