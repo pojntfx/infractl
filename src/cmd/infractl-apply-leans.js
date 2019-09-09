@@ -18,13 +18,15 @@ const Cryptographer = require("../lib/lean/cryptographer");
 const IPer = require("../lib/lean/iper");
 const Modprober = require("../lib/lean/modprober");
 const Clusterer = require("../lib/lean/clusterer");
+const Hostnamer = require("../lib/lean/hostnamer");
 
 require("../lib/asGenericAction")({
   args: "<user@ip> [otherTargets...]",
   action: async commander => {
     // Set up logger
     const logger = new Logger();
-    const localhost = `${process.env.USER}@${process.env.HOSTNAME}`;
+    const hostnamer = new Hostnamer();
+    const localhost = `${process.env.USER}@${hostnamer.getHostname()}`;
 
     // Create initial data model
     // Here one could "plug in" the (`hetznersshkeys`, `hetznernodes`) or (`ctpfsshkeys`, `ctpfnodes`) actions)
@@ -58,13 +60,15 @@ require("../lib/asGenericAction")({
           return undefined;
         } else {
           const ssher = new SSHer(
-            `${process.env.USER}@${process.env.HOSTNAME}`
+            `${process.env.USER}@${hostnamer.getHostname()}`
           );
           return ssher.getKey(node.split("@")[1]);
         }
       })
     );
-    const localSSHer = new SSHer(`${process.env.USER}@${process.env.HOSTNAME}`);
+    const localSSHer = new SSHer(
+      `${process.env.USER}@${hostnamer.getHostname()}`
+    );
     await localSSHer.trustKeys(
       nodeKeys,
       `${process.env.HOME}/.ssh/known_hosts`
@@ -463,7 +467,7 @@ require("../lib/asGenericAction")({
           return undefined;
         } else {
           const ssher = new SSHer(
-            `${process.env.USER}@${process.env.HOSTNAME}`
+            `${process.env.USER}@${hostnamer.getHostname()}`
           );
           return await ssher.getKey(node.split("@")[1]);
         }
