@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-new (require("../lib/lean/app"))(require("../../package.json").version, [
+new (require("../lib/app"))(require("../../package.json").version, [
   ["apply", "Create or update resources", "a"],
   ["get", "Get resources", "g"],
   ["delete", "Delete resources", "d"]
