@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 
+const Noun = require("../lib/lean/noun");
 const Logger = require("../lib/lean/logger");
 const Pinger = require("../lib/lean/pinger");
 const SSHer = require("../lib/lean/ssher");
@@ -21,7 +22,7 @@ const Clusterer = require("../lib/lean/clusterer");
 const Hostnamer = require("../lib/lean/hostnamer");
 const Homer = require("../lib/lean/homer");
 
-require("../lib/asGenericAction")({
+new Noun({
   args: "<user@ip> [otherTargets...]",
   action: async commander => {
     // Set up logger
