@@ -10,7 +10,7 @@ module.exports = class {
     this.hostname = connectionString.split("@")[1];
 
     const hostnamer = new Hostnamer();
-    const localUser = process.env.USER;
+    const localUser = hostnamer.getUsername();
     const localHostname = hostnamer.getHostname();
     const localAlternativeHostname = "localhost";
 
