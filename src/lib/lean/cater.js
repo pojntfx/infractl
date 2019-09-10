@@ -2,10 +2,10 @@ const SSHer = require("./ssher");
 const fs = require("fs");
 
 module.exports = class {
-  async getFileContent(destination, asJSON) {
+  async getFileContent(destination, asJSON, withSudo) {
     const ssher = new SSHer(destination.split(":")[0]);
     let fileContent = false;
-    if (ssher.isLocal) {
+    if (ssher.isLocal && !withSudo) {
       fileContent = await new Promise(resolve => {
         fs.existsSync(destination.split("@")[1].split(":")[1])
           ? fs.readFile(
@@ -17,9 +17,9 @@ module.exports = class {
       });
     } else {
       const fileContentRaw = await ssher.execCommand(
-        `[ -f ${destination.split("@")[1].split(":")[1]} ] && cat ${
-          destination.split("@")[1].split(":")[1]
-        }`
+        `[ -f ${destination.split("@")[1].split(":")[1]} ] && ${
+          withSudo ? "sudo" : ""
+        } cat ${destination.split("@")[1].split(":")[1]}`
       );
       fileContent = fileContentRaw;
     }

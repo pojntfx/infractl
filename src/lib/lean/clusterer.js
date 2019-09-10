@@ -4,7 +4,9 @@ module.exports = class {
   async getClusterToken(destination) {
     const cater = new Cater();
     return await cater.getFileContent(
-      `${destination}:/var/lib/rancher/k3s/server/node-token`
+      `${destination}:/var/lib/rancher/k3s/server/node-token`,
+      false,
+      true
     );
   }
 
@@ -28,7 +30,9 @@ module.exports = class {
   async getClusterConfig(destination, ip) {
     const cater = new Cater();
     const rawClusterConfig = await cater.getFileContent(
-      `${destination}:/etc/rancher/k3s/k3s.yaml`
+      `${destination}:/etc/rancher/k3s/k3s.yaml`,
+      false,
+      true
     );
     return rawClusterConfig.replace(/127\.0\.0\.1/g, ip);
   }
