@@ -1,27 +1,10 @@
 #!/usr/bin/env node
 
-require("../lib/asVerb")([
-  [
-    "sshkeys",
-    "List all SSH keys (without id) or get details on a SSH key (with id)",
-    "sshkey"
-  ],
-  [
-    "nodes",
-    "List all nodes (without id) or get details on a node (with id)",
-    "node"
-  ],
-  ["networktokens", "Get details on a network token", "networktoken"],
-  [
-    "networknodes",
-    "List all nodes of a network (without id) or get details on a node (with id)",
-    "networknode"
-  ],
-  ["clustertokens", "Get details on a cluster token", "clustertoken"],
-  ["clusterconfigs", "Get details on a cluster config", "clusterconfig"],
-  [
-    "clusternodes",
-    "List all nodes of a cluster (without id) or get details on a node (with id)",
-    "clusternode"
-  ]
+new (require("../lib/verb"))([
+  ["keys", "Get key(s)", "key"],
+  ["nodes", "Get node(s)", "node"],
+  ["networktokens", "Get network token", "networktoken"],
+  ["networknodes", "Get network nodes(s)", "networknode"],
+  ["clustertokens", "Get network token", "clustertoken"],
+  ["clusterconfigs", "Get network config", "clusterconfig"]
 ]);
