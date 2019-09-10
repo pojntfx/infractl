@@ -1,9 +1,13 @@
 const tcping = require("tcp-ping");
+const Hostnamer = require("./hostnamer");
 const SSHer = require("./ssher");
 
 module.exports = class {
   async ping(destination) {
-    const ssher = new SSHer(`${process.env.USER}@${destination.split(":")[0]}`);
+    const hostnamer = new Hostnamer();
+    const ssher = new SSHer(
+      `${hostnamer.getUsername()}@${destination.split(":")[0]}`
+    );
     if (ssher.isLocal) {
       return true;
     } else {

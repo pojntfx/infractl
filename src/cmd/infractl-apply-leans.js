@@ -19,6 +19,7 @@ const IPer = require("../lib/lean/iper");
 const Modprober = require("../lib/lean/modprober");
 const Clusterer = require("../lib/lean/clusterer");
 const Hostnamer = require("../lib/lean/hostnamer");
+const Homer = require("../lib/lean/homer");
 
 require("../lib/asGenericAction")({
   args: "<user@ip> [otherTargets...]",
@@ -26,7 +27,9 @@ require("../lib/asGenericAction")({
     // Set up logger
     const logger = new Logger();
     const hostnamer = new Hostnamer();
-    const localhost = `${process.env.USER}@${hostnamer.getHostname()}`;
+    const localUsername = hostnamer.getUsername();
+    const localHostname = hostnamer.getHostname();
+    const localhost = `${localUsername}@${localHostname}`;
 
     // Create initial data model
     // Here one could "plug in" the (`hetznersshkeys`, `hetznernodes`) or (`ctpfsshkeys`, `ctpfnodes`) actions)
@@ -59,19 +62,16 @@ require("../lib/asGenericAction")({
         if (isLocalSSHer.isLocal) {
           return undefined;
         } else {
-          const ssher = new SSHer(
-            `${process.env.USER}@${hostnamer.getHostname()}`
-          );
+          const ssher = new SSHer(`${localUsername}@${localHostname}`);
           return ssher.getKey(node.split("@")[1]);
         }
       })
     );
-    const localSSHer = new SSHer(
-      `${process.env.USER}@${hostnamer.getHostname()}`
-    );
+    const localSSHer = new SSHer(`${localUsername}@${localHostname}`);
+    const homer = new Homer();
     await localSSHer.trustKeys(
       nodeKeys,
-      `${process.env.HOME}/.ssh/known_hosts`
+      `${homer.getHomeDirectory()}/.ssh/known_hosts`
     );
     await logger.divide();
 
@@ -466,16 +466,14 @@ require("../lib/asGenericAction")({
         if (isLocalSSHer.isLocal) {
           return undefined;
         } else {
-          const ssher = new SSHer(
-            `${process.env.USER}@${hostnamer.getHostname()}`
-          );
+          const ssher = new SSHer(`${localUsername}@${localHostname}`);
           return await ssher.getKey(node.split("@")[1]);
         }
       })
     );
     await localSSHer.trustKeys(
       networkNodeKeys,
-      `${process.env.HOME}/.ssh/known_hosts`
+      `${homer.getHomeDirectory()}/.ssh/known_hosts`
     );
     await logger.divide();
 
