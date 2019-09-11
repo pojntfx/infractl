@@ -49,7 +49,8 @@ module.exports = class {
         await this.shell.connect({
           host: this.hostname,
           username: this.user,
-          agent: process.env.SSH_AUTH_SOCK
+          agent: process.env.SSH_AUTH_SOCK,
+          readyTimeout: 500000
         });
         const outputRaw = await this.shell.execCommand(command);
         this.dispose();
@@ -69,7 +70,8 @@ module.exports = class {
       await this.shell.connect({
         host: this.hostname,
         username: this.user,
-        agent: process.env.SSH_AUTH_SOCK
+        agent: process.env.SSH_AUTH_SOCK,
+        readyTimeout: 500000
       });
       let res = {};
       if (withSudo) {
@@ -77,7 +79,8 @@ module.exports = class {
         const fileName = filePath[filePath.length - 1];
         const temporaryDestination = `/tmp/${fileName}`;
         await this.shell.putFile(source, temporaryDestination);
-        res = await this.shell.exec(
+        this.dispose();
+        res = await this.execCommand(
           `sudo mv ${temporaryDestination} ${destination}`
         );
       } else {
