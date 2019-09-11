@@ -256,32 +256,26 @@ new (require("../lib/noun"))({
         const debianFiles = files.filter(file => file[2] === "debian");
         const centOSFiles = files.filter(file => file[2] === "centos");
 
-        if (universalFiles.length > 0) {
-          await Promise.all(
-            universalFiles.map(async ([name, destination, operatingSystem]) => {
-              await logger.log(
-                node,
-                `Setting permissions for ${name} (${operatingSystem})`
-              );
-              return await permissioner.setPermissions(destination, "+x", true);
-            })
-          );
-        }
         // The following ones can't be installed in parallel; `dpkg` and `rpm` use lock files
+        if (universalFiles.length > 0) {
+          for ([name, destination, operatingSystem] of universalFiles) {
+            await logger.log(
+              node,
+              `Setting permissions for ${name} (${operatingSystem})`
+            );
+            await permissioner.setPermissions(destination, "+x", true);
+          }
+        }
         if (debianFiles.length > 0) {
           for (file of debianFiles) {
-            await Promise.all([
-              logger.log(node, `Installing ${file[0]} (${file[2]})`),
-              packager.installDebianPackage(file[1])
-            ]);
+            await logger.log(node, `Installing ${file[0]} (${file[2]})`);
+            await packager.installDebianPackage(file[1]);
           }
         }
         if (centOSFiles.length > 0) {
           for (file of centOSFiles) {
-            await Promise.all([
-              logger.log(node, `Installing ${file[0]} (${file[2]})`),
-              packager.installCentOSPackage(file[1])
-            ]);
+            await logger.log(node, `Installing ${file[0]} (${file[2]})`);
+            await packager.installCentOSPackage(file[1]);
           }
         }
 
@@ -643,32 +637,26 @@ new (require("../lib/noun"))({
         const debianFiles = files.filter(file => file[2] === "debian");
         const centOSFiles = files.filter(file => file[2] === "centos");
 
-        if (universalFiles.length > 0) {
-          await Promise.all(
-            universalFiles.map(async ([name, destination, operatingSystem]) => {
-              await logger.log(
-                node,
-                `Setting permissions for ${name} (${operatingSystem})`
-              );
-              return await permissioner.setPermissions(destination, "+x", true);
-            })
-          );
-        }
         // The following ones can't be installed in parallel; `dpkg` and `rpm` use lock files
+        if (universalFiles.length > 0) {
+          for ([name, destination, operatingSystem] of universalFiles) {
+            await logger.log(
+              node,
+              `Setting permissions for ${name} (${operatingSystem})`
+            );
+            await permissioner.setPermissions(destination, "+x", true);
+          }
+        }
         if (debianFiles.length > 0) {
           for (file of debianFiles) {
-            await Promise.all([
-              logger.log(node, `Installing ${file[0]} (${file[2]})`),
-              packager.installDebianPackage(file[1])
-            ]);
+            await logger.log(node, `Installing ${file[0]} (${file[2]})`);
+            await packager.installDebianPackage(file[1]);
           }
         }
         if (centOSFiles.length > 0) {
           for (file of centOSFiles) {
-            await Promise.all([
-              logger.log(node, `Installing ${file[0]} (${file[2]})`),
-              packager.installCentOSPackage(file[1])
-            ]);
+            await logger.log(node, `Installing ${file[0]} (${file[2]})`);
+            await packager.installCentOSPackage(file[1]);
           }
         }
 
