@@ -17,7 +17,7 @@ const Servicer = require("../lib/servicer");
 const Cryptographer = require("../lib/cryptographer");
 const IPer = require("../lib/iper");
 const Modprober = require("../lib/modprober");
-const Clusterer = require("../lib/clusterer");
+const Workloader = require("../lib/workloader");
 const Hostnamer = require("../lib/hostnamer");
 const Homer = require("../lib/homer");
 const YAML = require("yaml");
@@ -307,7 +307,7 @@ new (require("../lib/noun"))({
       localhost,
       "Creating private network cluster node kernel config"
     );
-    const networkKernelConfig = await kernelr.createConfig(
+    const networkClusterKernelConfig = await kernelr.createConfig(
       ["net.ipv4.ip_forward = 1", "net.ipv4.conf.all.proxy_arp = 1"],
       await tmpFiler.getPath("network-cluster.conf")
     );
@@ -321,7 +321,7 @@ new (require("../lib/noun"))({
           "Uploading private network cluster node kernel config"
         );
         return await uploader.upload(
-          networkKernelConfig,
+          networkClusterKernelConfig,
           `${node}:/etc/network-cluster.conf`,
           true
         );
@@ -353,12 +353,14 @@ new (require("../lib/noun"))({
       "Creating private network cluster manager service"
     );
     const networkClusterManagerService = await servicer.createService({
-      description: "Network cluster daemon (manager and worker node)",
+      description: "Network cluster daemon (manager and worker)",
       execStart: `/bin/sh -c "/usr/local/bin/wireguard-go wgoverlay && /usr/local/bin/wesher --bind-addr ${
         publicNetworkClusterManagerNode[0].split("@")[1]
       } --cluster-key ${networkClusterToken}"`,
       environment: "WG_I_PREFER_BUGGY_USERSPACE_TO_POLISHED_KMOD=1",
-      destination: await tmpFiler.getPath("network-cluster-manager.service")
+      destination: await tmpFiler.getPath(
+        "network-cluster-manager.service"
+      )
     });
     await logger.divide();
 
@@ -368,12 +370,14 @@ new (require("../lib/noun"))({
       "Creating private network cluster worker node service"
     );
     const networkClusterWorkerServiceSource = await servicer.createService({
-      description: "Network cluster daemon (worker only node)",
+      description: "Network cluster daemon (worker only)",
       execStart: `/bin/sh -c "/usr/local/bin/wireguard-go wgoverlay && /usr/local/bin/wesher --cluster-key ${networkClusterToken} --join ${
         publicNetworkClusterManagerNode[0].split("@")[1]
       }"`,
       environment: "WG_I_PREFER_BUGGY_USERSPACE_TO_POLISHED_KMOD=1",
-      destination: await tmpFiler.getPath("network-cluster-worker.service")
+      destination: await tmpFiler.getPath(
+        "network-cluster-worker.service"
+      )
     });
     await logger.divide();
 
@@ -434,7 +438,10 @@ new (require("../lib/noun"))({
           node,
           "Enabling private network cluster worker node service"
         );
-        return servicer.enableService(node, "network-cluster-worker.service");
+        return servicer.enableService(
+          node,
+          "network-cluster-worker.service"
+        );
       })
     );
     await logger.divide();
@@ -537,25 +544,25 @@ new (require("../lib/noun"))({
     );
     await logger.divide();
 
-    // Create data model of cluster
-    await logger.log(localhost, "Creating cluster node data model");
-    const clusterManagerNodeInNetwork = privateNetworkClusterManagerNode;
-    const allNodesInNetworkForCluster = privateNetworkClusterNodes.filter(
+    // Create data model of workload cluster
+    await logger.log(localhost, "Creating workload cluster node data model");
+    const workloadClusterManagerNodeInPrivateNetworkCluster = privateNetworkClusterManagerNode;
+    const workloadClusterNodesInPrivateNetworkCluster = privateNetworkClusterNodes.filter(
       node => {
         const ssher1 = new SSHer(node[0]);
         const ssher2 = new SSHer(node[2]);
         return !ssher1.isLocal && !ssher2.isLocal;
       }
     );
-    const clusterWorkerNodesInNetwork = allNodesInNetworkForCluster.filter(
+    const workloadClusterWorkerNodesInPrivateNetworkCluster = workloadClusterNodesInPrivateNetworkCluster.filter(
       node =>
         privateNetworkClusterManagerNode[0] !== node[0] &&
         privateNetworkClusterManagerNode[2] !== node[2]
     );
     await logger.divide();
 
-    // Set all cluster file download sources
-    const clusterFiles = await Promise.all(
+    // Set all workload cluster file download sources
+    const workloadClusterFiles = await Promise.all(
       workloadClusterManifestRaw.map(async fileType => [
         fileType[0],
         await Promise.all(
@@ -571,21 +578,25 @@ new (require("../lib/noun"))({
       ])
     );
 
-    // Select the cluster files to download
-    const clusterFilesToDownload = clusterFiles
+    // Select the workload cluster files to download
+    const workloadClusterFilesToDownload = workloadClusterFiles
       .filter(
         target =>
           target[0] === "universal" ||
-          (allNodesInNetworkForCluster.find(([_, os]) => os === "debian") &&
+          (workloadClusterNodesInPrivateNetworkCluster.find(
+            ([_, os]) => os === "debian"
+          ) &&
             target[0] === "debian") ||
-          (allNodesInNetworkForCluster.find(([_, os]) => os === "centos") &&
+          (workloadClusterNodesInPrivateNetworkCluster.find(
+            ([_, os]) => os === "centos"
+          ) &&
             target[0] === "centos")
       )
       .filter(Boolean);
 
-    // Download cluster files
-    const clusterFilesToUpload = await Promise.all(
-      clusterFilesToDownload
+    // Download workload cluster files
+    const workloadClusterFilesToUpload = await Promise.all(
+      workloadClusterFilesToDownload
         .reduce((a, b) => a.concat(b[1].map(binary => [...binary, b[0]])), [])
         .map(
           async ([
@@ -614,18 +625,20 @@ new (require("../lib/noun"))({
     );
     await logger.divide();
 
-    // Set cluster services to disable
-    const clusterServicesToDisable = [
-      "cluster-manager.service",
-      "cluster-worker.service",
+    // Set workload cluster services to disable
+    const workloadClusterServicesToDisable = [
+      "workload-cluster-manager.service",
+      "workload-cluster-worker.service",
       "systemd-resolved.service"
     ];
 
-    // Disable cluster services
+    // Disable workload cluster services
     await Promise.all(
-      clusterServicesToDisable
+      workloadClusterServicesToDisable
         .map(service =>
-          allNodesInNetworkForCluster.map(([node]) => `${node}:${service}`)
+          workloadClusterNodesInPrivateNetworkCluster.map(
+            ([node]) => `${node}:${service}`
+          )
         )
         .reduce((a, b) => a.concat(b), [])
         .map(async destination => {
@@ -641,11 +654,11 @@ new (require("../lib/noun"))({
     );
     await logger.divide();
 
-    // Upload cluster files
-    const clusterFilesToInstall = await Promise.all(
-      allNodesInNetworkForCluster
+    // Upload workload cluster files
+    const workloadClusterFilesToInstall = await Promise.all(
+      workloadClusterNodesInPrivateNetworkCluster
         .map(([node, nodeOperatingSystem]) =>
-          clusterFilesToUpload
+          workloadClusterFilesToUpload
             .filter(
               binary =>
                 nodeOperatingSystem === binary[3] || binary[3] === "universal"
@@ -673,8 +686,8 @@ new (require("../lib/noun"))({
     );
     await logger.divide();
 
-    // Re-order the cluster files by nodes
-    const clusterFilesToInstallByNodes = clusterFilesToInstall
+    // Re-order the workload cluster files by nodes
+    const workloadClusterFilesToInstallByNodes = workloadClusterFilesToInstall
       .reduce(
         (allFiles, file) =>
           allFiles.find(node =>
@@ -692,9 +705,9 @@ new (require("../lib/noun"))({
       )
       .filter(node => node[0] !== "");
 
-    // Install cluster files
+    // Install workload cluster files
     await Promise.all(
-      clusterFilesToInstallByNodes.map(async ([node, files]) => {
+      workloadClusterFilesToInstallByNodes.map(async ([node, files]) => {
         const universalFiles = files.filter(file => file[2] === "universal");
         const debianFiles = files.filter(file => file[2] === "debian");
         const centOSFiles = files.filter(file => file[2] === "centos");
@@ -727,35 +740,35 @@ new (require("../lib/noun"))({
     );
     await logger.divide();
 
-    // Create cluster kernel config
+    // Create workload cluster kernel config
     await logger.log(localhost, "Creating cluster kernel config");
-    const clusterKernelConfig = await kernelr.createConfig(
+    const workloadClusterKernelConfig = await kernelr.createConfig(
       [
         "net.bridge.bridge-nf-call-ip6tables = 1",
         "net.bridge.bridge-nf-call-iptables = 1"
       ],
-      await tmpFiler.getPath("cluster.conf")
+      await tmpFiler.getPath("workload-cluster.conf")
     );
     await logger.divide();
 
-    // Upload cluster kernel config
+    // Upload workload cluster kernel config
     await Promise.all(
-      allNodesInNetworkForCluster.map(async ([node]) => {
-        await logger.log(node, "Uploading cluster kernel config");
+      workloadClusterNodesInPrivateNetworkCluster.map(async ([node]) => {
+        await logger.log(node, "Uploading workload cluster kernel config");
         return await uploader.upload(
-          clusterKernelConfig,
-          `${node}:/etc/cluster.conf`,
+          workloadClusterKernelConfig,
+          `${node}:/etc/workload-cluster.conf`,
           true
         );
       })
     );
     await logger.divide();
 
-    // Apply cluster kernel config
+    // Apply workload cluster kernel config
     await Promise.all(
-      allNodesInNetworkForCluster.map(async ([node]) => {
-        await logger.log(node, "Applying cluster kernel config");
-        return await kernelr.applyConfig(`${node}:/etc/cluster.conf`);
+      workloadClusterNodesInPrivateNetworkCluster.map(async ([node]) => {
+        await logger.log(node, "Applying workload cluster kernel config");
+        return await kernelr.applyConfig(`${node}:/etc/workload-cluster.conf`);
       })
     );
     await logger.divide();
@@ -763,7 +776,7 @@ new (require("../lib/noun"))({
     // Load br_netfilter module
     const modprober = new Modprober();
     await Promise.all(
-      allNodesInNetworkForCluster.map(async ([node]) => {
+      workloadClusterNodesInPrivateNetworkCluster.map(async ([node]) => {
         await logger.log(node, "Loading br_netfilter kernel module");
         return await modprober.modprobe(node, "br_netfilter");
       })
@@ -773,7 +786,7 @@ new (require("../lib/noun"))({
     // Set SELinux context
     const selinuxer = new SELinuxer();
     await Promise.all(
-      allNodesInNetworkForCluster.map(async ([node]) => {
+      workloadClusterNodesInPrivateNetworkCluster.map(async ([node]) => {
         await logger.log(node, "Setting SELinux context");
         await selinuxer.setenforce(node, "Permissive");
         await selinuxer.semanage(`${node}:/usr/local/bin/k3s`);
@@ -782,140 +795,159 @@ new (require("../lib/noun"))({
     );
     await logger.divide();
 
-    // Create cluster manager service
+    // Create workload cluster manager service
     await logger.log(localhost, "Creating cluster manager service");
-    const clusterManagerServiceSource = await servicer.createService({
-      description: "Cluster daemon (manager only)",
+    const workloadClusterManagerServiceSource = await servicer.createService({
+      description: "Workload cluster daemon (manager only)",
       execStart: `/usr/local/bin/k3s server --flannel-iface wgoverlay --tls-san ${
-        clusterManagerNodeInNetwork[2].split("@")[1]
+        workloadClusterManagerNodeInPrivateNetworkCluster[2].split("@")[1]
       } --disable-agent`,
-      destination: await tmpFiler.getPath("cluster-manager.service")
+      destination: await tmpFiler.getPath("workload-cluster-manager.service")
     });
     await logger.divide();
 
-    // Upload cluster manager service
+    // Upload workload cluster manager service
     await logger.log(
-      clusterManagerNodeInNetwork[0],
-      "Uploading cluster manager service"
+      workloadClusterManagerNodeInPrivateNetworkCluster[0],
+      "Uploading workload cluster manager service"
     );
     await uploader.upload(
-      clusterManagerServiceSource,
+      workloadClusterManagerServiceSource,
       `${
-        clusterManagerNodeInNetwork[0]
-      }:/etc/systemd/system/cluster-manager.service`,
+        workloadClusterManagerNodeInPrivateNetworkCluster[0]
+      }:/etc/systemd/system/workload-cluster-manager.service`,
       true
     );
     await logger.divide();
 
-    // Upload cluster storage manifest
+    // Upload workload cluster storage manifest
     await logger.log(
-      clusterManagerNodeInNetwork[0],
-      "Uploading cluster storage manifest"
+      workloadClusterManagerNodeInPrivateNetworkCluster[0],
+      "Uploading workload cluster storage manifest"
     );
     await uploader.createDirectory(
-      `${clusterManagerNodeInNetwork[0]}:/var/lib/rancher/k3s/server/manifests`,
+      `${
+        workloadClusterManagerNodeInPrivateNetworkCluster[0]
+      }:/var/lib/rancher/k3s/server/manifests`,
       true
     );
     await uploader.upload(
       `${__dirname}/../data/storageClusterManifest.yaml`,
       `${
-        clusterManagerNodeInNetwork[0]
+        workloadClusterManagerNodeInPrivateNetworkCluster[0]
       }:/var/lib/rancher/k3s/server/manifests/storageCluster.yaml`,
       true
     );
     await logger.divide();
 
-    // Reload services on all cluster nodes
+    // Reload services on all workload cluster nodes
     await Promise.all(
-      allNodesInNetworkForCluster.map(async ([node]) => {
+      workloadClusterNodesInPrivateNetworkCluster.map(async ([node]) => {
         await logger.log(node, "Reloading services");
         return await servicer.reloadServices(node);
       })
     );
     await logger.divide();
 
-    // Enable systemd-resolved service on all cluster nodes
+    // Enable systemd-resolved service on all workload cluster nodes
     await Promise.all(
-      allNodesInNetworkForCluster.map(async ([node]) => {
+      workloadClusterNodesInPrivateNetworkCluster.map(async ([node]) => {
         await logger.log(node, "Enabling systemd-resolved.service service");
         return await servicer.enableService(node, "systemd-resolved.service");
       })
     );
     await logger.divide();
 
-    // Enable cluster manager service on cluster manager node
+    // Enable workload cluster manager service on workload cluster manager node
     await logger.log(
-      clusterManagerNodeInNetwork[0],
-      "Enabling cluster-manager.service service"
+      workloadClusterManagerNodeInPrivateNetworkCluster[0],
+      "Enabling workload-cluster-manager.service service"
     );
     await servicer.enableService(
-      clusterManagerNodeInNetwork[0],
-      "cluster-manager.service"
+      workloadClusterManagerNodeInPrivateNetworkCluster[0],
+      "workload-cluster-manager.service"
     );
     await logger.divide();
 
-    // Get cluster token
-    await logger.log(clusterManagerNodeInNetwork[0], "Getting cluster token");
-    const clusterer = new Clusterer();
+    // Get workload cluster token
+    await logger.log(
+      workloadClusterManagerNodeInPrivateNetworkCluster[0],
+      "Getting workload cluster token"
+    );
+    const workloader = new Workloader();
     await servicer.waitForService(
-      clusterManagerNodeInNetwork[0],
-      "cluster-manager.service",
+      workloadClusterManagerNodeInPrivateNetworkCluster[0],
+      "workload-cluster-manager.service",
       1000
     );
-    await clusterer.waitForClusterToken(clusterManagerNodeInNetwork[0], 1000);
-    const clusterToken = await clusterer.getClusterToken(
-      clusterManagerNodeInNetwork[0]
+    await workloader.waitForWorkloadClusterToken(
+      workloadClusterManagerNodeInPrivateNetworkCluster[0],
+      1000
+    );
+    const workloadClusterToken = await workloader.getClusterToken(
+      workloadClusterManagerNodeInPrivateNetworkCluster[0]
     );
     await logger.divide();
 
-    // Create cluster worker service
-    await logger.log(localhost, "Creating cluster worker service");
-    const clusterWorkerServiceSource = await servicer.createService({
-      description: "Cluster daemon (worker only)",
-      execStart: `/usr/local/bin/k3s agent --flannel-iface wgoverlay --token ${clusterToken} --server https://${
-        clusterManagerNodeInNetwork[0].split("@")[1]
+    // Create workload cluster worker service
+    await logger.log(localhost, "Creating workload cluster worker service");
+    const workloadClusterWorkerServiceSource = await servicer.createService({
+      description: "Workloda cluster daemon (worker only)",
+      execStart: `/usr/local/bin/k3s agent --flannel-iface wgoverlay --token ${workloadClusterToken} --server https://${
+        workloadClusterManagerNodeInPrivateNetworkCluster[0].split("@")[1]
       }:6443`,
-      destination: await tmpFiler.getPath("cluster-worker.service")
+      destination: await tmpFiler.getPath("workload-cluster-worker.service")
     });
     await logger.divide();
 
-    // Upload cluster worker service
+    // Upload workload cluster worker service
     await Promise.all(
-      clusterWorkerNodesInNetwork.map(async ([node]) => {
-        await logger.log(node, "Uploading cluster worker service");
+      workloadClusterWorkerNodesInPrivateNetworkCluster.map(async ([node]) => {
+        await logger.log(node, "Uploading workload cluster worker service");
         return await uploader.upload(
-          clusterWorkerServiceSource,
-          `${node}:/etc/systemd/system/cluster-worker.service`,
+          workloadClusterWorkerServiceSource,
+          `${node}:/etc/systemd/system/workload-cluster-worker.service`,
           true
         );
       })
     );
     await logger.divide();
 
-    // Reload services on cluster worker nodes
+    // Reload services on workload cluster worker nodes
     await Promise.all(
-      clusterWorkerNodesInNetwork.map(async ([node]) => {
+      workloadClusterWorkerNodesInPrivateNetworkCluster.map(async ([node]) => {
         await logger.log(node, "Reloading services");
         return await servicer.reloadServices(node);
       })
     );
     await logger.divide();
 
-    // Enable cluster worker service on cluster worker nodes
+    // Enable workload cluster worker service on workload cluster worker nodes
     await Promise.all(
-      clusterWorkerNodesInNetwork.map(async ([node]) => {
-        await logger.log(node, "Enabling cluster-worker.service service");
-        return await servicer.enableService(node, "cluster-worker.service");
+      workloadClusterWorkerNodesInPrivateNetworkCluster.map(async ([node]) => {
+        await logger.log(
+          node,
+          "Enabling workload-cluster-worker.service service"
+        );
+        return await servicer.enableService(
+          node,
+          "workload-cluster-worker.service"
+        );
       })
     );
     await logger.divide();
 
-    // Get cluster config from cluster manager node
-    await logger.log(clusterManagerNodeInNetwork[0], "Getting cluster config");
-    await clusterer.waitForClusterConfig(clusterManagerNodeInNetwork[0]);
-    const clusterConfig = await clusterer.getClusterConfig(
-      clusterManagerNodeInNetwork[0],
-      clusterManagerNodeInNetwork[2].split("@")[1]
+    // Get workload cluster config from workload cluster manager node
+    await logger.log(
+      workloadClusterManagerNodeInPrivateNetworkCluster[0],
+      "Getting workload cluster config"
+    );
+    await workloader.waitForClusterConfig(
+      workloadClusterManagerNodeInPrivateNetworkCluster[0]
+    );
+    const workloadClusterConfig = await workloader.getWorkloadClusterConfig(
+      workloadClusterManagerNodeInPrivateNetworkCluster[0],
+      workloadClusterManagerNodeInPrivateNetworkCluster[2].split("@")[1]
     );
     await logger.divide();
 
@@ -935,10 +967,10 @@ new (require("../lib/noun"))({
           {
             name: "workload",
             manager: {
-              public: clusterManagerNodeInNetwork[2],
-              private: clusterManagerNodeInNetwork[0]
+              public: workloadClusterManagerNodeInPrivateNetworkCluster[2],
+              private: workloadClusterManagerNodeInPrivateNetworkCluster[0]
             },
-            token: clusterToken
+            token: workloadClusterToken
           }
         ]
       },
@@ -947,7 +979,7 @@ new (require("../lib/noun"))({
     );
     await logger.log(
       localhost,
-      YAML.parse(clusterConfig),
+      YAML.parse(workloadClusterConfig),
       "data",
       "Successfully applied workload cluster's config"
     );
