@@ -103,7 +103,9 @@ module.exports = class {
       return await this.shell.chmod(permissions, destination.split(":")[1]);
     } else {
       return await this.execCommand(
-        `sudo chmod ${permissions} ${destination.split(":")[1]}`
+        `${withSudo ? "sudo" : ""} chmod ${permissions} ${
+          destination.split(":")[1]
+        }`
       );
     }
   }
