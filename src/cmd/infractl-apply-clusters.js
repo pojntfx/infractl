@@ -20,6 +20,7 @@ const Modprober = require("../lib/modprober");
 const Clusterer = require("../lib/clusterer");
 const Hostnamer = require("../lib/hostnamer");
 const Homer = require("../lib/homer");
+const YAML = require("yaml");
 
 new (require("../lib/noun"))({
   args: "<user@ip> [otherTargets...]",
@@ -269,14 +270,18 @@ new (require("../lib/noun"))({
         // The following ones can't be installed in parallel; `dpkg` and `rpm` use lock files
         if (debianFiles.length > 0) {
           for (file of debianFiles) {
-            await logger.log(node, `Installing ${file[0]} (${file[2]})`);
-            await packager.installDebianPackage(file[1]);
+            await Promise.all([
+              logger.log(node, `Installing ${file[0]} (${file[2]})`),
+              packager.installDebianPackage(file[1])
+            ]);
           }
         }
         if (centOSFiles.length > 0) {
           for (file of centOSFiles) {
-            await logger.log(node, `Installing ${file[0]} (${file[2]})`);
-            await packager.installCentOSPackage(file[1]);
+            await Promise.all([
+              logger.log(node, `Installing ${file[0]} (${file[2]})`),
+              packager.installCentOSPackage(file[1])
+            ]);
           }
         }
 
@@ -652,14 +657,18 @@ new (require("../lib/noun"))({
         // The following ones can't be installed in parallel; `dpkg` and `rpm` use lock files
         if (debianFiles.length > 0) {
           for (file of debianFiles) {
-            await logger.log(node, `Installing ${file[0]} (${file[2]})`);
-            await packager.installDebianPackage(file[1]);
+            await Promise.all([
+              logger.log(node, `Installing ${file[0]} (${file[2]})`),
+              packager.installDebianPackage(file[1])
+            ]);
           }
         }
         if (centOSFiles.length > 0) {
           for (file of centOSFiles) {
-            await logger.log(node, `Installing ${file[0]} (${file[2]})`);
-            await packager.installCentOSPackage(file[1]);
+            await Promise.all([
+              logger.log(node, `Installing ${file[0]} (${file[2]})`),
+              packager.installCentOSPackage(file[1])
+            ]);
           }
         }
 
@@ -858,27 +867,36 @@ new (require("../lib/noun"))({
       clusterManagerNodeInNetwork[0],
       clusterManagerNodeInNetwork[2].split("@")[1]
     );
+    await logger.divide();
 
     // Log the data
-    await logger.logData(
-      "NETWORK_MANAGER_NODE_PUBLIC",
-      networkManagerNodeInNetwork[2]
+    await logger.log(
+      localhost,
+      {
+        networkCluster: {
+          manager: {
+            public: networkManagerNodeInNetwork[2],
+            private: networkManagerNodeInNetwork[0]
+          },
+          token: networkToken
+        },
+        workloadCluster: {
+          manager: {
+            public: clusterManagerNodeInNetwork[2],
+            private: clusterManagerNodeInNetwork[0]
+          },
+          token: clusterToken
+        }
+      },
+      "data",
+      "Cluster's Variables"
     );
-    await logger.logData(
-      "NETWORK_MANAGER_NODE_PRIVATE",
-      networkManagerNodeInNetwork[0]
+    await logger.log(
+      localhost,
+      YAML.parse(clusterConfig),
+      "data",
+      "Workload Cluster's Config"
     );
-    await logger.logData("NETWORK_TOKEN", networkToken);
-    await logger.logData(
-      "CLUSTER_MANAGER_NODE_PUBLIC",
-      clusterManagerNodeInNetwork[2]
-    );
-    await logger.logData(
-      "CLUSTER_MANAGER_NODE_PRIVATE",
-      clusterManagerNodeInNetwork[0]
-    );
-    await logger.logData("CLUSTER_TOKEN", clusterToken);
-    await logger.logData("CLUSTER_CONFIG", clusterConfig);
     await logger.divide();
 
     // Send positive message to user
