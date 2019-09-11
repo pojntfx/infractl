@@ -1,11 +1,13 @@
-# Felicitas Pojtinger's Infractl
+# Felicitas Pojtinger's InfraCTL
 
-A simple CLI to manage infrastructure for k3s clusters.
+A CLI to manage supra-cloud SSH keys, nodes and Kubernetes clusters.
 
 ## Features
 
 ```plaintext
 Usage: infractl [options] [command]
+
+A CLI to manage supra-cloud SSH keys, nodes and Kubernetes clusters.
 
 Options:
   -V, --version  output the version number
