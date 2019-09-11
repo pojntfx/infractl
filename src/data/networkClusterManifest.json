@@ -3,13 +3,13 @@
     "universal",
     [
       [
-        "network binary 1",
+        "private network cl. binary 1",
         "https://nx904.your-storageshare.de/s/9JSS9BsQEQTEW8E/download",
         "wireguard-go",
         "/usr/local/bin/wireguard-go"
       ],
       [
-        "network binary 2",
+        "private network cl. binary 2",
         "https://nx904.your-storageshare.de/s/NLk8NdCPf4GqkZ9/download",
         "wesher",
         "/usr/local/bin/wesher"
@@ -20,37 +20,37 @@
     "debian",
     [
       [
-        "network firewall package 1",
+        "private network cl. firewall package 1",
         "https://nx904.your-storageshare.de/s/oZWcXHQEXB8qYb6/download",
         "iptables.deb",
         "/tmp/iptables.deb"
       ],
       [
-        "network firewall package 2",
+        "private network cl. firewall package 2",
         "https://nx904.your-storageshare.de/s/zCyzZH8QLwwxnwT/download",
         "libnetfilter.deb",
         "/tmp/libnetfilter.deb"
       ],
       [
-        "network firewall package 3",
+        "private network cl. firewall package 3",
         "https://nx904.your-storageshare.de/s/KKjjwJtGtYftkQ8/download",
         "libxtables.deb",
         "/tmp/libxtables.deb"
       ],
       [
-        "network firewall package 4",
+        "private network cl. firewall package 4",
         "https://nx904.your-storageshare.de/s/WqGePH7oPAgPT5r/download",
         "libmnl.deb",
         "/tmp/libmnl.deb"
       ],
       [
-        "network firewall package 5",
+        "private network cl. firewall package 5",
         "https://nx904.your-storageshare.de/s/59y8EabfWrnb2Hb/download",
         "libnfnetlink0.deb",
         "/tmp/libnfnetlink0.deb"
       ],
       [
-        "network firewall package 6",
+        "private network cl. firewall package 6",
         "https://nx904.your-storageshare.de/s/Ew87MxWMRB3CcDG/download",
         "libnftnl11.deb",
         "/tmp/libnftnl11.deb"
@@ -61,19 +61,19 @@
     "centos",
     [
       [
-        "network firewall package 1",
+        "private network cl. firewall 1",
         "https://nx904.your-storageshare.de/s/jkidqgeCMbmijmY/download",
         "iptables.rpm",
         "/tmp/iptables.rpm"
       ],
       [
-        "network firewall package 2",
+        "private network cl. firewall package 2",
         "https://nx904.your-storageshare.de/s/tnZaE4mojcokAWA/download",
         "libnfnetlink.rpm",
         "/tmp/libnfnetlink.rpm"
       ],
       [
-        "network firewall package 3",
+        "private network cl. firewall package 3",
         "https://nx904.your-storageshare.de/s/xp9F8bGQPCwrZ3k/download",
         "libnetfilter_conntrack.rpm",
         "/tmp/libnetfilter_conntrack.rpm"

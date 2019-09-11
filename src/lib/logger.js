@@ -9,7 +9,7 @@ module.exports = class {
           )}${`${new Date().getTime()} [DATA]`
             .split("")
             .map(_ => ".")
-            .join("")}.${"".padEnd(60, ".")} ${destination}`
+            .join("")}.${"".padEnd(65, ".")} ${destination}`
         )
       : console.log(
           `${new Date().getTime()} [${
@@ -18,7 +18,7 @@ module.exports = class {
               : messageType === "error"
               ? "WARN"
               : "INFO"
-          }] ${`${message} `.padEnd(60, ".")} ${destination}`
+          }] ${`${message} `.padEnd(65, ".")} ${destination}`
         );
   }
 
