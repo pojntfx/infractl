@@ -4,18 +4,21 @@ module.exports = class {
   async log(destination, message, messageType, dataName) {
     messageType === "data"
       ? console.log(
-          `${new Date().getTime()} [DATA] ${dataName}: ${`\n\n${YAML.stringify(
+          `${new Date().getTime()} [DATA] ${dataName}:\n${YAML.stringify(
             message
-          )}\n` + ``.padEnd(60, ".")} ${`${destination}`}`
+          )}${`${new Date().getTime()} [DATA]`
+            .split("")
+            .map(_ => ".")
+            .join("")}.${"".padEnd(60, ".")} ${destination}`
         )
       : console.log(
           `${new Date().getTime()} [${
             messageType === "done"
               ? "DONE"
               : messageType === "error"
-              ? "ERROR"
+              ? "WARN"
               : "INFO"
-          }] ${`${message} `.padEnd(60, ".")} ${`${destination}`}`
+          }] ${`${message} `.padEnd(60, ".")} ${destination}`
         );
   }
 
