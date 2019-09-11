@@ -877,17 +877,13 @@ new (require("../lib/noun"))({
         }
       },
       "data",
-      "Cluster's Variables"
+      "Successfully applied cluster's variables"
     );
     await logger.log(
       localhost,
       YAML.parse(clusterConfig),
       "data",
-      "Workload Cluster's Config"
+      "Successfully applied workload cluster's config"
     );
-    await logger.divide();
-
-    // Send positive message to user
-    await logger.log(localhost, "Successfully applied cluster.", "done");
   }
 });
