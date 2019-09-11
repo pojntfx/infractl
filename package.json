@@ -20,12 +20,14 @@
   "license": "AGPL-3.0",
   "dependencies": {
     "commander": "^2.19.0",
+    "configstore": "^5.0.0",
     "download": "^7.1.0",
     "lodash": "^4.17.15",
     "node-fetch": "^2.6.0",
     "node-ssh": "^6.0.0",
     "shelljs": "^0.8.3",
-    "tcp-ping": "^0.1.1"
+    "tcp-ping": "^0.1.1",
+    "yaml": "^1.6.0"
   },
   "devDependencies": {
     "pkg": "^4.3.7"

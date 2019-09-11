@@ -6,7 +6,7 @@ module.exports = class {
       ? console.log(
           `${new Date().getTime()} [DATA] ${dataName}:\n${YAML.stringify(
             message
-          )}${`${new Date().getTime()} [DATA]`
+          )}\n${`${new Date().getTime()} [DATA]`
             .split("")
             .map(_ => ".")
             .join("")}.${"".padEnd(65, ".")} ${destination}`
