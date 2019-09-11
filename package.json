@@ -1,7 +1,7 @@
 {
   "name": "infractl",
   "version": "0.0.1-alpha3",
-  "description": "A simple CLI to manage infrastructure for k3s clusters",
+  "description": "A CLI to manage supra-cloud SSH keys, nodes and Kubernetes clusters.",
   "main": "src/cmd/infractl",
   "scripts": {
     "build": "chmod +x ./src/cmd/* && pkg . -t node10-linux,node10-macos,node10-win --out-path dist",

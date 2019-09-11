@@ -879,5 +879,9 @@ new (require("../lib/noun"))({
     );
     await logger.logData("CLUSTER_TOKEN", clusterToken);
     await logger.logData("CLUSTER_CONFIG", clusterConfig);
+    await logger.divide();
+
+    // Send positive message to user
+    await logger.log(localhost, "Successfully applied cluster.", true);
   }
 });

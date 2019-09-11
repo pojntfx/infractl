@@ -8,4 +8,8 @@ module.exports = class {
   getUsername() {
     return os.userInfo().username;
   }
+
+  getAddress() {
+    return `${this.getUsername()}@${this.getHostname()}`;
+  }
 };

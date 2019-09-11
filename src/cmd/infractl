@@ -1,7 +1,11 @@
 #!/usr/bin/env node
 
-new (require("../lib/app"))(require("../../package.json").version, [
-  ["apply", "Create or update resources", "a"],
-  ["get", "Get resources", "g"],
-  ["delete", "Delete resources", "d"]
-]);
+new (require("../lib/app"))(
+  require("../../package.json").version,
+  require("../../package.json").description,
+  [
+    ["apply", "Create or update resources", "a"],
+    ["get", "Get resources", "g"],
+    ["delete", "Delete resources", "d"]
+  ]
+);
