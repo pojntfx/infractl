@@ -3,13 +3,13 @@
 const Logger = require("../lib/logger");
 const Pinger = require("../lib/pinger");
 const SSHer = require("../lib/ssher");
-const networkFilesRaw = require("../data/networkClusterManifest.json");
+const networkClusterManifestRaw = require("../data/networkClusterManifest.json");
 const TmpFiler = require("../lib/tmpfiler");
 const Downloader = require("../lib/downloader");
 const OSer = require("../lib/oser");
 const Uploader = require("../lib/uploader");
 const Packager = require("../lib/packager");
-const clusterFilesRaw = require("../data/workloadClusterManifest.json");
+const workloadClusterManifestRaw = require("../data/workloadClusterManifest.json");
 const SELinuxer = require("../lib/selinuxer");
 const Permissioner = require("../lib/permissioner");
 const Kernelr = require("../lib/kernelr");
@@ -29,28 +29,32 @@ new (require("../lib/noun"))({
     // Set up logger
     const logger = new Logger();
     const hostnamer = new Hostnamer();
-    const localUsername = hostnamer.getUsername();
-    const localHostname = hostnamer.getHostname();
-    const localhost = `${localUsername}@${localHostname}`;
+    const localhost = hostnamer.getAddress();
 
-    // Create initial data model
+    // Create provided public network cluster node data model
     // Here one could "plug in" the (`hetznersshkeys`, `hetznernodes`) or (`ctpfsshkeys`, `ctpfnodes`) actions)
-    await logger.log(localhost, "Creating initial node data model");
-    const networkManagerNodeSimple = commander.args[0];
-    const networkWorkerNodesSimple = commander.args.filter(
+    await logger.log(
+      localhost,
+      "Creating provided public network cluster node data model"
+    );
+    const providedPublicNetworkClusterManagerNode = commander.args[0];
+    const providedPublicNetworkClusterWorkerNode = commander.args.filter(
       (_, index) => index !== 0
     );
-    const allNodesSimple = [
-      networkManagerNodeSimple,
-      ...networkWorkerNodesSimple
+    const providedPublicNetworkClusterNodes = [
+      providedPublicNetworkClusterManagerNode,
+      ...providedPublicNetworkClusterWorkerNode
     ];
     await logger.divide();
 
     // Wait for node connectivity
     const pinger = new Pinger();
     await Promise.all(
-      allNodesSimple.map(async node => {
-        await logger.log(node, "Waiting for node connectivity");
+      providedPublicNetworkClusterNodes.map(async node => {
+        await logger.log(
+          node,
+          "Waiting for public network cluster node connectivity"
+        );
         return await pinger.waitForNode(`${node.split("@")[1]}:22`, 1000);
       })
     );
@@ -58,18 +62,18 @@ new (require("../lib/noun"))({
 
     // Set up node access
     const nodeKeys = await Promise.all(
-      allNodesSimple.map(async node => {
-        await logger.log(node, "Setting up node access");
+      providedPublicNetworkClusterNodes.map(async node => {
+        await logger.log(node, "Setting up public network cluster node access");
         const isLocalSSHer = new SSHer(node);
         if (isLocalSSHer.isLocal) {
           return undefined;
         } else {
-          const ssher = new SSHer(`${localUsername}@${localHostname}`);
+          const ssher = new SSHer(localhost);
           return ssher.getKey(node.split("@")[1]);
         }
       })
     );
-    const localSSHer = new SSHer(`${localUsername}@${localHostname}`);
+    const localSSHer = new SSHer(localhost);
     const homer = new Homer();
     await localSSHer.trustKeys(
       nodeKeys,
@@ -81,36 +85,47 @@ new (require("../lib/noun"))({
     const oser = new OSer();
     const nodeOperatingSystems = [];
     await Promise.all(
-      allNodesSimple.map(async node => {
-        await logger.log(node, "Getting node's operating system");
+      providedPublicNetworkClusterNodes.map(async node => {
+        await logger.log(
+          node,
+          "Getting public network cluster node's operating system"
+        );
         const nodeOperatingSystem = await oser.getOS(node);
         return nodeOperatingSystems.push([node, nodeOperatingSystem]);
       })
     );
     await logger.divide();
 
-    // Create advanced node data model
-    await logger.log(localhost, "Creating advanced node data model");
-    const networkManagerNode = [
-      networkManagerNodeSimple,
+    // Create public network cluster node data model
+    await logger.log(
+      localhost,
+      "Creating public network cluster node data model"
+    );
+    const publicNetworkClusterManagerNode = [
+      providedPublicNetworkClusterManagerNode,
       nodeOperatingSystems.find(
         ([operatingSystemNode]) =>
-          operatingSystemNode === networkManagerNodeSimple
+          operatingSystemNode === providedPublicNetworkClusterManagerNode
       )[1]
     ];
-    const networkWorkerNodes = networkWorkerNodesSimple.map(node => [
-      node,
-      nodeOperatingSystems.find(
-        ([operatingSystemNode]) => operatingSystemNode === node
-      )[1]
-    ]);
-    const allNodes = [networkManagerNode, ...networkWorkerNodes];
+    const publicNetworkClusterWorkerNodes = providedPublicNetworkClusterWorkerNode.map(
+      node => [
+        node,
+        nodeOperatingSystems.find(
+          ([operatingSystemNode]) => operatingSystemNode === node
+        )[1]
+      ]
+    );
+    const publicNetworkClusterNodes = [
+      publicNetworkClusterManagerNode,
+      ...publicNetworkClusterWorkerNodes
+    ];
     await logger.divide();
 
-    // Set all network file download sources
+    // Set all network cluster file download sources
     const tmpFiler = new TmpFiler();
-    const networkFiles = await Promise.all(
-      networkFilesRaw.map(async fileType => [
+    const networkClusterFiles = await Promise.all(
+      networkClusterManifestRaw.map(async fileType => [
         fileType[0],
         await Promise.all(
           fileType[1].map(
@@ -125,22 +140,22 @@ new (require("../lib/noun"))({
       ])
     );
 
-    // Select the network files to download
-    const networkFilesToDownload = networkFiles
+    // Select the network cluster files to download
+    const networkClusterFilesToDownload = networkClusterFiles
       .filter(
         target =>
           target[0] === "universal" ||
-          (allNodes.find(([_, os]) => os === "debian") &&
+          (publicNetworkClusterNodes.find(([_, os]) => os === "debian") &&
             target[0] === "debian") ||
-          (allNodes.find(([_, os]) => os === "centos") &&
+          (publicNetworkClusterNodes.find(([_, os]) => os === "centos") &&
             target[0] === "centos")
       )
       .filter(Boolean);
 
-    // Download network files
+    // Download network cluster files
     const downloader = new Downloader();
-    const networkFilesToUpload = await Promise.all(
-      networkFilesToDownload
+    const networkClusterFilesToUpload = await Promise.all(
+      networkClusterFilesToDownload
         .reduce((a, b) => a.concat(b[1].map(binary => [...binary, b[0]])), [])
         .map(
           async ([
@@ -169,18 +184,20 @@ new (require("../lib/noun"))({
     );
     await logger.divide();
 
-    // Set network services to disable
-    const networkServicesToDisable = [
+    // Set network cluster services to disable
+    const networkClusterServicesToDisable = [
       "firewalld.service",
-      "network-manager.service",
-      "network-worker.service"
+      "network-cluster-manager.service",
+      "network-cluster-worker.service"
     ];
 
-    // Disable network services
+    // Disable network cluster services
     const servicer = new Servicer();
     await Promise.all(
-      networkServicesToDisable
-        .map(service => allNodes.map(([node]) => `${node}:${service}`))
+      networkClusterServicesToDisable
+        .map(service =>
+          publicNetworkClusterNodes.map(([node]) => `${node}:${service}`)
+        )
         .reduce((a, b) => a.concat(b), [])
         .map(async destination => {
           await logger.log(
@@ -195,12 +212,12 @@ new (require("../lib/noun"))({
     );
     await logger.divide();
 
-    // Upload network files
+    // Upload network cluster files
     const uploader = new Uploader();
-    const networkFilesToInstall = await Promise.all(
-      allNodes
+    const networkClusterFilesToInstall = await Promise.all(
+      publicNetworkClusterNodes
         .map(([node, nodeOperatingSystem]) =>
-          networkFilesToUpload
+          networkClusterFilesToUpload
             .filter(
               binary =>
                 nodeOperatingSystem === binary[3] || binary[3] === "universal"
@@ -228,8 +245,8 @@ new (require("../lib/noun"))({
     );
     await logger.divide();
 
-    // Re-order the network files by nodes
-    const networkFilesToInstallByNodes = networkFilesToInstall
+    // Re-order the network cluster files by nodes
+    const networkClusterFilesToInstallByNodes = networkClusterFilesToInstall
       .reduce(
         (allFiles, file) =>
           allFiles.find(node =>
@@ -247,11 +264,11 @@ new (require("../lib/noun"))({
       )
       .filter(node => node[0] !== "");
 
-    // Install network files
+    // Install network cluster files
     const packager = new Packager();
     const permissioner = new Permissioner();
     await Promise.all(
-      networkFilesToInstallByNodes.map(async ([node, files]) => {
+      networkClusterFilesToInstallByNodes.map(async ([node, files]) => {
         const universalFiles = files.filter(file => file[2] === "universal");
         const debianFiles = files.filter(file => file[2] === "debian");
         const centOSFiles = files.filter(file => file[2] === "centos");
@@ -284,86 +301,106 @@ new (require("../lib/noun"))({
     );
     await logger.divide();
 
-    // Create network kernel config
+    // Create network cluster kernel config
     const kernelr = new Kernelr();
-    await logger.log(localhost, "Creating network kernel config");
+    await logger.log(
+      localhost,
+      "Creating private network cluster node kernel config"
+    );
     const networkKernelConfig = await kernelr.createConfig(
       ["net.ipv4.ip_forward = 1", "net.ipv4.conf.all.proxy_arp = 1"],
-      await tmpFiler.getPath("network.conf")
+      await tmpFiler.getPath("network-cluster.conf")
     );
     await logger.divide();
 
-    // Upload network kernel config
+    // Upload network cluster kernel config
     await Promise.all(
-      allNodes.map(async ([node]) => {
-        await logger.log(node, "Uploading network kernel config");
+      publicNetworkClusterNodes.map(async ([node]) => {
+        await logger.log(
+          node,
+          "Uploading private network cluster node kernel config"
+        );
         return await uploader.upload(
           networkKernelConfig,
-          `${node}:/etc/network.conf`,
+          `${node}:/etc/network-cluster.conf`,
           true
         );
       })
     );
     await logger.divide();
 
-    // Apply network kernel config
+    // Apply network cluster kernel config
     await Promise.all(
-      allNodes.map(async ([node]) => {
-        await logger.log(node, "Applying network kernel config");
-        return await kernelr.applyConfig(`${node}:/etc/network.conf`);
+      publicNetworkClusterNodes.map(async ([node]) => {
+        await logger.log(
+          node,
+          "Applying private network cluster node kernel config"
+        );
+        return await kernelr.applyConfig(`${node}:/etc/network-cluster.conf`);
       })
     );
     await logger.divide();
 
-    // Create network token
+    // Create network cluster token
     const cryptographer = new Cryptographer();
-    await logger.log(localhost, "Creating network token");
-    const networkToken = await cryptographer.getRandomString(32);
+    await logger.log(localhost, "Creating private network cluster token");
+    const networkClusterToken = await cryptographer.getRandomString(32);
     await logger.divide();
 
-    // Create network manager service
-    await logger.log(localhost, "Creating network manager service");
-    const networkManagerServiceSource = await servicer.createService({
-      description: "Overlay network daemon (manager and worker)",
+    // Create network cluster manager service
+    await logger.log(
+      localhost,
+      "Creating private network cluster manager service"
+    );
+    const networkClusterManagerService = await servicer.createService({
+      description: "Network cluster daemon (manager and worker node)",
       execStart: `/bin/sh -c "/usr/local/bin/wireguard-go wgoverlay && /usr/local/bin/wesher --bind-addr ${
-        networkManagerNode[0].split("@")[1]
-      } --cluster-key ${networkToken}"`,
+        publicNetworkClusterManagerNode[0].split("@")[1]
+      } --cluster-key ${networkClusterToken}"`,
       environment: "WG_I_PREFER_BUGGY_USERSPACE_TO_POLISHED_KMOD=1",
-      destination: await tmpFiler.getPath("network-manager.service")
+      destination: await tmpFiler.getPath("network-cluster-manager.service")
     });
     await logger.divide();
 
-    // Create network worker service
-    await logger.log(localhost, "Creating network worker service");
-    const networkWorkerServiceSource = await servicer.createService({
-      description: "Overlay network daemon (worker only)",
-      execStart: `/bin/sh -c "/usr/local/bin/wireguard-go wgoverlay && /usr/local/bin/wesher --cluster-key ${networkToken} --join ${
-        networkManagerNode[0].split("@")[1]
+    // Create network cluster worker service
+    await logger.log(
+      localhost,
+      "Creating private network cluster worker node service"
+    );
+    const networkClusterWorkerServiceSource = await servicer.createService({
+      description: "Network cluster daemon (worker only node)",
+      execStart: `/bin/sh -c "/usr/local/bin/wireguard-go wgoverlay && /usr/local/bin/wesher --cluster-key ${networkClusterToken} --join ${
+        publicNetworkClusterManagerNode[0].split("@")[1]
       }"`,
       environment: "WG_I_PREFER_BUGGY_USERSPACE_TO_POLISHED_KMOD=1",
-      destination: await tmpFiler.getPath("network-worker.service")
+      destination: await tmpFiler.getPath("network-cluster-worker.service")
     });
     await logger.divide();
 
-    // Upload network manager service
+    // Upload network cluster manager service
     await logger.log(
-      networkManagerNode[0],
-      "Uploading network manager service"
+      publicNetworkClusterManagerNode[0],
+      "Uploading private network cluster manager node service"
     );
     await uploader.upload(
-      networkManagerServiceSource,
-      `${networkManagerNode[0]}:/etc/systemd/system/network-manager.service`,
+      networkClusterManagerService,
+      `${
+        publicNetworkClusterManagerNode[0]
+      }:/etc/systemd/system/network-cluster-manager.service`,
       true
     );
     await logger.divide();
 
-    // Upload network worker service
+    // Upload network cluster worker service
     await Promise.all(
-      networkWorkerNodes.map(async ([node]) => {
-        await logger.log(node, "Uploading network worker service");
+      publicNetworkClusterWorkerNodes.map(async ([node]) => {
+        await logger.log(
+          node,
+          "Uploading private network cluster worker node service"
+        );
         return uploader.upload(
-          networkWorkerServiceSource,
-          `${node}:/etc/systemd/system/network-worker.service`,
+          networkClusterWorkerServiceSource,
+          `${node}:/etc/systemd/system/network-cluster-worker.service`,
           true
         );
       })
@@ -372,67 +409,81 @@ new (require("../lib/noun"))({
 
     // Reload services
     await Promise.all(
-      allNodes.map(async ([node]) => {
+      publicNetworkClusterNodes.map(async ([node]) => {
         await logger.log(node, "Reloading services");
         return servicer.reloadServices(node);
       })
     );
     await logger.divide();
 
-    // Enable network manager service
-    await logger.log(networkManagerNode[0], "Enabling network manager service");
+    // Enable network cluster manager service
+    await logger.log(
+      publicNetworkClusterManagerNode[0],
+      "Enabling private network cluster manager service"
+    );
     await servicer.enableService(
-      networkManagerNode[0],
-      "network-manager.service"
+      publicNetworkClusterManagerNode[0],
+      "network-cluster-manager.service"
     );
     await logger.divide();
 
-    // Enable network worker service
+    // Enable network cluster worker service
     await Promise.all(
-      networkWorkerNodes.map(async ([node]) => {
-        await logger.log(node, "Enabling network worker service");
-        return servicer.enableService(node, "network-worker.service");
+      publicNetworkClusterWorkerNodes.map(async ([node]) => {
+        await logger.log(
+          node,
+          "Enabling private network cluster worker node service"
+        );
+        return servicer.enableService(node, "network-cluster-worker.service");
       })
     );
     await logger.divide();
 
-    // Get network manager node in network
+    // Get network cluster manager node
     const iper = new IPer();
     await logger.log(
-      networkManagerNode[0],
-      "Getting network manager node in network"
+      publicNetworkClusterManagerNode[0],
+      "Getting private network cluster manager node"
     );
     await servicer.waitForService(
-      networkManagerNode[0],
-      "network-manager.service",
+      publicNetworkClusterManagerNode[0],
+      "network-cluster-manager.service",
       1000
     );
-    await iper.waitForInterface(networkManagerNode[0], "wgoverlay", 1000);
-    const networkManagerNodeInNetworkInterface = await iper.getInterface(
-      networkManagerNode[0],
+    await iper.waitForInterface(
+      publicNetworkClusterManagerNode[0],
+      "wgoverlay",
+      1000
+    );
+    const privateNetworkClusterManagerNodeInterface = await iper.getInterface(
+      publicNetworkClusterManagerNode[0],
       "wgoverlay"
     );
-    const networkManagerNodeInNetwork = [
-      `${networkManagerNode[0].split("@")[0]}@${
-        networkManagerNodeInNetworkInterface.ip
+    const privateNetworkClusterManagerNode = [
+      `${publicNetworkClusterManagerNode[0].split("@")[0]}@${
+        privateNetworkClusterManagerNodeInterface.ip
       }`,
-      networkManagerNode[1],
-      networkManagerNode[0]
+      publicNetworkClusterManagerNode[1],
+      publicNetworkClusterManagerNode[0]
     ];
     await logger.divide();
 
-    // Get network worker nodes in network
-    const networkWorkerNodesInNetwork = [];
+    // Get network cluster worker nodes
+    const privateNetworkClusterWorkerNodes = [];
     await Promise.all(
-      networkWorkerNodes.map(async ([node]) => {
-        await logger.log(node, "Getting network worker node in network");
-        await servicer.waitForService(node, "network-worker.service", 1000);
+      publicNetworkClusterWorkerNodes.map(async ([node]) => {
+        await logger.log(node, "Getting private network cluster worker node");
+        await servicer.waitForService(
+          node,
+          "network-cluster-worker.service",
+          1000
+        );
         await iper.waitForInterface(node, "wgoverlay", 1000);
         const networkWorkerNodeInNetworkInterface = await iper.getInterface(
           node,
           "wgoverlay"
         );
-        return networkWorkerNodesInNetwork.push([
+        return privateNetworkClusterWorkerNodes.push([
           `${node.split("@")[0]}@${networkWorkerNodeInNetworkInterface.ip}`,
           nodeOperatingSystems.find(([osNode]) => node === osNode)[1],
           node
@@ -441,60 +492,71 @@ new (require("../lib/noun"))({
     );
     await logger.divide();
 
-    // Create data model of network
-    await logger.log(localhost, "Creating network node data model");
-    const allNodesInNetwork = [
-      networkManagerNodeInNetwork,
-      ...networkWorkerNodesInNetwork
+    // Create data model of private network cluster
+    await logger.log(
+      localhost,
+      "Creating private network cluster node data model"
+    );
+    const privateNetworkClusterNodes = [
+      privateNetworkClusterManagerNode,
+      ...privateNetworkClusterWorkerNodes
     ];
     await logger.divide();
 
-    // Wait for node connectivity
+    // Wait for private network cluster node connectivity
     await Promise.all(
-      allNodesInNetwork.map(async ([node]) => {
-        await logger.log(node, "Waiting for network node connectivity");
+      privateNetworkClusterNodes.map(async ([node]) => {
+        await logger.log(
+          node,
+          "Waiting for private network cluster node connectivity"
+        );
         return await pinger.waitForNode(`${node.split("@")[1]}:22`, 1000);
       })
     );
     await logger.divide();
 
     // Set up network node access
-    const networkNodeKeys = await Promise.all(
-      allNodesInNetwork.map(async ([node]) => {
-        await logger.log(node, "Setting up network node access");
+    const privateNetworkClusterNodeKeys = await Promise.all(
+      privateNetworkClusterNodes.map(async ([node]) => {
+        await logger.log(
+          node,
+          "Setting up private network cluster node access"
+        );
         const isLocalSSHer = new SSHer(node);
         if (isLocalSSHer.isLocal) {
           return undefined;
         } else {
-          const ssher = new SSHer(`${localUsername}@${localHostname}`);
+          const ssher = new SSHer(localhost);
           return await ssher.getKey(node.split("@")[1]);
         }
       })
     );
     await localSSHer.trustKeys(
-      networkNodeKeys,
+      privateNetworkClusterNodeKeys,
       `${homer.getHomeDirectory()}/.ssh/known_hosts`
     );
     await logger.divide();
 
     // Create data model of cluster
     await logger.log(localhost, "Creating cluster node data model");
-    const clusterManagerNodeInNetwork = networkManagerNodeInNetwork;
-    const allNodesInNetworkForCluster = allNodesInNetwork.filter(node => {
-      const ssher1 = new SSHer(node[0]);
-      const ssher2 = new SSHer(node[2]);
-      return !ssher1.isLocal && !ssher2.isLocal;
-    });
+    const clusterManagerNodeInNetwork = privateNetworkClusterManagerNode;
+    const allNodesInNetworkForCluster = privateNetworkClusterNodes.filter(
+      node => {
+        const ssher1 = new SSHer(node[0]);
+        const ssher2 = new SSHer(node[2]);
+        return !ssher1.isLocal && !ssher2.isLocal;
+      }
+    );
     const clusterWorkerNodesInNetwork = allNodesInNetworkForCluster.filter(
       node =>
-        networkManagerNodeInNetwork[0] !== node[0] &&
-        networkManagerNodeInNetwork[2] !== node[2]
+        privateNetworkClusterManagerNode[0] !== node[0] &&
+        privateNetworkClusterManagerNode[2] !== node[2]
     );
     await logger.divide();
 
     // Set all cluster file download sources
     const clusterFiles = await Promise.all(
-      clusterFilesRaw.map(async fileType => [
+      workloadClusterManifestRaw.map(async fileType => [
         fileType[0],
         await Promise.all(
           fileType[1].map(
@@ -865,10 +927,10 @@ new (require("../lib/noun"))({
           {
             name: "network",
             manager: {
-              public: networkManagerNodeInNetwork[2],
-              private: networkManagerNodeInNetwork[0]
+              public: privateNetworkClusterManagerNode[2],
+              private: privateNetworkClusterManagerNode[0]
             },
-            token: networkToken
+            token: networkClusterToken
           },
           {
             name: "workload",
