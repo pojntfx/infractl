@@ -20,4 +20,8 @@ module.exports = class {
   async getHetznerToken() {
     return this.configstore.get("hetznerToken");
   }
+
+  async getAll() {
+    return this.configstore.all;
+  }
 };
