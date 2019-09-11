@@ -1,8 +1,12 @@
 module.exports = class {
-  async log(destination, message, done) {
+  async log(destination, message, messageType) {
     console.log(
       `${new Date().getTime()} [${
-        done ? "DONE" : "STEP"
+        messageType === "done"
+          ? "DONE"
+          : messageType === "error"
+          ? "ERROR"
+          : "INFO"
       }] ${`${message} `.padEnd(60, ".")} ${`${destination}`}`
     );
   }

@@ -882,6 +882,6 @@ new (require("../lib/noun"))({
     await logger.divide();
 
     // Send positive message to user
-    await logger.log(localhost, "Successfully applied cluster.", true);
+    await logger.log(localhost, "Successfully applied cluster.", "done");
   }
 });

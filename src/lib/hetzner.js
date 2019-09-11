@@ -2,9 +2,9 @@ const fetch = require("node-fetch");
 const _ = require("lodash");
 
 module.exports = class {
-  constructor({ endpoint, accessToken }) {
+  constructor({ endpoint, token }) {
     this.endpoint = endpoint;
-    this.accessToken = accessToken;
+    this.token = token;
   }
 
   __fetch(path, args) {
@@ -12,7 +12,7 @@ module.exports = class {
       `${this.endpoint}/${path}`,
       _.merge(args, {
         headers: {
-          Authorization: `Bearer ${this.accessToken}`
+          Authorization: `Bearer ${this.token}`
         }
       })
     );

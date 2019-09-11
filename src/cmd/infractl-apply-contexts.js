@@ -33,6 +33,7 @@ new (require("../lib/noun"))({
     }
     await logger.divide();
 
-    await logger.log(localhost, "Successfully applied context.", true);
+    // Send positive message to user
+    await logger.log(localhost, "Successfully applied context.", "done");
   }
 });
