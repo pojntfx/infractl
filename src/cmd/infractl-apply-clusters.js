@@ -3,13 +3,13 @@
 const Logger = require("../lib/logger");
 const Pinger = require("../lib/pinger");
 const SSHer = require("../lib/ssher");
-const networkFilesRaw = require("../data/networkFiles.json");
+const networkFilesRaw = require("../data/networkClusterManifest.json");
 const TmpFiler = require("../lib/tmpfiler");
 const Downloader = require("../lib/downloader");
 const OSer = require("../lib/oser");
 const Uploader = require("../lib/uploader");
 const Packager = require("../lib/packager");
-const clusterFilesRaw = require("../data/clusterFiles.json");
+const clusterFilesRaw = require("../data/workloadClusterManifest.json");
 const SELinuxer = require("../lib/selinuxer");
 const Permissioner = require("../lib/permissioner");
 const Kernelr = require("../lib/kernelr");
@@ -755,10 +755,10 @@ new (require("../lib/noun"))({
       true
     );
     await uploader.upload(
-      `${__dirname}/../data/storageFile.yaml`,
+      `${__dirname}/../data/storageClusterManifest.yaml`,
       `${
         clusterManagerNodeInNetwork[0]
-      }:/var/lib/rancher/k3s/server/manifests/storageFile.yaml`,
+      }:/var/lib/rancher/k3s/server/manifests/storageCluster.yaml`,
       true
     );
     await logger.divide();
@@ -861,23 +861,27 @@ new (require("../lib/noun"))({
     await logger.log(
       localhost,
       {
-        networkCluster: {
-          manager: {
-            public: networkManagerNodeInNetwork[2],
-            private: networkManagerNodeInNetwork[0]
+        clusters: [
+          {
+            name: "network",
+            manager: {
+              public: networkManagerNodeInNetwork[2],
+              private: networkManagerNodeInNetwork[0]
+            },
+            token: networkToken
           },
-          token: networkToken
-        },
-        workloadCluster: {
-          manager: {
-            public: clusterManagerNodeInNetwork[2],
-            private: clusterManagerNodeInNetwork[0]
-          },
-          token: clusterToken
-        }
+          {
+            name: "workload",
+            manager: {
+              public: clusterManagerNodeInNetwork[2],
+              private: clusterManagerNodeInNetwork[0]
+            },
+            token: clusterToken
+          }
+        ]
       },
       "data",
-      "Successfully applied cluster's variables"
+      "Successfully applied clusters' variables"
     );
     await logger.log(
       localhost,
