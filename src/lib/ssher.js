@@ -61,10 +61,14 @@ module.exports = class {
 
   async putFile(source, destination, withSudo) {
     if (this.isLocal) {
-      if (withSudo) {
-        return await this.shell.exec(`sudo cp ${source} ${destination}`);
+      if (!(source === destination)) {
+        if (withSudo) {
+          return await this.shell.exec(`sudo cp ${source} ${destination}`);
+        } else {
+          return await this.shell.cp(source, destination);
+        }
       } else {
-        return await this.shell.cp(source, destination);
+        return true;
       }
     } else {
       await this.shell.connect({
