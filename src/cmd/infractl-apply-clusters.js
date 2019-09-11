@@ -258,7 +258,7 @@ new (require("../lib/noun"))({
 
         // The following ones can't be installed in parallel; `dpkg` and `rpm` use lock files
         if (universalFiles.length > 0) {
-          for ([name, destination, operatingSystem] of universalFiles) {
+          for (let [name, destination, operatingSystem] of universalFiles) {
             await logger.log(
               node,
               `Setting permissions for ${name} (${operatingSystem})`
@@ -267,13 +267,13 @@ new (require("../lib/noun"))({
           }
         }
         if (debianFiles.length > 0) {
-          for (file of debianFiles) {
+          for (let file of debianFiles) {
             await logger.log(node, `Installing ${file[0]} (${file[2]})`);
             await packager.installDebianPackage(file[1]);
           }
         }
         if (centOSFiles.length > 0) {
-          for (file of centOSFiles) {
+          for (let file of centOSFiles) {
             await logger.log(node, `Installing ${file[0]} (${file[2]})`);
             await packager.installCentOSPackage(file[1]);
           }
@@ -639,7 +639,7 @@ new (require("../lib/noun"))({
 
         // The following ones can't be installed in parallel; `dpkg` and `rpm` use lock files
         if (universalFiles.length > 0) {
-          for ([name, destination, operatingSystem] of universalFiles) {
+          for (let [name, destination, operatingSystem] of universalFiles) {
             await logger.log(
               node,
               `Setting permissions for ${name} (${operatingSystem})`
@@ -648,13 +648,13 @@ new (require("../lib/noun"))({
           }
         }
         if (debianFiles.length > 0) {
-          for (file of debianFiles) {
+          for (let file of debianFiles) {
             await logger.log(node, `Installing ${file[0]} (${file[2]})`);
             await packager.installDebianPackage(file[1]);
           }
         }
         if (centOSFiles.length > 0) {
-          for (file of centOSFiles) {
+          for (let file of centOSFiles) {
             await logger.log(node, `Installing ${file[0]} (${file[2]})`);
             await packager.installCentOSPackage(file[1]);
           }
