@@ -22,7 +22,7 @@ new (require("../lib/noun"))({
     } else {
       await logger.log(
         commander.args[0],
-        "Private network cluster token could not be found",
+        "Private network cluster token could not be found!",
         "error"
       );
     }
