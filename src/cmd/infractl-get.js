@@ -3,8 +3,24 @@
 new (require("../lib/verb"))([
   ["keys", "Get key(s)", "key"],
   ["nodes", "Get node(s)", "node"],
-  ["networktokens", "Get network token", "networktoken"],
-  ["networknodes", "Get network nodes(s)", "networknode"],
-  ["clustertokens", "Get network token", "clustertoken"],
-  ["clusterconfigs", "Get network config", "clusterconfig"]
+  [
+    "privatenetworkclustertokens",
+    "Get private network cluster token",
+    "privatenetworkclustertoken"
+  ],
+  [
+    "privatenetworkclusternodes",
+    "Get private network cluster nodes(s)",
+    "privatenetworkclusternode"
+  ],
+  [
+    "workloadclustertokens",
+    "Get workload cluster token",
+    "workloadclustertoken"
+  ],
+  [
+    "workloadclusterconfigs",
+    "Get workload cluster config",
+    "workloadclusterconfig"
+  ]
 ]);
