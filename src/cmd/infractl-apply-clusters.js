@@ -10,6 +10,7 @@ const OSer = require("../lib/oser");
 const Uploader = require("../lib/uploader");
 const Packager = require("../lib/packager");
 const workloadClusterManifestRaw = require("../data/workloadClusterManifest.json");
+const Issuer = require("../lib/issuer");
 const SELinuxer = require("../lib/selinuxer");
 const Permissioner = require("../lib/permissioner");
 const Kernelr = require("../lib/kernelr");
@@ -24,6 +25,12 @@ const YAML = require("yaml");
 
 new (require("../lib/noun"))({
   args: "<user@ip> [otherTargets...]",
+  options: [
+    [
+      "-e, --email [user@provider]",
+      "Email to use for Let's Encrypt certificate issuers (optional, if not provided they won't be deployed)"
+    ]
+  ],
   checker: commander =>
     commander.args[0] &&
     (commander.args[0].split("@")[0] && commander.args[0].split("@")[1]),
@@ -858,6 +865,33 @@ new (require("../lib/noun"))({
       }:/var/lib/rancher/k3s/server/manifests/certManager.yaml`,
       true
     );
+    // Upload workload cluster Let's Encrypt issuer manifest
+    if (
+      commander.email &&
+      (commander.email.split("@")[0] && commander.email.split("@")[1])
+    ) {
+      await logger.log(
+        localhost,
+        "Creating workload cluster Let's Encrypt issuer manifest"
+      );
+      const issuer = new Issuer();
+      const issuersManifestSource = await issuer.createIssuers(
+        `${localhost}:${__dirname}/../data/certIssuersManifest.yaml`,
+        await tmpFiler.getPath("certIssuersManifest.yaml"),
+        commander.email
+      );
+      await logger.log(
+        workloadClusterManagerNodeInPrivateNetworkCluster[0],
+        "Uploading workload cluster Let's Encrypt issuer manifest"
+      );
+      await uploader.upload(
+        issuersManifestSource,
+        `${
+          workloadClusterManagerNodeInPrivateNetworkCluster[0]
+        }:/var/lib/rancher/k3s/server/manifests/certIssuers.yaml`,
+        true
+      );
+    }
     await logger.divide();
 
     // Reload services on all workload cluster nodes
