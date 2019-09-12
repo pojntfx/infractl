@@ -13,7 +13,7 @@
   "pkg": {
     "scripts": "src/**/*.js",
     "assets": [
-      "src/data/storageFile.yaml"
+      "src/data/*.yaml"
     ]
   },
   "author": "Felicitas Pojtinger <felicitas@pojtinger.com>",
