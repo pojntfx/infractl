@@ -796,7 +796,7 @@ new (require("../lib/noun"))({
       description: "Workload cluster daemon (manager only)",
       execStart: `/usr/local/bin/k3s server --flannel-iface wgoverlay --tls-san ${
         workloadClusterManagerNodeInPrivateNetworkCluster[2].split("@")[1]
-      } --disable-agent`,
+      }`,
       destination: await tmpFiler.getPath("workload-cluster-manager.service")
     });
     await logger.divide();
