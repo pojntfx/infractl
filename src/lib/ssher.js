@@ -44,7 +44,8 @@ module.exports = class {
   async execCommand(command) {
     return new Promise(async resolve => {
       if (this.isLocal) {
-        resolve(this.shell.exec(command, { silent: true }));
+        const outputRaw = this.shell.exec(command, { silent: true });
+        resolve(outputRaw.stdout);
       } else {
         await this.shell.connect({
           host: this.hostname,
