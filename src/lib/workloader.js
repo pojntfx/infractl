@@ -10,7 +10,7 @@ module.exports = class {
     );
   }
 
-  async waitForWorkloadClusterToken(destination, interval) {
+  async waitForClusterToken(destination, interval) {
     const clusterToken = await this.getClusterToken(destination);
     return new Promise(resolve => {
       if (clusterToken) {
@@ -18,7 +18,7 @@ module.exports = class {
       } else {
         setTimeout(
           () =>
-            this.waitForWorkloadClusterToken(destination, interval).then(() =>
+            this.waitForClusterToken(destination, interval).then(() =>
               resolve(true)
             ),
           interval
@@ -27,7 +27,7 @@ module.exports = class {
     });
   }
 
-  async getWorkloadClusterConfig(destination, ip) {
+  async getClusterConfig(destination, ip) {
     const cater = new Cater();
     const rawClusterConfig = await cater.getFileContent(
       `${destination}:/etc/rancher/k3s/k3s.yaml`,
@@ -40,7 +40,7 @@ module.exports = class {
   }
 
   async waitForClusterConfig(destination, interval) {
-    const clusterConfig = await this.getWorkloadClusterConfig(destination);
+    const clusterConfig = await this.getClusterConfig(destination);
     return new Promise(resolve => {
       if (clusterConfig) {
         resolve(true);

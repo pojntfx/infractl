@@ -13,7 +13,7 @@ new (require("../lib/noun"))({
     const workloader = new Workloader();
 
     // Get cluster config
-    const clusterConfig = await workloader.getWorkloadClusterConfig(
+    const clusterConfig = await workloader.getClusterConfig(
       commander.args[0],
       commander.args[0].split("@")[1]
     );
