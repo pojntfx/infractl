@@ -4,6 +4,7 @@ metadata:
   name: openebs
   namespace: kube-system
 spec:
+  targetNamespace: default
   chart: stable/openebs
   set:
     defaultStorageConfig.enabled: false

@@ -4,6 +4,7 @@ metadata:
   name: nginx-ingress
   namespace: kube-system
 spec:
+  targetNamespace: default
   chart: stable/nginx-ingress
   set:
     controller.hostNetwork: "true"

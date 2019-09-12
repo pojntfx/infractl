@@ -8309,6 +8309,7 @@ metadata:
   name: cert-manager
   namespace: kube-system
 spec:
+  targetNamespace: default
   chart: cert-manager
   repo: https://charts.jetstack.io
   set:
