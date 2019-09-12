@@ -815,7 +815,7 @@ new (require("../lib/noun"))({
     );
     await logger.divide();
 
-    // Upload workload cluster storage manifest
+    // Create remote manifest directory
     await logger.log(
       workloadClusterManagerNodeInPrivateNetworkCluster[0],
       "Uploading workload cluster storage manifest"
@@ -826,11 +826,24 @@ new (require("../lib/noun"))({
       }:/var/lib/rancher/k3s/server/manifests`,
       true
     );
+    // Upload workload cluster storage manifest
     await uploader.upload(
       `${__dirname}/../data/storageClusterManifest.yaml`,
       `${
         workloadClusterManagerNodeInPrivateNetworkCluster[0]
       }:/var/lib/rancher/k3s/server/manifests/storageCluster.yaml`,
+      true
+    );
+    // Upload workload cluster ingress manifest
+    await logger.log(
+      workloadClusterManagerNodeInPrivateNetworkCluster[0],
+      "Uploading workload cluster ingress manifest"
+    );
+    await uploader.upload(
+      `${__dirname}/../data/ingressControllerManifest.yaml`,
+      `${
+        workloadClusterManagerNodeInPrivateNetworkCluster[0]
+      }:/var/lib/rancher/k3s/server/manifests/ingressController.yaml`,
       true
     );
     await logger.divide();
