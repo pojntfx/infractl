@@ -24,7 +24,9 @@ const YAML = require("yaml");
 
 new (require("../lib/noun"))({
   args: "<user@ip> [otherTargets...]",
-  checker: commander => commander.args[0],
+  checker: commander =>
+    commander.args[0] &&
+    (commander.args[0].split("@")[0] && commander.args[0].split("@")[1]),
   action: async commander => {
     // Set up logger
     const logger = new Logger();
@@ -949,7 +951,7 @@ new (require("../lib/noun"))({
       localhost,
       [
         {
-          name: "network",
+          name: "privateNetwork",
           managerPublicAccess: privateNetworkClusterManagerNode[2],
           managerPrivateAccess: privateNetworkClusterManagerNode[0],
           token: networkClusterToken

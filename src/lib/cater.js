@@ -17,12 +17,18 @@ module.exports = class {
       });
     } else {
       const fileContentRaw = await ssher.execCommand(
-        `[ -f ${destination.split("@")[1].split(":")[1]} ] && ${
-          withSudo ? "sudo" : ""
-        } cat ${destination.split("@")[1].split(":")[1]}`
+        `${withSudo ? "sudo" : ""} [ -f ${
+          destination.split("@")[1].split(":")[1]
+        } ] && ${withSudo ? "sudo" : ""} cat ${
+          destination.split("@")[1].split(":")[1]
+        }`
       );
       fileContent = fileContentRaw;
     }
-    return asJSON ? JSON.parse(fileContent) : fileContent;
+    return fileContent
+      ? asJSON
+        ? JSON.parse(fileContent)
+        : fileContent
+      : false;
   }
 };
