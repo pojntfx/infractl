@@ -34,7 +34,9 @@ module.exports = class {
       false,
       true
     );
-    return rawClusterConfig.replace(/127\.0\.0\.1/g, ip);
+    return rawClusterConfig
+      ? rawClusterConfig.replace(/127\.0\.0\.1/g, ip)
+      : false;
   }
 
   async waitForClusterConfig(destination, interval) {
