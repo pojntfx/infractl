@@ -346,7 +346,7 @@ new (require("../lib/noun"))({
     // Create network cluster token
     const cryptographer = new Cryptographer();
     await logger.log(localhost, "Creating private network cluster token");
-    const networkClusterToken = await cryptographer.getRandomString(32);
+    const privateNetworkClusterToken = await cryptographer.getRandomString(32);
     await logger.divide();
 
     // Create network cluster manager service
@@ -358,7 +358,7 @@ new (require("../lib/noun"))({
       description: "Network cluster daemon (manager and worker)",
       execStart: `/bin/sh -c "/usr/local/bin/wireguard-go wgoverlay && /usr/local/bin/wesher --bind-addr ${
         publicNetworkClusterManagerNode[0].split("@")[1]
-      } --cluster-key ${networkClusterToken}"`,
+      } --cluster-key ${privateNetworkClusterToken}"`,
       environment: "WG_I_PREFER_BUGGY_USERSPACE_TO_POLISHED_KMOD=1",
       destination: await tmpFiler.getPath("network-cluster-manager.service")
     });
@@ -371,7 +371,7 @@ new (require("../lib/noun"))({
     );
     const networkClusterWorkerServiceSource = await servicer.createService({
       description: "Network cluster daemon (worker only)",
-      execStart: `/bin/sh -c "/usr/local/bin/wireguard-go wgoverlay && /usr/local/bin/wesher --cluster-key ${networkClusterToken} --join ${
+      execStart: `/bin/sh -c "/usr/local/bin/wireguard-go wgoverlay && /usr/local/bin/wesher --cluster-key ${privateNetworkClusterToken} --join ${
         publicNetworkClusterManagerNode[0].split("@")[1]
       }"`,
       environment: "WG_I_PREFER_BUGGY_USERSPACE_TO_POLISHED_KMOD=1",
@@ -949,22 +949,18 @@ new (require("../lib/noun"))({
     // Log the data
     await logger.log(
       localhost,
-      [
-        {
-          name: "privateNetwork",
-          managerPublicAccess: privateNetworkClusterManagerNode[2],
-          managerPrivateAccess: privateNetworkClusterManagerNode[0],
-          token: networkClusterToken
-        },
-        {
-          name: "workload",
-          managerPublicAccess:
-            workloadClusterManagerNodeInPrivateNetworkCluster[2],
-          managerPrivateAccess:
-            workloadClusterManagerNodeInPrivateNetworkCluster[0],
-          token: workloadClusterToken
-        }
-      ],
+      {
+        privateNetworkClusterManagerNodePublicAccess:
+          privateNetworkClusterManagerNode[2],
+        privateNetworkClusterManagerNodePrivateAccess:
+          privateNetworkClusterManagerNode[0],
+        privateNetworkClusterToken: privateNetworkClusterToken,
+        workloadClusterManagerNodePublicAccess:
+          workloadClusterManagerNodeInPrivateNetworkCluster[2],
+        workloadClusterManagerNodePrivateAccess:
+          workloadClusterManagerNodeInPrivateNetworkCluster[0],
+        workloadClusterToken: workloadClusterToken
+      },
       "data",
       "Successfully applied clusters' variables"
     );
