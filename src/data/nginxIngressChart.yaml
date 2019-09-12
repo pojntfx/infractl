@@ -1,0 +1,11 @@
+apiVersion: helm.cattle.io/v1
+kind: HelmChart
+metadata:
+  name: nginx-ingress
+  namespace: kube-system
+spec:
+  chart: stable/nginx-ingress
+  set:
+    controller.hostNetwork: "true"
+    controller.kind: "DaemonSet"
+    controller.daemonset.useHostPort: "true"
