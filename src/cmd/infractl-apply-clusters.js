@@ -822,10 +822,10 @@ new (require("../lib/noun"))({
     );
     await logger.divide();
 
-    // Create remote manifest directory
+    // Create remote manifests and charts directory
     await logger.log(
       workloadClusterManagerNodeInPrivateNetworkCluster[0],
-      "Uploading workload cluster storage manifest"
+      "Creating remote manifests and charts directory"
     );
     await uploader.createDirectory(
       `${
@@ -833,46 +833,50 @@ new (require("../lib/noun"))({
       }:/var/lib/rancher/k3s/server/manifests`,
       true
     );
-    // Upload workload cluster storage manifest
-    await uploader.upload(
-      `${__dirname}/../data/storageClusterManifest.yaml`,
-      `${
-        workloadClusterManagerNodeInPrivateNetworkCluster[0]
-      }:/var/lib/rancher/k3s/server/manifests/storageCluster.yaml`,
-      true
-    );
-    // Upload workload cluster ingress manifest
+    // Upload workload cluster storage chart
     await logger.log(
       workloadClusterManagerNodeInPrivateNetworkCluster[0],
-      "Uploading workload cluster ingress manifest"
+      "Uploading workload cluster storage chart"
     );
     await uploader.upload(
-      `${__dirname}/../data/ingressControllerManifest.yaml`,
+      `${__dirname}/../data/openEBSChart.yaml`,
       `${
         workloadClusterManagerNodeInPrivateNetworkCluster[0]
-      }:/var/lib/rancher/k3s/server/manifests/ingressController.yaml`,
+      }:/var/lib/rancher/k3s/server/manifests/openEBS.yaml`,
       true
     );
-    // Upload workload cluster cert-manager manifest
+    // Upload workload cluster ingress chart
     await logger.log(
       workloadClusterManagerNodeInPrivateNetworkCluster[0],
-      "Uploading workload cluster cert-manager manifest"
+      "Uploading workload cluster ingress chart"
     );
     await uploader.upload(
-      `${__dirname}/../data/certManagerManifest.yaml`,
+      `${__dirname}/../data/nginxIngressChart.yaml`,
+      `${
+        workloadClusterManagerNodeInPrivateNetworkCluster[0]
+      }:/var/lib/rancher/k3s/server/manifests/nginxIngress.yaml`,
+      true
+    );
+    // Upload workload cluster certificate manager chart
+    await logger.log(
+      workloadClusterManagerNodeInPrivateNetworkCluster[0],
+      "Uploading workload cluster certificate manager chart"
+    );
+    await uploader.upload(
+      `${__dirname}/../data/certManagerChart.yaml`,
       `${
         workloadClusterManagerNodeInPrivateNetworkCluster[0]
       }:/var/lib/rancher/k3s/server/manifests/certManager.yaml`,
       true
     );
-    // Upload workload cluster Let's Encrypt issuer manifest
+    // Upload workload cluster certificate issuer manifest
     if (
       commander.email &&
       (commander.email.split("@")[0] && commander.email.split("@")[1])
     ) {
       await logger.log(
         localhost,
-        "Creating workload cluster Let's Encrypt issuer manifest"
+        "Creating workload cluster certificate issuer manifest"
       );
       const issuer = new Issuer();
       const issuersManifestSource = await issuer.createIssuers(
@@ -882,7 +886,7 @@ new (require("../lib/noun"))({
       );
       await logger.log(
         workloadClusterManagerNodeInPrivateNetworkCluster[0],
-        "Uploading workload cluster Let's Encrypt issuer manifest"
+        "Uploading workload cluster certificate issuer manifest"
       );
       await uploader.upload(
         issuersManifestSource,
