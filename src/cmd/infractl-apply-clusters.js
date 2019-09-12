@@ -794,7 +794,7 @@ new (require("../lib/noun"))({
     await logger.log(localhost, "Creating cluster manager service");
     const workloadClusterManagerServiceSource = await servicer.createService({
       description: "Workload cluster daemon (manager only)",
-      execStart: `/usr/local/bin/k3s server --flannel-iface wgoverlay --tls-san ${
+      execStart: `/usr/local/bin/k3s server --no-deploy traefik --no-deploy servicelb --flannel-iface wgoverlay --tls-san ${
         workloadClusterManagerNodeInPrivateNetworkCluster[2].split("@")[1]
       }`,
       destination: await tmpFiler.getPath("workload-cluster-manager.service")
@@ -888,7 +888,7 @@ new (require("../lib/noun"))({
     await logger.log(localhost, "Creating workload cluster worker service");
     const workloadClusterWorkerServiceSource = await servicer.createService({
       description: "Workloda cluster daemon (worker only)",
-      execStart: `/usr/local/bin/k3s agent --flannel-iface wgoverlay --token ${workloadClusterToken} --server https://${
+      execStart: `/usr/local/bin/k3s agent --no-deploy traefik --no-deploy servicelb --flannel-iface wgoverlay --token ${workloadClusterToken} --server https://${
         workloadClusterManagerNodeInPrivateNetworkCluster[0].split("@")[1]
       }:6443`,
       destination: await tmpFiler.getPath("workload-cluster-worker.service")
