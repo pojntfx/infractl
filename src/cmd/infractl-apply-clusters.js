@@ -875,7 +875,7 @@ new (require("../lib/noun"))({
       "workload-cluster-manager.service",
       1000
     );
-    await workloader.waitForWorkloadClusterToken(
+    await workloader.waitForClusterToken(
       workloadClusterManagerNodeInPrivateNetworkCluster[0],
       1000
     );
@@ -940,7 +940,7 @@ new (require("../lib/noun"))({
     await workloader.waitForClusterConfig(
       workloadClusterManagerNodeInPrivateNetworkCluster[0]
     );
-    const workloadClusterConfig = await workloader.getWorkloadClusterConfig(
+    const workloadClusterConfig = await workloader.getClusterConfig(
       workloadClusterManagerNodeInPrivateNetworkCluster[0],
       workloadClusterManagerNodeInPrivateNetworkCluster[2].split("@")[1]
     );
