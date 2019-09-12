@@ -800,7 +800,7 @@ new (require("../lib/noun"))({
     // Create workload cluster manager service
     await logger.log(localhost, "Creating cluster manager service");
     const workloadClusterManagerServiceSource = await servicer.createService({
-      description: "Workload cluster daemon (manager only)",
+      description: "Workload cluster daemon (manager and worker)",
       execStart: `/usr/local/bin/k3s server --no-deploy traefik --no-deploy servicelb --flannel-iface wgoverlay --tls-san ${
         workloadClusterManagerNodeInPrivateNetworkCluster[2].split("@")[1]
       }`,
