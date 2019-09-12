@@ -888,7 +888,7 @@ new (require("../lib/noun"))({
     await logger.log(localhost, "Creating workload cluster worker service");
     const workloadClusterWorkerServiceSource = await servicer.createService({
       description: "Workloda cluster daemon (worker only)",
-      execStart: `/usr/local/bin/k3s agent --no-deploy traefik --no-deploy servicelb --flannel-iface wgoverlay --token ${workloadClusterToken} --server https://${
+      execStart: `/usr/local/bin/k3s agent --flannel-iface wgoverlay --token ${workloadClusterToken} --server https://${
         workloadClusterManagerNodeInPrivateNetworkCluster[0].split("@")[1]
       }:6443`,
       destination: await tmpFiler.getPath("workload-cluster-worker.service")
