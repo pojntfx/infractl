@@ -358,9 +358,7 @@ new (require("../lib/noun"))({
         publicNetworkClusterManagerNode[0].split("@")[1]
       } --cluster-key ${networkClusterToken}"`,
       environment: "WG_I_PREFER_BUGGY_USERSPACE_TO_POLISHED_KMOD=1",
-      destination: await tmpFiler.getPath(
-        "network-cluster-manager.service"
-      )
+      destination: await tmpFiler.getPath("network-cluster-manager.service")
     });
     await logger.divide();
 
@@ -375,9 +373,7 @@ new (require("../lib/noun"))({
         publicNetworkClusterManagerNode[0].split("@")[1]
       }"`,
       environment: "WG_I_PREFER_BUGGY_USERSPACE_TO_POLISHED_KMOD=1",
-      destination: await tmpFiler.getPath(
-        "network-cluster-worker.service"
-      )
+      destination: await tmpFiler.getPath("network-cluster-worker.service")
     });
     await logger.divide();
 
@@ -438,10 +434,7 @@ new (require("../lib/noun"))({
           node,
           "Enabling private network cluster worker node service"
         );
-        return servicer.enableService(
-          node,
-          "network-cluster-worker.service"
-        );
+        return servicer.enableService(node, "network-cluster-worker.service");
       })
     );
     await logger.divide();
@@ -954,26 +947,22 @@ new (require("../lib/noun"))({
     // Log the data
     await logger.log(
       localhost,
-      {
-        clusters: [
-          {
-            name: "network",
-            manager: {
-              public: privateNetworkClusterManagerNode[2],
-              private: privateNetworkClusterManagerNode[0]
-            },
-            token: networkClusterToken
-          },
-          {
-            name: "workload",
-            manager: {
-              public: workloadClusterManagerNodeInPrivateNetworkCluster[2],
-              private: workloadClusterManagerNodeInPrivateNetworkCluster[0]
-            },
-            token: workloadClusterToken
-          }
-        ]
-      },
+      [
+        {
+          name: "network",
+          managerPublicAccess: privateNetworkClusterManagerNode[2],
+          managerPrivateAccess: privateNetworkClusterManagerNode[0],
+          token: networkClusterToken
+        },
+        {
+          name: "workload",
+          managerPublicAccess:
+            workloadClusterManagerNodeInPrivateNetworkCluster[2],
+          managerPrivateAccess:
+            workloadClusterManagerNodeInPrivateNetworkCluster[0],
+          token: workloadClusterToken
+        }
+      ],
       "data",
       "Successfully applied clusters' variables"
     );
