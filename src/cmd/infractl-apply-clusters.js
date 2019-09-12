@@ -846,6 +846,18 @@ new (require("../lib/noun"))({
       }:/var/lib/rancher/k3s/server/manifests/ingressController.yaml`,
       true
     );
+    // Upload workload cluster cert-manager manifest
+    await logger.log(
+      workloadClusterManagerNodeInPrivateNetworkCluster[0],
+      "Uploading workload cluster cert-manager manifest"
+    );
+    await uploader.upload(
+      `${__dirname}/../data/certManagerManifest.yaml`,
+      `${
+        workloadClusterManagerNodeInPrivateNetworkCluster[0]
+      }:/var/lib/rancher/k3s/server/manifests/certManager.yaml`,
+      true
+    );
     await logger.divide();
 
     // Reload services on all workload cluster nodes
