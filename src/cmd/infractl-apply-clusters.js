@@ -842,7 +842,7 @@ new (require("../lib/noun"))({
       `${__dirname}/../data/openEBSChart.yaml`,
       `${
         workloadClusterManagerNodeInPrivateNetworkCluster[0]
-      }:/var/lib/rancher/k3s/server/manifests/openEBS.yaml`,
+      }:/var/lib/rancher/k3s/server/manifests/openebs.yaml`,
       true
     );
     // Upload workload cluster ingress chart
@@ -854,7 +854,7 @@ new (require("../lib/noun"))({
       `${__dirname}/../data/nginxIngressChart.yaml`,
       `${
         workloadClusterManagerNodeInPrivateNetworkCluster[0]
-      }:/var/lib/rancher/k3s/server/manifests/nginxIngress.yaml`,
+      }:/var/lib/rancher/k3s/server/manifests/nginxingress.yaml`,
       true
     );
     // Upload workload cluster certificate manager chart
@@ -866,7 +866,7 @@ new (require("../lib/noun"))({
       `${__dirname}/../data/certManagerChart.yaml`,
       `${
         workloadClusterManagerNodeInPrivateNetworkCluster[0]
-      }:/var/lib/rancher/k3s/server/manifests/certManager.yaml`,
+      }:/var/lib/rancher/k3s/server/manifests/certmanager.yaml`,
       true
     );
     // Upload workload cluster certificate issuer manifest
@@ -892,7 +892,7 @@ new (require("../lib/noun"))({
         issuersManifestSource,
         `${
           workloadClusterManagerNodeInPrivateNetworkCluster[0]
-        }:/var/lib/rancher/k3s/server/manifests/certIssuers.yaml`,
+        }:/var/lib/rancher/k3s/server/manifests/certissuers.yaml`,
         true
       );
     }
