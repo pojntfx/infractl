@@ -1,11 +1,15 @@
 #!/usr/bin/env node
 
 new (require("../lib/verb"))([
-  ["workloadclusters", "Delete workload cluster(s)", "workloadcluster"],
   [
-    "privatenetworkclusters",
-    "Delete private network cluster(s)",
-    "privatenetworkcluster"
+    "workloadclusternodes",
+    "Delete workload cluster node(s)",
+    "workloadclusternode"
+  ],
+  [
+    "privatenetworkclusternodes",
+    "Delete private network cluster node(s)",
+    "privatenetworkclusternode"
   ],
   ["nodes", "Delete node(s)", "node"],
   ["keys", "Delete key(s)", "key"]
