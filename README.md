@@ -1,13 +1,13 @@
 # Felicitas Pojtinger's InfraCTL
 
-A CLI to manage supra-cloud SSH keys, nodes and Kubernetes clusters.
+A CLI to manage supra-cloud SSH keys, nodes, WireGuard overlay networks and Kubernetes clusters.
 
 ## Features
 
 ```plaintext
 Usage: infractl [options] [command]
 
-A CLI to manage supra-cloud SSH keys, nodes and Kubernetes clusters.
+A CLI to manage supra-cloud SSH keys, nodes, WireGuard overlay networks and Kubernetes clusters.
 
 Options:
   -V, --version  output the version number
