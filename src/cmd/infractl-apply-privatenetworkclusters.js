@@ -497,7 +497,7 @@ new (require("../lib/noun"))({
           privateNetworkClusterManagerNode[2],
         privateNetworkClusterManagerNodePrivateAccess:
           privateNetworkClusterManagerNode[0],
-        privateNetworkClusterToken: privateNetworkClusterToken
+        privateNetworkClusterToken
       },
       "data",
       "Successfully applied private network clusters' variables"
