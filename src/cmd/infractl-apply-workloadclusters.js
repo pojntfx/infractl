@@ -511,7 +511,7 @@ new (require("../lib/noun"))({
     // Create workload cluster worker service
     await logger.log(localhost, "Creating workload cluster worker service");
     const workerServiceSource = await servicer.createService({
-      description: "Workloda cluster daemon (worker only)",
+      description: "Workload cluster daemon (worker only)",
       execStart: `/usr/local/bin/k3s agent --flannel-iface wgoverlay --token ${token} --server https://${
         managerNode[0].split("@")[1]
       }:6443`,
@@ -521,7 +521,7 @@ new (require("../lib/noun"))({
 
     // Upload workload cluster worker service
     await Promise.all(
-      allNodes.map(async ([node]) => {
+      workerNodes.map(async ([node]) => {
         await logger.log(node, "Uploading workload cluster worker service");
         return await uploader.upload(
           workerServiceSource,
@@ -543,7 +543,7 @@ new (require("../lib/noun"))({
 
     // Enable workload cluster worker service on workload cluster worker nodes
     await Promise.all(
-      allNodes.map(async ([node]) => {
+      workerNodes.map(async ([node]) => {
         await logger.log(
           node,
           "Enabling workload-cluster-worker.service service"
