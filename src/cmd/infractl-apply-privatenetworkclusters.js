@@ -18,7 +18,8 @@ const Hostnamer = require("../lib/hostnamer");
 const Homer = require("../lib/homer");
 
 new (require("../lib/noun"))({
-  args: "<user@manager-node-ip> <user@worker-node-ip> [otherWorkerNodes...]",
+  args:
+    "<user@manager-node-ip> <user@worker-node-ip> [otherWorkerNodes...] $(whoami)@$(hostname)",
   checker: commander =>
     commander.args[0] &&
     commander.args[1] &&
@@ -351,19 +352,27 @@ new (require("../lib/noun"))({
     });
     await logger.divide();
 
-    // Create network cluster worker service
-    await logger.log(
-      localhost,
-      "Creating private network cluster worker node service"
+    // Create network cluster worker services
+    const workerServiceSources = await Promise.all(
+      publicWorkerNodes.map(async ([node]) => {
+        await logger.log(
+          node,
+          "Creating private network cluster worker node service"
+        );
+        return await servicer.createService({
+          description: "Network cluster daemon (worker only)",
+          execStart: `/bin/sh -c "/usr/local/bin/wireguard-go wgoverlay && /usr/local/bin/wesher --no-etc-hosts --bind-addr ${
+            node.split("@")[1]
+          } --cluster-key ${token} --join ${
+            publicManagerNode[0].split("@")[1]
+          }"`,
+          environment: "WG_I_PREFER_BUGGY_USERSPACE_TO_POLISHED_KMOD=1",
+          destination: await tmpFiler.getPath(
+            `network-cluster-worker.service-${node}`
+          )
+        });
+      })
     );
-    const workerServiceSource = await servicer.createService({
-      description: "Network cluster daemon (worker only)",
-      execStart: `/bin/sh -c "/usr/local/bin/wireguard-go wgoverlay && /usr/local/bin/wesher --no-etc-hosts --cluster-key ${token} --join ${
-        publicManagerNode[0].split("@")[1]
-      }"`,
-      environment: "WG_I_PREFER_BUGGY_USERSPACE_TO_POLISHED_KMOD=1",
-      destination: await tmpFiler.getPath("network-cluster-worker.service")
-    });
     await logger.divide();
 
     // Upload network cluster manager service
@@ -388,7 +397,10 @@ new (require("../lib/noun"))({
           "Uploading private network cluster worker node service"
         );
         return uploader.upload(
-          workerServiceSource,
+          workerServiceSources.find(
+            source =>
+              source.split("network-cluster-worker.service-")[1] === node
+          ),
           `${node}:/etc/systemd/system/network-cluster-worker.service`,
           true
         );
