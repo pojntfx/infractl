@@ -21,15 +21,15 @@ const Homer = require("../lib/homer");
 const YAML = require("yaml");
 
 new (require("../lib/noun"))({
-  args: "<user@manager-ip> <user@worker-ip> [otherWorkers...]",
+  args: "<user@manager-node-ip> <user@worker-node-ip> [otherWorkerNodes...]",
   options: [
     [
       "-e, --email [user@provider]",
       "Email to use for Let's Encrypt certificate issuers (optional, if not provided they won't be deployed)"
     ],
     [
-      "-m, --additional-manager-ip [ip]",
-      "Additional IP of the manager node to use in the cluster config (if not, the target IP will be used, which might only be reachable from within the private network cluster depending on your setup)"
+      "-m, --additional-manager-node-ip [ip]",
+      "Additional IP of the manager node to use in the cluster config (if not specified, the target IP will be used, which might only be reachable from within the private network cluster depending on your setup)"
     ]
   ],
   checker: commander =>
@@ -366,8 +366,8 @@ new (require("../lib/noun"))({
     const managerServiceSource = await servicer.createService({
       description: "Workload cluster daemon (manager and worker)",
       execStart: `/usr/local/bin/k3s server --no-deploy traefik --no-deploy servicelb --flannel-iface wgoverlay --tls-san ${
-        commander.additionalManagerIp
-          ? commander.additionalManagerIp
+        commander.additionalManagerNodeIp
+          ? commander.additionalManagerNodeIp
           : managerNode[0].split("@")[1]
       }`,
       destination: await tmpFiler.getPath("workload-cluster-manager.service")
@@ -561,8 +561,8 @@ new (require("../lib/noun"))({
     await workloader.waitForClusterConfig(managerNode[0]);
     const config = await workloader.getClusterConfig(
       managerNode[0],
-      commander.additionalManagerIp
-        ? commander.additionalManagerIp
+      commander.additionalManagerNodeIp
+        ? commander.additionalManagerNodeIp
         : managerNode[0].split("@")[1]
     );
     await logger.divide();
@@ -572,8 +572,10 @@ new (require("../lib/noun"))({
       localhost,
       {
         managerNode: {
-          publicAccess: commander.additionalManagerIp
-            ? `${managerNode[0].split("@")[0]}@${commander.additionalManagerIp}`
+          publicAccess: commander.additionalManagerNodeIp
+            ? `${managerNode[0].split("@")[0]}@${
+                commander.additionalManagerNodeIp
+              }`
             : managerNode[0],
           privateAccess: managerNode[0]
         },

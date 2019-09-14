@@ -18,7 +18,7 @@ const Hostnamer = require("../lib/hostnamer");
 const Homer = require("../lib/homer");
 
 new (require("../lib/noun"))({
-  args: "<user@manager-ip> <user@worker-ip> [otherWorkers...]",
+  args: "<user@manager-node-ip> <user@worker-node-ip> [otherWorkerNodes...]",
   checker: commander =>
     commander.args[0] &&
     commander.args[1] &&
