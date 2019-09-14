@@ -631,7 +631,8 @@ new (require("../lib/noun"))({
     const workloadClusterServicesToDisable = [
       "workload-cluster-manager.service",
       "workload-cluster-worker.service",
-      "systemd-resolved.service"
+      "systemd-resolved.service",
+      "iscsid.service"
     ];
 
     // Disable workload cluster services
@@ -912,6 +913,15 @@ new (require("../lib/noun"))({
       workloadClusterNodesInPrivateNetworkCluster.map(async ([node]) => {
         await logger.log(node, "Enabling systemd-resolved.service service");
         return await servicer.enableService(node, "systemd-resolved.service");
+      })
+    );
+    await logger.divide();
+
+    // Enable iscsid service on all workload cluster nodes
+    await Promise.all(
+      workloadClusterNodesInPrivateNetworkCluster.map(async ([node]) => {
+        await logger.log(node, "Enabling iscsid.service service");
+        return await servicer.enableService(node, "iscsid.service");
       })
     );
     await logger.divide();
