@@ -118,6 +118,21 @@ module.exports = class {
     }
   }
 
+  async rm(destination, recursive, withSudo) {
+    if (this.isLocal && !withSudo) {
+      return await this.shell.rm(
+        `${recursive ? "-rf" : "-f"}`,
+        destination.split(":")[1]
+      );
+    } else {
+      return await this.execCommand(
+        `${withSudo ? "sudo" : ""} rm ${recursive ? "-rf" : "-f"} ${
+          destination.split(":")[1]
+        }`
+      );
+    }
+  }
+
   async getKey(source) {
     const newKey = await this.execCommand(`ssh-keyscan -t rsa ${source}`);
     await this.dispose();
