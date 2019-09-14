@@ -363,7 +363,7 @@ new (require("../lib/noun"))({
     );
     const networkClusterManagerService = await servicer.createService({
       description: "Network cluster daemon (manager and worker)",
-      execStart: `/bin/sh -c "/usr/local/bin/wireguard-go wgoverlay && /usr/local/bin/wesher --bind-addr ${
+      execStart: `/bin/sh -c "/usr/local/bin/wireguard-go wgoverlay && /usr/local/bin/wesher --no-etc-hosts --bind-addr ${
         publicNetworkClusterManagerNode[0].split("@")[1]
       } --cluster-key ${privateNetworkClusterToken}"`,
       environment: "WG_I_PREFER_BUGGY_USERSPACE_TO_POLISHED_KMOD=1",
@@ -378,7 +378,7 @@ new (require("../lib/noun"))({
     );
     const networkClusterWorkerServiceSource = await servicer.createService({
       description: "Network cluster daemon (worker only)",
-      execStart: `/bin/sh -c "/usr/local/bin/wireguard-go wgoverlay && /usr/local/bin/wesher --cluster-key ${privateNetworkClusterToken} --join ${
+      execStart: `/bin/sh -c "/usr/local/bin/wireguard-go wgoverlay && /usr/local/bin/wesher --no-etc-hosts --cluster-key ${privateNetworkClusterToken} --join ${
         publicNetworkClusterManagerNode[0].split("@")[1]
       }"`,
       environment: "WG_I_PREFER_BUGGY_USERSPACE_TO_POLISHED_KMOD=1",
