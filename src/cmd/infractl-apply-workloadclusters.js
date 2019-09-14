@@ -21,7 +21,7 @@ const Homer = require("../lib/homer");
 const YAML = require("yaml");
 
 new (require("../lib/noun"))({
-  args: "<user@ip> [otherTargets...]",
+  args: "<user@manager-ip> <user@worker-ip> [otherWorkers...]",
   options: [
     [
       "-e, --email [user@provider]",
@@ -34,7 +34,10 @@ new (require("../lib/noun"))({
   ],
   checker: commander =>
     commander.args[0] &&
-    (commander.args[0].split("@")[0] && commander.args[0].split("@")[1]),
+    commander.args[1] &&
+    (commander.args[0].split("@")[0] &&
+      commander.args[0].split("@")[1] &&
+      (commander.args[1].split("@")[0] && commander.args[1].split("@")[1])),
   action: async commander => {
     // Set up logger
     const logger = new Logger();
