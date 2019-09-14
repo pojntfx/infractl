@@ -4,7 +4,7 @@ const PrivateNetworker = require("../lib/privateNetworker");
 const YAML = require("yaml");
 
 new (require("../lib/noun"))({
-  args: "<user@ip> [id]",
+  args: "<user@query-node-ip> [id]",
   checker: commander =>
     commander.args[0] &&
     (commander.args[0].split("@")[0] && commander.args[0].split("@")[1]),
