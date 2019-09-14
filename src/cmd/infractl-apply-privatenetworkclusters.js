@@ -179,8 +179,8 @@ new (require("../lib/noun"))({
     // Set network cluster services to disable
     const servicesToDisable = [
       "firewalld.service",
-      "network-cluster-manager.service",
-      "network-cluster-worker.service"
+      "private-network-cluster-manager.service",
+      "private-network-cluster-worker.service"
     ];
 
     // Disable network cluster services
@@ -348,7 +348,9 @@ new (require("../lib/noun"))({
         publicManagerNode[0].split("@")[1]
       } --cluster-key ${token}"`,
       environment: "WG_I_PREFER_BUGGY_USERSPACE_TO_POLISHED_KMOD=1",
-      destination: await tmpFiler.getPath("network-cluster-manager.service")
+      destination: await tmpFiler.getPath(
+        "private-network-cluster-manager.service"
+      )
     });
     await logger.divide();
 
@@ -368,7 +370,7 @@ new (require("../lib/noun"))({
           }"`,
           environment: "WG_I_PREFER_BUGGY_USERSPACE_TO_POLISHED_KMOD=1",
           destination: await tmpFiler.getPath(
-            `network-cluster-worker.service-${node}`
+            `private-network-cluster-worker.service-${node}`
           )
         });
       })
@@ -384,7 +386,7 @@ new (require("../lib/noun"))({
       managerServiceSource,
       `${
         publicManagerNode[0]
-      }:/etc/systemd/system/network-cluster-manager.service`,
+      }:/etc/systemd/system/private-network-cluster-manager.service`,
       true
     );
     await logger.divide();
@@ -399,9 +401,10 @@ new (require("../lib/noun"))({
         return uploader.upload(
           workerServiceSources.find(
             source =>
-              source.split("network-cluster-worker.service-")[1] === node
+              source.split("private-network-cluster-worker.service-")[1] ===
+              node
           ),
-          `${node}:/etc/systemd/system/network-cluster-worker.service`,
+          `${node}:/etc/systemd/system/private-network-cluster-worker.service`,
           true
         );
       })
@@ -424,7 +427,7 @@ new (require("../lib/noun"))({
     );
     await servicer.enableService(
       publicManagerNode[0],
-      "network-cluster-manager.service"
+      "private-network-cluster-manager.service"
     );
     await logger.divide();
 
@@ -435,7 +438,10 @@ new (require("../lib/noun"))({
           node,
           "Enabling private network cluster worker node service"
         );
-        return servicer.enableService(node, "network-cluster-worker.service");
+        return servicer.enableService(
+          node,
+          "private-network-cluster-worker.service"
+        );
       })
     );
     await logger.divide();
@@ -448,7 +454,7 @@ new (require("../lib/noun"))({
     );
     await servicer.waitForService(
       publicManagerNode[0],
-      "network-cluster-manager.service",
+      "private-network-cluster-manager.service",
       1000
     );
     await iper.waitForInterface(publicManagerNode[0], "wgoverlay", 1000);
@@ -470,7 +476,7 @@ new (require("../lib/noun"))({
         await logger.log(node, "Getting private network cluster worker node");
         await servicer.waitForService(
           node,
-          "network-cluster-worker.service",
+          "private-network-cluster-worker.service",
           1000
         );
         await iper.waitForInterface(node, "wgoverlay", 1000);
