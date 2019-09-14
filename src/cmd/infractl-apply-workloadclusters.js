@@ -604,7 +604,7 @@ new (require("../lib/noun"))({
         workloadClusterManagerNodePublicAccess: commander.additionalManagerIp
           ? commander.additionalManagerIp
           : workloadClusterManagerNodeInPrivateNetworkCluster[0].split("@")[1],
-        workloadClusterManagerNodePrivateAccess: workloadClusterManagerNodeInPrivateNetworkCluster[1].split(
+        workloadClusterManagerNodePrivateAccess: workloadClusterManagerNodeInPrivateNetworkCluster[0].split(
           "@"
         )[1],
         workloadClusterToken
