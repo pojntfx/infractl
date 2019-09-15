@@ -1,5 +1,6 @@
-#!/usr/bin/env node
+#!/usr/bin/env no de
 const Logger = require("../lib/logger");
+const Hostnamer = require("../lib/hostnamer");
 const Servicer = require("../lib/servicer");
 const SSHer = require("../lib/ssher");
 
@@ -9,6 +10,8 @@ new (require("../lib/noun"))({
     commander.args[0] &&
     (commander.args[0].split("@")[0] && commander.args[0].split("@")[1]),
   action: async commander => {
+    const hostnamer = new Hostnamer();
+    const localhost = hostnamer.getAddress();
     const logger = new Logger();
     const servicer = new Servicer();
 
@@ -70,8 +73,8 @@ new (require("../lib/noun"))({
 
         // Log positive message to user
         return await logger.log(
-          node,
-          "Successfully deleted private network cluster node.",
+          localhost,
+          `Successfully deleted private network cluster node ${node}.`,
           "done"
         );
       })
