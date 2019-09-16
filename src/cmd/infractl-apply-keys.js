@@ -13,7 +13,7 @@ new (require("../lib/noun"))({
     ["-n, --key-name <name>", "Key's name (i.e. user@ip-1)"],
     [
       "-f, --key-file [path]",
-      "Key's path (cannot be updated) (i.e. ~/.ssh/id_rsa.pub)"
+      "Key's path (i.e. ~/.ssh/id_rsa.pub) (cannot be updated)"
     ]
   ],
   checker: commander =>

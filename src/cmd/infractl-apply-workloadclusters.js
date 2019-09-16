@@ -25,11 +25,11 @@ new (require("../lib/noun"))({
   options: [
     [
       "-e, --lets-encrypt-certificate-issuers-email [email]",
-      "Let's Encrypt certificate issuers' email for certificates (optional, if not provided the issuers won't be deployed)"
+      "Let's Encrypt certificate issuers' email for certificates (i.e. user@host.tld) (optional, if not provided the issuers won't be deployed)"
     ],
     [
       "-m, --additional-manager-node-ip [ip]",
-      "Additional manager node's IP for the workload cluster config (if not specified, the target IP will be used, which might only be reachable from within the private network cluster depending on your setup)"
+      "Additional manager node's IP for the workload cluster config (i.e. 192.168.178.141) (if not specified, the target IP will be used, which might only be reachable from within the private network cluster depending on your setup)"
     ]
   ],
   checker: commander =>

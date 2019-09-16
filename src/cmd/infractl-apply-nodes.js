@@ -9,7 +9,7 @@ const Hetzner = require("../lib/hetzner");
 new (require("../lib/noun"))({
   args: `[id]`,
   options: [
-    ["-n, --node-name <name>", "Node's name"],
+    ["-n, --node-name <name>", "Node's name (i.e. node-1)"],
     ["-k, --node-key [id]", "Node's key (cannot be updated)"],
     ["-l, --node-location [id]", "Node's location (cannot be updated)"],
     ["-t, --node-type [id]", "Node's type (cannot be updated)"],

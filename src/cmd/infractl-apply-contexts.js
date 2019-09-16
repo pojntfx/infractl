@@ -8,11 +8,11 @@ new (require("../lib/noun"))({
   options: [
     [
       "-h, --hetzner-endpoint <endpoint>",
-      "Hetzner endpoint (i.e. https://api.hetzner.cloud/v1)"
+      "Hetzner's endpoint (i.e. https://api.hetzner.cloud/v1)"
     ],
     [
       "-H, --hetzner-token <token>",
-      "Hetzner token (i.e. jEheVytlAoFl7F8MqUQ7jAo2hOXASztX)"
+      "Hetzner's token (i.e. jEheVytlAoFl7F8MqUQ7jAo2hOXASztX)"
     ]
   ],
   checker: commander => commander.hetznerEndpoint || commander.hetznerToken,

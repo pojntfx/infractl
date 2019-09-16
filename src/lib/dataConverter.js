@@ -3,7 +3,7 @@ const table = require("markdown-table");
 const pluralize = require("pluralize");
 
 module.exports.stringify = data => {
-  if (Array.isArray(data)) {
+  if (Array.isArray(data) && data[0]) {
     const headers = [
       ...Object.keys(data[0])
         .reduce(
