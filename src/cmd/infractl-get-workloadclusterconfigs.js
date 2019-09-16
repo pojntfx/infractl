@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 const Logger = require("../lib/logger");
 const Workloader = require("../lib/workloader");
-const YAML = require("yaml");
+const DataConverter = require("../lib/dataConverter");
 
 new (require("../lib/noun"))({
   args: "<user@ip>",
@@ -20,7 +20,7 @@ new (require("../lib/noun"))({
 
     // Log cluster config
     if (clusterConfig) {
-      console.log(YAML.stringify(YAML.parse(clusterConfig)));
+      console.log(DataConverter.stringify(DataConverter.parse(clusterConfig)));
     } else {
       await logger.log(
         commander.args[0],

@@ -1,10 +1,10 @@
-const YAML = require("yaml");
+const DataConverter = require("./dataConverter");
 
 module.exports = class {
   async log(destination, message, messageType, dataName) {
     messageType === "data"
       ? console.log(
-          `${new Date().getTime()} [DATA] ${dataName}:\n${YAML.stringify(
+          `${new Date().getTime()} [DATA] ${dataName}:\n${DataConverter.stringify(
             message
           )}\n${`${new Date().getTime()} [DATA]`
             .split("")

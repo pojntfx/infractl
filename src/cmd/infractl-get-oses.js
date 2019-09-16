@@ -5,7 +5,7 @@ const Contexter = require("../lib/contexter");
 const packageJSON = require("../../package.json");
 const Universaler = require("../lib/universaler");
 const Hetzner = require("../lib/hetzner");
-const YAML = require("yaml");
+const DataConverter = require("../lib/dataConverter");
 
 new (require("../lib/noun"))({
   args: "[id]",
@@ -40,7 +40,7 @@ new (require("../lib/noun"))({
 
       // Log single os
       os
-        ? console.log(YAML.stringify(os))
+        ? console.log(DataConverter.stringify(os))
         : await logger.log(
             localhost,
             `Not a valid id, os provider prefix "${
@@ -68,7 +68,7 @@ new (require("../lib/noun"))({
       ])).filter(Boolean);
 
       // Log all oses
-      console.log(YAML.stringify(oses));
+      console.log(DataConverter.stringify(oses));
     }
   }
 });

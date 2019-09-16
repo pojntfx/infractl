@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 const Logger = require("../lib/logger");
 const PrivateNetworker = require("../lib/privateNetworker");
-const YAML = require("yaml");
+const DataConverter = require("../lib/dataConverter");
 
 new (require("../lib/noun"))({
   args: "<user@query-node-ip> [id]",
@@ -20,7 +20,7 @@ new (require("../lib/noun"))({
       );
       // Log cluster node
       if (clusterNode) {
-        console.log(YAML.stringify(clusterNode));
+        console.log(DataConverter.stringify(clusterNode));
       } else {
         await logger.log(
           commander.args[0],
@@ -33,7 +33,7 @@ new (require("../lib/noun"))({
       const clusterNodes = await privateNetworker.getNodes(commander.args[0]);
       // Log cluster nodes
       if (clusterNodes) {
-        console.log(YAML.stringify(clusterNodes));
+        console.log(DataConverter.stringify(clusterNodes));
       } else {
         await logger.log(
           commander.args[0],
