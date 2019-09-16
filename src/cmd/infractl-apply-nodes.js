@@ -10,13 +10,10 @@ new (require("../lib/noun"))({
   args: `[id]`,
   options: [
     ["-n, --node-name <name>", "Node's name"],
+    ["-k, --node-key [id]", "Node's key (cannot be updated)"],
     ["-l, --node-location [id]", "Node's location (cannot be updated)"],
-    [
-      "-t, --node-type [H-1-2-20|H-2-4-40|H-2-8-80|H-4-16-160|H-8-32-240]",
-      "Node's type (provider-cores-memory (in GB)-disk (in GB)) (cannot be updated)"
-    ],
-    ["-o, --node-os [id]", "Node's OS (cannot be updated)"],
-    ["-k, --node-key [id]", "Node's key (cannot be updated)"]
+    ["-t, --node-type [id]", "Node's type (cannot be updated)"],
+    ["-o, --node-os [id]", "Node's OS (cannot be updated)"]
   ],
   checker: commander =>
     commander.args[0]

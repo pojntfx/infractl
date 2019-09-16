@@ -573,12 +573,14 @@ new (require("../lib/noun"))({
       localhost,
       {
         managerNode: {
-          publicAccess: commander.additionalManagerNodeIp
-            ? `${managerNode[0].split("@")[0]}@${
-                commander.additionalManagerNodeIp
-              }`
-            : managerNode[0],
-          privateAccess: managerNode[0]
+          access: {
+            public: commander.additionalManagerNodeIp
+              ? `${managerNode[0].split("@")[0]}@${
+                  commander.additionalManagerNodeIp
+                }`
+              : managerNode[0],
+            private: managerNode[0]
+          }
         },
         token
       },
