@@ -10,7 +10,7 @@ const Cater = require("../lib/cater");
 new (require("../lib/noun"))({
   args: `<id|"H-">`,
   options: [
-    ["-n, --key-name [name]", "Key's name"],
+    ["-n, --key-name <name>", "Key's name"],
     ["-f, --key-file [path]", "Key's path (cannot be updated)"]
   ],
   checker: commander =>

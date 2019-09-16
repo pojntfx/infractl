@@ -101,4 +101,14 @@ module.exports = class {
     const location = await this.__fetch(`locations/${id}`);
     return location.json();
   }
+
+  async getOSes() {
+    const oses = await this.__fetch("images?status=available&type=system");
+    return oses.json();
+  }
+
+  async getOS(id) {
+    const os = await this.__fetch(`images/${id}`);
+    return os.json();
+  }
 };

@@ -78,26 +78,7 @@ module.exports = class {
 
   async getSupracloudOSId(from, os) {
     if (from === "hetzner") {
-      let universalOS = "";
-
-      switch (os) {
-        case "debian-10":
-          universalOS = "H-debian";
-          break;
-        case "centos-7":
-          universalOS = "H-centos";
-          break;
-        case "ubuntu-18.04":
-          universalOS = "H-ubuntu";
-          break;
-        case "fedora-30":
-          universalOS = "H-fedora";
-          break;
-        default:
-          universalOS = os;
-      }
-
-      return universalOS;
+      return `H-${os}`;
     } else {
       return false;
     }
@@ -105,26 +86,7 @@ module.exports = class {
 
   async getProprietaryOSId(to, os) {
     if (to === "hetzner") {
-      let proprietaryOS = "";
-
-      switch (os) {
-        case "H-debian":
-          proprietaryOS = "debian-10";
-          break;
-        case "H-centos":
-          proprietaryOS = "centos-7";
-          break;
-        case "H-ubuntu":
-          proprietaryOS = "ubuntu-18.04";
-          break;
-        case "H-fedora":
-          proprietaryOS = "fedora-30";
-          break;
-        default:
-          proprietaryOS = os;
-      }
-
-      return proprietaryOS;
+      return os.replace("H-", "");
     } else {
       return false;
     }
@@ -203,8 +165,11 @@ module.exports = class {
           "hetzner",
           server.datacenter.location.id
         ),
-        os: await this.getSupracloudOSId("hetzner", server.image.name),
-        type: await this.getSupracloudTypeId("hetzner", server.server_type.name)
+        type: await this.getSupracloudTypeId(
+          "hetzner",
+          server.server_type.name
+        ),
+        os: await this.getSupracloudOSId("hetzner", server.image.id)
       };
     } else {
       return false;
@@ -219,12 +184,7 @@ module.exports = class {
     }
   }
 
-  async getSupracloudLocation(
-    from,
-    location,
-    withHumanLocation,
-    isUniversalId
-  ) {
+  async getSupracloudLocation(from, location, withDescription, isUniversalId) {
     if (from === "hetzner") {
       const datacenter = location.location ? location.location : location;
       const basicLocation = {
@@ -236,10 +196,10 @@ module.exports = class {
         longitude: datacenter.longitude
       };
 
-      return withHumanLocation
+      return withDescription
         ? {
             ...basicLocation,
-            location: `${datacenter.description}, ${datacenter.city}, ${datacenter.country}`
+            description: `${datacenter.description}, ${datacenter.city}, ${datacenter.country}`
           }
         : basicLocation;
     } else {
@@ -250,6 +210,35 @@ module.exports = class {
   async getSupracloudLocationList(from, locations) {
     if (from === "hetzner") {
       return locations.locations;
+    } else {
+      return false;
+    }
+  }
+
+  async getSupracloudOS(from, os, withHumanName, isUniversalId) {
+    if (from === "hetzner") {
+      const image = os.image ? os.image : os;
+      const basicOS = {
+        id: isUniversalId
+          ? image.id
+          : await this.getSupracloudOSId("hetzner", image.id),
+        name: image.name
+      };
+
+      return withHumanName
+        ? {
+            ...basicOS,
+            description: image.description
+          }
+        : basicOS;
+    } else {
+      return false;
+    }
+  }
+
+  async getSupracloudOSList(from, oses) {
+    if (from === "hetzner") {
+      return oses.images;
     } else {
       return false;
     }
