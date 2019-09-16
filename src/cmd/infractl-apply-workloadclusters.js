@@ -24,12 +24,12 @@ new (require("../lib/noun"))({
   args: "<user@manager-node-ip> <user@worker-node-ip> [otherWorkerNodes...]",
   options: [
     [
-      "-e, --email [user@provider]",
-      "Email to use for Let's Encrypt certificate issuers (optional, if not provided they won't be deployed)"
+      "-e, --lets-encrypt-certificate-issuers-email [user@provider]",
+      "Let's Encrypt certificate issuers' email for certificates (optional, if not provided the issuers won't be deployed)"
     ],
     [
       "-m, --additional-manager-node-ip [ip]",
-      "Additional IP of the manager node to use in the cluster config (if not specified, the target IP will be used, which might only be reachable from within the private network cluster depending on your setup)"
+      "Additional manager node's IP for the workload cluster config (if not specified, the target IP will be used, which might only be reachable from within the private network cluster depending on your setup)"
     ]
   ],
   checker: commander =>
@@ -431,8 +431,9 @@ new (require("../lib/noun"))({
     );
     // Upload workload cluster certificate issuer manifest
     if (
-      commander.email &&
-      (commander.email.split("@")[0] && commander.email.split("@")[1])
+      commander.letsEncryptCertificateIssuersEmail &&
+      (commander.letsEncryptCertificateIssuersEmail.split("@")[0] &&
+        commander.letsEncryptCertificateIssuersEmail.split("@")[1])
     ) {
       await logger.log(
         localhost,
@@ -442,7 +443,7 @@ new (require("../lib/noun"))({
       const issuersManifestSource = await issuer.createIssuers(
         `${localhost}:${__dirname}/../data/certIssuersManifest.yaml`,
         await tmpFiler.getPath("certIssuersManifest.yaml"),
-        commander.email
+        commander.letsEncryptCertificateIssuersEmail
       );
       await logger.log(
         managerNode[0],
