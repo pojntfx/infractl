@@ -94,29 +94,7 @@ module.exports = class {
 
   async getSupracloudTypeId(from, nodeType) {
     if (from === "hetzner") {
-      let proprietaryNodeType = "";
-
-      switch (nodeType) {
-        case "cx11":
-          proprietaryNodeType = "H-1-2-20";
-          break;
-        case "cx21":
-          proprietaryNodeType = "H-2-4-40";
-          break;
-        case "cx31":
-          proprietaryNodeType = "H-2-8-80";
-          break;
-        case "cx41":
-          proprietaryNodeType = "H-4-16-160";
-          break;
-        case "cx51":
-          proprietaryNodeType = "H-8-32-240";
-          break;
-        default:
-          proprietaryNodeType = nodeType;
-      }
-
-      return proprietaryNodeType;
+      return `H-${nodeType}`;
     } else {
       return false;
     }
@@ -124,29 +102,7 @@ module.exports = class {
 
   async getProprietaryTypeId(to, nodeType) {
     if (to === "hetzner") {
-      let supracloudNodeType = "";
-
-      switch (nodeType) {
-        case "H-1-2-20":
-          supracloudNodeType = "cx11";
-          break;
-        case "H-2-4-40":
-          supracloudNodeType = "cx21";
-          break;
-        case "H-2-8-80":
-          supracloudNodeType = "cx31";
-          break;
-        case "H-4-16-160":
-          supracloudNodeType = "cx41";
-          break;
-        case "H-8-32-240":
-          supracloudNodeType = "cx51";
-          break;
-        default:
-          supracloudNodeType = nodeType;
-      }
-
-      return supracloudNodeType;
+      return nodeType.replace("H-", "");
     } else {
       return false;
     }
@@ -160,15 +116,14 @@ module.exports = class {
           ? server.id
           : await this.getSupracloudNodeId("hetzner", server.id),
         name: server.name,
-        publicAccess: `root@${server.public_net.ipv4.ip}`,
+        ips: {
+          public: server.public_net.ipv4.ip
+        },
         location: await this.getSupracloudLocationId(
           "hetzner",
           server.datacenter.location.id
         ),
-        type: await this.getSupracloudTypeId(
-          "hetzner",
-          server.server_type.name
-        ),
+        type: await this.getSupracloudTypeId("hetzner", server.server_type.id),
         os: await this.getSupracloudOSId("hetzner", server.image.id)
       };
     } else {
@@ -239,6 +194,49 @@ module.exports = class {
   async getSupracloudOSList(from, oses) {
     if (from === "hetzner") {
       return oses.images;
+    } else {
+      return false;
+    }
+  }
+
+  async getSupracloudType(from, nodeType, withSpecifications, isUniversalId) {
+    if (from === "hetzner") {
+      const machineType = nodeType.server_type
+        ? nodeType.server_type
+        : nodeType;
+      const prices = machineType.prices.sort(
+        (a, b) => a.price_hourly.gross < b.price_hourly.gross
+      )[0];
+      const basicType = {
+        id: isUniversalId
+          ? machineType.id
+          : await this.getSupracloudTypeId("hetzner", machineType.id),
+        name: machineType.name,
+        prices: {
+          hourly: `${Math.round(prices.price_hourly.gross * 10000) / 10000} €`,
+          monthly: `${Math.round(prices.price_monthly.gross * 10000) / 10000} €`
+        }
+      };
+
+      return withSpecifications
+        ? {
+            ...basicType,
+            description: machineType.description,
+            cores: machineType.cores,
+            memory: `${machineType.memory} GB`,
+            disk: `${machineType.disk} GB`
+          }
+        : basicType;
+    } else {
+      return false;
+    }
+  }
+
+  async getSupracloudTypeList(from, types) {
+    if (from === "hetzner") {
+      return types.server_types.filter(
+        nodeType => !nodeType.name.includes("-ceph")
+      );
     } else {
       return false;
     }

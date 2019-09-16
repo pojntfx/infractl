@@ -498,8 +498,10 @@ new (require("../lib/noun"))({
       localhost,
       {
         managerNode: {
-          publicAccess: privateManagerNode[2],
-          privateAccess: privateManagerNode[0]
+          access: {
+            public: privateManagerNode[2],
+            private: privateManagerNode[0]
+          }
         },
         token
       },

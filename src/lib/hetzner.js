@@ -102,6 +102,16 @@ module.exports = class {
     return location.json();
   }
 
+  async getTypes() {
+    const nodeTypes = await this.__fetch("server_types");
+    return nodeTypes.json();
+  }
+
+  async getType(id) {
+    const nodeType = await this.__fetch(`server_types/${id}`);
+    return nodeType.json();
+  }
+
   async getOSes() {
     const oses = await this.__fetch("images?status=available&type=system");
     return oses.json();

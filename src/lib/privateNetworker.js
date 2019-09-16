@@ -25,8 +25,10 @@ module.exports = class {
     const queryNode = {
       id: "not_available_this_is_the_query_node",
       name: await asyncHostnamer.getHostname(destination),
-      privateIp: (await iper.getInterface(destination, "wgoverlay")).ip,
-      publicIp: destination.split("@")[1],
+      ips: {
+        private: (await iper.getInterface(destination, "wgoverlay")).ip,
+        public: destination.split("@")[1]
+      },
       pubKey: "not_available_this_is_the_query_node"
     };
     return rawClusterInfo
@@ -36,8 +38,10 @@ module.exports = class {
             ...rawClusterInfo.Nodes.map(node => ({
               id: node.PubKey,
               name: node.Name,
-              privateIp: node.OverlayAddr.IP,
-              publicIp: node.Addr,
+              ips: {
+                private: node.OverlayAddr.IP,
+                public: node.Addr
+              },
               pubKey: node.PubKey
             }))
           ].find(node => node.id === id)
@@ -46,8 +50,10 @@ module.exports = class {
             ...rawClusterInfo.Nodes.map(node => ({
               id: node.PubKey,
               name: node.Name,
-              privateIp: node.OverlayAddr.IP,
-              publicIp: node.Addr
+              ips: {
+                private: node.OverlayAddr.IP,
+                public: node.Addr
+              }
             }))
           ]
       : false;
