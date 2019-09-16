@@ -25,21 +25,32 @@ new (require("../lib/noun"))({
     // Log either one or multiple nodes
     if (commander.args[0]) {
       let node = undefined;
+      let nodeStatus = {};
 
       // Hetzner
       if (commander.args[0].split("-")[0] === "H") {
         node = await universaler.getSupracloudNode(
           "hetzner",
-          await hetzner.getNode(
-            await universaler.getProprietaryNodeId("hetzner", commander.args[0])
-          ),
+          await hetzner
+            .getNode(
+              await universaler.getProprietaryNodeId(
+                "hetzner",
+                commander.args[0]
+              )
+            )
+            .then(node => {
+              nodeStatus = node;
+              return node;
+            }),
           false
         );
       }
 
       // Log single node
-      node
-        ? console.log(DataConverter.stringify(node))
+      node || nodeStatus.error
+        ? nodeStatus.error
+          ? await logger.log(localhost, nodeStatus.error.message, "error")
+          : console.log(DataConverter.stringify(node))
         : await logger.log(
             localhost,
             `Not a valid id, node provider prefix "${
