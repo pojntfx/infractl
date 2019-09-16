@@ -18,7 +18,7 @@ const Modprober = require("../lib/modprober");
 const Workloader = require("../lib/workloader");
 const Hostnamer = require("../lib/hostnamer");
 const Homer = require("../lib/homer");
-const YAML = require("yaml");
+const DataConverter = require("../lib/dataConverter");
 
 new (require("../lib/noun"))({
   args: "<user@manager-node-ip> <user@worker-node-ip> [otherWorkerNodes...]",
@@ -589,7 +589,7 @@ new (require("../lib/noun"))({
     );
     await logger.log(
       localhost,
-      YAML.parse(config),
+      DataConverter.parse(config),
       "data",
       "Successfully applied workload cluster's config"
     );

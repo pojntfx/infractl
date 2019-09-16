@@ -22,15 +22,17 @@ module.exports = class {
     );
     const iper = new IPer();
     const asyncHostnamer = new AsyncHostnamer();
-    const queryNode = {
+    const basicQueryNode = {
       id: "not_available_this_is_the_query_node",
       name: await asyncHostnamer.getHostname(destination),
       ips: {
         private: (await iper.getInterface(destination, "wgoverlay")).ip,
         public: destination.split("@")[1]
-      },
-      pubKey: "not_available_this_is_the_query_node"
+      }
     };
+    const queryNode = id
+      ? { ...basicQueryNode, pubKey: "not_available_this_is_the_query_node" }
+      : basicQueryNode;
     return rawClusterInfo
       ? id
         ? [
