@@ -25,6 +25,14 @@ new (require("../lib/noun"))({
     return await Promise.all(
       commander.args.map(async id => {
         if (id.split("-")[0] === "H") {
+          // Check for Hetzner context
+          if (!(await contexter.getHetznerContextStatus()))
+            return await logger.log(
+              localhost,
+              "Hetzner context has not yet been set up!",
+              "error"
+            );
+
           // Hetzner
           const sshKey = await hetzner.deleteSSHKey(
             await universaler.getProprietarySSHKeyId("hetzner", id)

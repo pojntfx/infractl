@@ -54,7 +54,7 @@ module.exports = class {
 
   async getSupracloudSSHKeyList(from, keys) {
     if (from === "hetzner") {
-      return keys.ssh_keys;
+      return keys.ssh_keys || [];
     } else {
       return false;
     }
@@ -138,7 +138,7 @@ module.exports = class {
 
   async getSupracloudNodeList(from, nodes) {
     if (from === "hetzner") {
-      return nodes.servers;
+      return nodes.servers || [];
     } else {
       return false;
     }
@@ -169,7 +169,7 @@ module.exports = class {
 
   async getSupracloudLocationList(from, locations) {
     if (from === "hetzner") {
-      return locations.locations;
+      return locations.locations || [];
     } else {
       return false;
     }
@@ -198,7 +198,7 @@ module.exports = class {
 
   async getSupracloudOSList(from, oses) {
     if (from === "hetzner") {
-      return oses.images;
+      return oses.images || [];
     } else {
       return false;
     }
@@ -244,9 +244,11 @@ module.exports = class {
 
   async getSupracloudTypeList(from, types) {
     if (from === "hetzner") {
-      return types.server_types.filter(
-        nodeType => !nodeType.name.includes("-ceph")
-      );
+      return types.server_types
+        ? types.server_types.filter(
+            nodeType => !nodeType.name.includes("-ceph")
+          )
+        : [];
     } else {
       return false;
     }

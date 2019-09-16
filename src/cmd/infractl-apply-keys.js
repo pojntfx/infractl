@@ -40,6 +40,14 @@ new (require("../lib/noun"))({
 
     // Hetzner
     if (commander.args[0].split("-")[0] === "H") {
+      // Check for Hetzner context
+      if (!(await contexter.getHetznerContextStatus()))
+        return await logger.log(
+          localhost,
+          "Hetzner context has not yet been set up!",
+          "error"
+        );
+
       sshKey = await hetzner.upsertSSHKey(
         commander.args[0]
           ? await universaler.getProprietarySSHKeyId(
