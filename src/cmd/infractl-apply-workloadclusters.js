@@ -21,7 +21,7 @@ const Homer = require("../lib/homer");
 const DataConverter = require("../lib/dataConverter");
 
 new (require("../lib/noun"))({
-  args: "<user@manager-node-ip> <user@worker-node-ip> [otherWorkerNodes...]",
+  args: "<user@manager-node-ip> [user@worker-node-ip] [otherWorkerNodes...]",
   options: [
     [
       "-e, --lets-encrypt-certificate-issuers-email [email]",
@@ -34,10 +34,7 @@ new (require("../lib/noun"))({
   ],
   checker: commander =>
     commander.args[0] &&
-    commander.args[1] &&
-    (commander.args[0].split("@")[0] &&
-      commander.args[0].split("@")[1] &&
-      (commander.args[1].split("@")[0] && commander.args[1].split("@")[1])),
+    (commander.args[0].split("@")[0] && commander.args[0].split("@")[1]),
   action: async commander => {
     // Set up logger
     const logger = new Logger();
