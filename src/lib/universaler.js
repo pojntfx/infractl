@@ -64,29 +64,72 @@ module.exports = class {
     }
   }
 
+  async getSupracloudNodeOS(from, os) {
+    if (from === "hetzner") {
+      let universalOS = "";
+
+      switch (os) {
+        case "debian-10":
+          universalOS = "debian";
+          break;
+        case "centos-7":
+          universalOS = "centos";
+          break;
+        case "ubuntu-18.04":
+          universalOS = "ubuntu";
+          break;
+        case "fedora-30":
+          universalOS = "fedora";
+          break;
+        default:
+          universalOS = os;
+      }
+
+      return universalOS;
+    } else {
+      return false;
+    }
+  }
+
+  async getProprietaryNodeOS(from, os) {
+    if (from === "hetzner") {
+      let proprietaryOS = "";
+
+      switch (os) {
+        case "debian":
+          proprietaryOS = "debian-10";
+          break;
+        case "centos":
+          proprietaryOS = "centos-7";
+          break;
+        case "ubuntu":
+          proprietaryOS = "ubuntu-18.04";
+          break;
+        case "fedora":
+          proprietaryOS = "fedora-30";
+          break;
+        default:
+          proprietaryOS = os;
+      }
+
+      return proprietaryOS;
+    } else {
+      return false;
+    }
+  }
+
   async getSupracloudNode(from, node, isUniversalId) {
     if (from === "hetzner") {
+      const server = node.server ? node.server : node;
       return {
         id: isUniversalId
-          ? node.server
-            ? node.server.id
-            : node.id
-          : await this.getSupracloudNodeId(
-              "hetzner",
-              node.server ? node.server.id : node.id
-            ),
-        name: node.server ? node.server.name : node.name,
-        publicAccess: node.server
-          ? `root@${node.server.public_net.ipv4.ip}`
-          : `root@${node.public_net.ipv4.ip}`,
-        os: node.server ? node.server.image.name : node.image.name,
-        cores: node.server
-          ? node.server.server_type.cores
-          : node.server_type.cores,
-        memory: node.server
-          ? node.server.server_type.memory
-          : node.server_type.memory,
-        disk: node.server ? node.server.server_type.disk : node.server_type.disk
+          ? server.id
+          : await this.getSupracloudNodeId("hetzner", server.id),
+        name: server.name,
+        publicAccess: `root@${server.public_net.ipv4.ip}`,
+        location: server.datacenter.location.name,
+        os: await this.getSupracloudNodeOS("hetzner", server.image.name),
+        type: `${server.server_type.cores}-${server.server_type.memory}-${server.server_type.disk}`
       };
     } else {
       return false;
