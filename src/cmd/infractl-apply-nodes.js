@@ -7,7 +7,7 @@ const Universaler = require("../lib/universaler");
 const Hetzner = require("../lib/hetzner");
 
 new (require("../lib/noun"))({
-  args: `<id|"H-">`,
+  args: `[id]`,
   options: [
     ["-n, --node-name [name]", "Node's name"],
     [
@@ -15,29 +15,27 @@ new (require("../lib/noun"))({
       "Node's location (cannot be updated)"
     ],
     [
-      "-o, --node-os [debian|centos|ubuntu|fedora]",
+      "-o, --node-os [H-debian|H-centos|H-ubuntu|H-fedora]",
       "Node's OS (cannot be updated)"
     ],
     [
-      "-t, --node-type [1-2-20|2-4-40|2-8-80|4-16-160|8-32-240]",
-      "Node's type (cores-memory (in GB)-disk (in GB)) (cannot be updated)"
+      "-t, --node-type [H-1-2-20|H-2-4-40|H-2-8-80|H-4-16-160|H-8-32-240]",
+      "Node's type (provider-cores-memory (in GB)-disk (in GB)) (cannot be updated)"
     ],
-    ["-k, --node-key [name]", "Node's key's name (cannot be updated)"]
+    ["-k, --node-key [id]", "Node's key (cannot be updated)"]
   ],
   checker: commander =>
     commander.args[0]
-      ? commander.args[0].split(/[A-Z]\-/)[1]
-        ? commander.nodeName &&
-          !commander.nodeLocation &&
-          !commander.nodeOs &&
-          !commander.nodeType &&
-          !commander.nodeKey
-        : commander.nodeName &&
-          commander.nodeLocation &&
-          commander.nodeOs &&
-          commander.nodeType &&
-          commander.nodeKey
-      : false,
+      ? commander.nodeName &&
+        !commander.nodeLocation &&
+        !commander.nodeOs &&
+        !commander.nodeType &&
+        !commander.nodeKey
+      : commander.nodeName &&
+        commander.nodeLocation &&
+        commander.nodeOs &&
+        commander.nodeType &&
+        commander.nodeKey,
   action: async commander => {
     const hostnamer = new Hostnamer();
     const localhost = hostnamer.getAddress();
@@ -54,7 +52,11 @@ new (require("../lib/noun"))({
     let node = undefined;
 
     // Hetzner
-    if (commander.args[0].split("-")[0] === "H") {
+    if (
+      commander.args[0]
+        ? commander.args[0].split("-")[0] === "H"
+        : commander.nodeLocation.split("-")[0] === "H"
+    ) {
       node = await hetzner.upsertNode(
         commander.args[0]
           ? await universaler.getProprietaryNodeId("hetzner", commander.args[0])
@@ -74,10 +76,17 @@ new (require("../lib/noun"))({
             commander.nodeType
           ),
           ssh_keys: [
-            await universaler.getProprietarySSHKeyId(
+            (await universaler.getSupracloudSSHKey(
               "hetzner",
-              commander.nodeKey
-            )
+              await hetzner.getSSHKey(
+                await universaler.getProprietarySSHKeyId(
+                  "hetzner",
+                  commander.nodeKey
+                )
+              ),
+              false,
+              true
+            )).name
           ]
         }
       );

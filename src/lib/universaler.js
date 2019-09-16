@@ -82,16 +82,16 @@ module.exports = class {
 
       switch (os) {
         case "debian-10":
-          universalOS = "debian";
+          universalOS = "H-debian";
           break;
         case "centos-7":
-          universalOS = "centos";
+          universalOS = "H-centos";
           break;
         case "ubuntu-18.04":
-          universalOS = "ubuntu";
+          universalOS = "H-ubuntu";
           break;
         case "fedora-30":
-          universalOS = "fedora";
+          universalOS = "H-fedora";
           break;
         default:
           universalOS = os;
@@ -108,16 +108,16 @@ module.exports = class {
       let proprietaryOS = "";
 
       switch (os) {
-        case "debian":
+        case "H-debian":
           proprietaryOS = "debian-10";
           break;
-        case "centos":
+        case "H-centos":
           proprietaryOS = "centos-7";
           break;
-        case "ubuntu":
+        case "H-ubuntu":
           proprietaryOS = "ubuntu-18.04";
           break;
-        case "fedora":
+        case "H-fedora":
           proprietaryOS = "fedora-30";
           break;
         default:
@@ -136,19 +136,19 @@ module.exports = class {
 
       switch (nodeType) {
         case "cx11":
-          proprietaryNodeType = "1-2-20";
+          proprietaryNodeType = "H-1-2-20";
           break;
         case "cx21":
-          proprietaryNodeType = "2-4-40";
+          proprietaryNodeType = "H-2-4-40";
           break;
         case "cx31":
-          proprietaryNodeType = "2-8-80";
+          proprietaryNodeType = "H-2-8-80";
           break;
         case "cx41":
-          proprietaryNodeType = "4-16-160";
+          proprietaryNodeType = "H-4-16-160";
           break;
         case "cx51":
-          proprietaryNodeType = "8-32-240";
+          proprietaryNodeType = "H-8-32-240";
           break;
         default:
           proprietaryNodeType = nodeType;
@@ -165,19 +165,19 @@ module.exports = class {
       let supracloudNodeType = "";
 
       switch (nodeType) {
-        case "1-2-20":
+        case "H-1-2-20":
           supracloudNodeType = "cx11";
           break;
-        case "2-4-40":
+        case "H-2-4-40":
           supracloudNodeType = "cx21";
           break;
-        case "2-8-80":
+        case "H-2-8-80":
           supracloudNodeType = "cx31";
           break;
-        case "4-16-160":
+        case "H-4-16-160":
           supracloudNodeType = "cx41";
           break;
-        case "8-32-240":
+        case "H-8-32-240":
           supracloudNodeType = "cx51";
           break;
         default:
