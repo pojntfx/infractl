@@ -48,6 +48,14 @@ new (require("../lib/noun"))({
         ? commander.args[0].split("-")[0] === "H"
         : commander.nodeLocation.split("-")[0] === "H"
     ) {
+      // Check for Hetzner context
+      if (!(await contexter.getHetznerContextStatus()))
+        return await logger.log(
+          localhost,
+          "Hetzner context has not yet been set up!",
+          "error"
+        );
+
       node = await hetzner.upsertNode(
         commander.args[0]
           ? await universaler.getProprietaryNodeId("hetzner", commander.args[0])

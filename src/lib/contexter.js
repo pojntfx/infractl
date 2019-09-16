@@ -21,6 +21,10 @@ module.exports = class {
     return this.configstore.get("hetznerToken");
   }
 
+  async getHetznerContextStatus() {
+    return (await this.getHetznerEndpoint()) && (await this.getHetznerToken());
+  }
+
   async getAll() {
     return this.configstore.all;
   }

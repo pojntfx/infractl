@@ -5,27 +5,30 @@ module.exports = class {
   constructor({ endpoint, token }) {
     this.endpoint = endpoint;
     this.token = token;
+    if (!this.endpoint && !this.token) this.isSetUp = false;
   }
 
   __fetch(path, args) {
-    return fetch(
-      `${this.endpoint}/${path}`,
-      _.merge(args, {
-        headers: {
-          Authorization: `Bearer ${this.token}`
-        }
-      })
-    );
+    return this.isSetUp
+      ? fetch(
+          `${this.endpoint}/${path}`,
+          _.merge(args, {
+            headers: {
+              Authorization: `Bearer ${this.token}`
+            }
+          })
+        ).then(res => res.json())
+      : false;
   }
 
   async getNodes() {
     const node = await this.__fetch("servers");
-    return node.json();
+    return node;
   }
 
   async getNode(id) {
     const nodes = await this.__fetch(`servers/${id}`);
-    return nodes.json();
+    return nodes;
   }
 
   async upsertNode(id, newNode) {
@@ -36,7 +39,7 @@ module.exports = class {
       },
       body: JSON.stringify(newNode)
     });
-    return upsertedNode.json();
+    return upsertedNode;
   }
 
   async updateNodeStatus(id, status) {
@@ -51,7 +54,7 @@ module.exports = class {
         }
       }
     );
-    return updatedNode.json();
+    return updatedNode;
   }
 
   async deleteNode(id) {
@@ -63,12 +66,12 @@ module.exports = class {
 
   async getSSHKeys() {
     const sshKeys = await this.__fetch("ssh_keys");
-    return sshKeys.json();
+    return sshKeys;
   }
 
   async getSSHKey(id) {
     const sshKey = await this.__fetch(`ssh_keys/${id}`);
-    return sshKey.json();
+    return sshKey;
   }
 
   async upsertSSHKey(id, newKey) {
@@ -82,7 +85,7 @@ module.exports = class {
         body: JSON.stringify(newKey)
       }
     );
-    return upsertedSSHKey.json();
+    return upsertedSSHKey;
   }
 
   async deleteSSHKey(id) {
@@ -94,31 +97,31 @@ module.exports = class {
 
   async getLocations() {
     const locations = await this.__fetch("locations");
-    return locations.json();
+    return locations;
   }
 
   async getLocation(id) {
     const location = await this.__fetch(`locations/${id}`);
-    return location.json();
+    return location;
   }
 
   async getTypes() {
     const nodeTypes = await this.__fetch("server_types");
-    return nodeTypes.json();
+    return nodeTypes;
   }
 
   async getType(id) {
     const nodeType = await this.__fetch(`server_types/${id}`);
-    return nodeType.json();
+    return nodeType;
   }
 
   async getOSes() {
     const oses = await this.__fetch("images?status=available&type=system");
-    return oses.json();
+    return oses;
   }
 
   async getOS(id) {
     const os = await this.__fetch(`images/${id}`);
-    return os.json();
+    return os;
   }
 };
