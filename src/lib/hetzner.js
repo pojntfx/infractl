@@ -12,7 +12,7 @@ module.exports = class {
     }
   }
 
-  __fetch(path, args) {
+  __fetch(path, args, noJSON) {
     return this.isSetUp
       ? fetch(
           `${this.endpoint}/${path}`,
@@ -21,7 +21,7 @@ module.exports = class {
               Authorization: `Bearer ${this.token}`
             }
           })
-        ).then(res => res.json())
+        ).then(res => (noJSON ? res : res.json()))
       : false;
   }
 
@@ -62,9 +62,13 @@ module.exports = class {
   }
 
   async deleteNode(id) {
-    const deletedNode = await this.__fetch(`servers/${id}`, {
-      method: "DELETE"
-    });
+    const deletedNode = await this.__fetch(
+      `servers/${id}`,
+      {
+        method: "DELETE"
+      },
+      true
+    );
     return deletedNode;
   }
 
@@ -93,9 +97,13 @@ module.exports = class {
   }
 
   async deleteSSHKey(id) {
-    const deletedSSHKey = await this.__fetch(`ssh_keys/${id}`, {
-      method: "DELETE"
-    });
+    const deletedSSHKey = await this.__fetch(
+      `ssh_keys/${id}`,
+      {
+        method: "DELETE"
+      },
+      true
+    );
     return deletedSSHKey;
   }
 
