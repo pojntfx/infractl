@@ -145,7 +145,7 @@ module.exports = class {
       const basicLocation = {
         id: isUniversalId
           ? datacenter.id
-          : await this.getSupracloudNodeId("hetzner", datacenter.id),
+          : await this.getSupracloudLocationId("hetzner", datacenter.id),
         name: datacenter.name,
         latitude: datacenter.latitude,
         longitude: datacenter.longitude

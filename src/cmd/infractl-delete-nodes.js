@@ -26,14 +26,20 @@ new (require("../lib/noun"))({
       commander.args.map(async id => {
         if (id.split("-")[0] === "H") {
           // Hetzner
-          await hetzner.deleteNode(
+          const node = await hetzner.deleteNode(
             await universaler.getProprietaryNodeId("hetzner", id)
           );
-          return await logger.log(
-            localhost,
-            `Successfully deleted node ${id}.`,
-            "done"
-          );
+          return node.status !== 200
+            ? await logger.log(
+                localhost,
+                `${node.status} ${node.statusText}`,
+                "error"
+              )
+            : await logger.log(
+                localhost,
+                `Successfully deleted node ${id}.`,
+                "done"
+              );
         } else {
           return await logger.log(
             localhost,
