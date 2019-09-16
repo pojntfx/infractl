@@ -5,7 +5,11 @@ module.exports = class {
   constructor({ endpoint, token }) {
     this.endpoint = endpoint;
     this.token = token;
-    if (!this.endpoint && !this.token) this.isSetUp = false;
+    if (!this.endpoint && !this.token) {
+      this.isSetUp = false;
+    } else {
+      this.isSetUp = true;
+    }
   }
 
   __fetch(path, args) {
