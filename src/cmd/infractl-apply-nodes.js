@@ -10,10 +10,7 @@ new (require("../lib/noun"))({
   args: `[id]`,
   options: [
     ["-n, --node-name [name]", "Node's name"],
-    [
-      "-l, --node-location [H-ngb1|H-fsn1|H-hel1]",
-      "Node's location (cannot be updated)"
-    ],
+    ["-l, --node-location [id]", "Node's location (cannot be updated)"],
     [
       "-o, --node-os [H-debian|H-centos|H-ubuntu|H-fedora]",
       "Node's OS (cannot be updated)"
@@ -63,15 +60,15 @@ new (require("../lib/noun"))({
           : false,
         {
           name: commander.nodeName,
-          location: await universaler.getProprietaryLocationName(
+          location: await universaler.getProprietaryLocationId(
             "hetzner",
             commander.nodeLocation
           ),
-          image: await universaler.getProprietaryNodeOS(
+          image: await universaler.getProprietaryOSId(
             "hetzner",
             commander.nodeOs
           ),
-          server_type: await universaler.getProprietaryNodeType(
+          server_type: await universaler.getProprietaryTypeId(
             "hetzner",
             commander.nodeType
           ),

@@ -91,4 +91,14 @@ module.exports = class {
     });
     return deletedSSHKey;
   }
+
+  async getLocations() {
+    const locations = await this.__fetch("locations");
+    return locations.json();
+  }
+
+  async getLocation(id) {
+    const location = await this.__fetch(`locations/${id}`);
+    return location.json();
+  }
 };

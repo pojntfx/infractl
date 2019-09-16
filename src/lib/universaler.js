@@ -15,7 +15,7 @@ module.exports = class {
     }
   }
 
-  async getSupracloudLocationName(from, name) {
+  async getSupracloudLocationId(from, name) {
     if (from === "hetzner") {
       return `H-${name}`;
     } else {
@@ -23,7 +23,7 @@ module.exports = class {
     }
   }
 
-  async getProprietaryLocationName(to, name) {
+  async getProprietaryLocationId(to, name) {
     if (to === "hetzner") {
       return name.replace("H-", "");
     } else {
@@ -76,7 +76,7 @@ module.exports = class {
     }
   }
 
-  async getSupracloudNodeOS(from, os) {
+  async getSupracloudOSId(from, os) {
     if (from === "hetzner") {
       let universalOS = "";
 
@@ -103,7 +103,7 @@ module.exports = class {
     }
   }
 
-  async getProprietaryNodeOS(to, os) {
+  async getProprietaryOSId(to, os) {
     if (to === "hetzner") {
       let proprietaryOS = "";
 
@@ -130,7 +130,7 @@ module.exports = class {
     }
   }
 
-  async getSupracloudNodeType(from, nodeType) {
+  async getSupracloudTypeId(from, nodeType) {
     if (from === "hetzner") {
       let proprietaryNodeType = "";
 
@@ -160,7 +160,7 @@ module.exports = class {
     }
   }
 
-  async getProprietaryNodeType(to, nodeType) {
+  async getProprietaryTypeId(to, nodeType) {
     if (to === "hetzner") {
       let supracloudNodeType = "";
 
@@ -199,24 +199,57 @@ module.exports = class {
           : await this.getSupracloudNodeId("hetzner", server.id),
         name: server.name,
         publicAccess: `root@${server.public_net.ipv4.ip}`,
-        location: await this.getSupracloudLocationName(
+        location: await this.getSupracloudLocationId(
           "hetzner",
-          server.datacenter.location.name
+          server.datacenter.location.id
         ),
-        os: await this.getSupracloudNodeOS("hetzner", server.image.name),
-        type: await this.getSupracloudNodeType(
-          "hetzner",
-          server.server_type.name
-        )
+        os: await this.getSupracloudOSId("hetzner", server.image.name),
+        type: await this.getSupracloudTypeId("hetzner", server.server_type.name)
       };
     } else {
       return false;
     }
   }
 
-  async getSupracloudNodeList(from, keys) {
+  async getSupracloudNodeList(from, nodes) {
     if (from === "hetzner") {
-      return keys.servers;
+      return nodes.servers;
+    } else {
+      return false;
+    }
+  }
+
+  async getSupracloudLocation(
+    from,
+    location,
+    withHumanLocation,
+    isUniversalId
+  ) {
+    if (from === "hetzner") {
+      const datacenter = location.location ? location.location : location;
+      const basicLocation = {
+        id: isUniversalId
+          ? datacenter.id
+          : await this.getSupracloudNodeId("hetzner", datacenter.id),
+        name: datacenter.name,
+        latitude: datacenter.latitude,
+        longitude: datacenter.longitude
+      };
+
+      return withHumanLocation
+        ? {
+            ...basicLocation,
+            location: `${datacenter.description}, ${datacenter.city}, ${datacenter.country}`
+          }
+        : basicLocation;
+    } else {
+      return false;
+    }
+  }
+
+  async getSupracloudLocationList(from, locations) {
+    if (from === "hetzner") {
+      return locations.locations;
     } else {
       return false;
     }
