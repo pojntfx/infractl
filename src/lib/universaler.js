@@ -111,6 +111,11 @@ module.exports = class {
   async getSupracloudNode(from, node, isUniversalId) {
     if (from === "hetzner") {
       const server = node.server ? node.server : node;
+
+      if (server.error) {
+        return false;
+      }
+
       return {
         id: isUniversalId
           ? server.id

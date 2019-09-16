@@ -25,17 +25,23 @@ new (require("../lib/noun"))({
     // Log either one or multiple locations
     if (commander.args[0]) {
       let location = undefined;
+      let locationStatus = undefined;
 
       // Hetzner
       if (commander.args[0].split("-")[0] === "H") {
         location = await universaler.getSupracloudLocation(
           "hetzner",
-          await hetzner.getLocation(
-            await universaler.getProprietaryLocationId(
-              "hetzner",
-              commander.args[0]
+          await hetzner
+            .getLocation(
+              await universaler.getProprietaryLocationId(
+                "hetzner",
+                commander.args[0]
+              )
             )
-          ),
+            .then(location => {
+              locationStatus = location;
+              return location;
+            }),
           true,
           false
         );
@@ -43,7 +49,9 @@ new (require("../lib/noun"))({
 
       // Log single location
       location
-        ? console.log(DataConverter.stringify(location))
+        ? locationStatus.error
+          ? await logger.log(localhost, locationStatus.error.message, "error")
+          : console.log(DataConverter.stringify(location))
         : await logger.log(
             localhost,
             `Not a valid id, location provider prefix "${
