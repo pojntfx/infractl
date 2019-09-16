@@ -26,14 +26,20 @@ new (require("../lib/noun"))({
       commander.args.map(async id => {
         if (id.split("-")[0] === "H") {
           // Hetzner
-          await hetzner.deleteSSHKey(
+          const sshKey = await hetzner.deleteSSHKey(
             await universaler.getProprietarySSHKeyId("hetzner", id)
           );
-          return await logger.log(
-            localhost,
-            `Successfully deleted key ${id}.`,
-            "done"
-          );
+          return sshKey.status !== 204
+            ? await logger.log(
+                localhost,
+                `${sshKey.status} ${sshKey.statusText}`,
+                "error"
+              )
+            : await logger.log(
+                localhost,
+                `Successfully deleted key ${id}.`,
+                "done"
+              );
         } else {
           return await logger.log(
             localhost,

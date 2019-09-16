@@ -25,24 +25,32 @@ new (require("../lib/noun"))({
     // Log either one or multiple SSH keys
     if (commander.args[0]) {
       let sshKey = undefined;
+      let sshKeyStatus = undefined;
 
       // Hetzner
       if (commander.args[0].split("-")[0] === "H") {
         sshKey = await universaler.getSupracloudSSHKey(
           "hetzner",
-          await hetzner.getSSHKey(
-            await universaler.getProprietarySSHKeyId(
-              "hetzner",
-              commander.args[0]
+          await hetzner
+            .getSSHKey(
+              await universaler.getProprietarySSHKeyId(
+                "hetzner",
+                commander.args[0]
+              )
             )
-          ),
+            .then(key => {
+              sshKeyStatus = key;
+              return key;
+            }),
           true
         );
       }
 
       // Log single SSH key
       sshKey
-        ? console.log(DataConverter.stringify(sshKey))
+        ? sshKeyStatus.error
+          ? await logger.log(localhost, sshKeyStatus.error.message, "error")
+          : console.log(DataConverter.stringify(sshKey))
         : await logger.log(
             localhost,
             `Not a valid id, key provider prefix "${
