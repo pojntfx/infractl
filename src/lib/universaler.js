@@ -17,22 +17,18 @@ module.exports = class {
 
   async getSupracloudSSHKey(from, key, withContent, isUniversalId) {
     if (from === "hetzner") {
+      const sshKey = key.ssh_key ? key.ssh_key : key;
       const basicKey = {
         id: isUniversalId
-          ? key.ssh_key
-            ? key.ssh_key.id
-            : key.id
-          : await this.getSupracloudSSHKeyId(
-              "hetzner",
-              key.ssh_key ? key.ssh_key.id : key.id
-            ),
-        name: key.ssh_key ? key.ssh_key.name : key.name,
-        fingerprint: key.ssh_key ? key.ssh_key.fingerprint : key.fingerprint
+          ? sshKey.id
+          : await this.getSupracloudSSHKeyId("hetzner", sshKey.id),
+        name: sshKey.name,
+        fingerprint: sshKey.fingerprint
       };
       return withContent
         ? {
             ...basicKey,
-            content: key.ssh_key ? key.ssh_key.public_key : key.public_key
+            content: sshKey.public_key
           }
         : basicKey;
     } else {
