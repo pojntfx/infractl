@@ -25,22 +25,33 @@ new (require("../lib/noun"))({
     // Log either one or multiple nodeTypes
     if (commander.args[0]) {
       let nodeType = undefined;
+      let nodeTypeStatus = {};
 
       // Hetzner
       if (commander.args[0].split("-")[0] === "H") {
         nodeType = await universaler.getSupracloudType(
           "hetzner",
-          await hetzner.getType(
-            await universaler.getProprietaryTypeId("hetzner", commander.args[0])
-          ),
+          await hetzner
+            .getType(
+              await universaler.getProprietaryTypeId(
+                "hetzner",
+                commander.args[0]
+              )
+            )
+            .then(nodeType => {
+              nodeTypeStatus = nodeType;
+              return nodeType;
+            }),
           true,
           false
         );
       }
 
       // Log single nodeType
-      nodeType
-        ? console.log(DataConverter.stringify(nodeType))
+      nodeType || nodeTypeStatus.error
+        ? nodeTypeStatus.error
+          ? await logger.log(localhost, nodeTypeStatus.error.message, "error")
+          : console.log(DataConverter.stringify(nodeType))
         : await logger.log(
             localhost,
             `Not a valid id, type provider prefix "${
