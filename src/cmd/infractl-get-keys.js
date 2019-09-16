@@ -5,7 +5,7 @@ const Contexter = require("../lib/contexter");
 const packageJSON = require("../../package.json");
 const Universaler = require("../lib/universaler");
 const Hetzner = require("../lib/hetzner");
-const YAML = require("yaml");
+const DataConverter = require("../lib/dataConverter");
 
 new (require("../lib/noun"))({
   args: "[id]",
@@ -42,7 +42,7 @@ new (require("../lib/noun"))({
 
       // Log single SSH key
       sshKey
-        ? console.log(YAML.stringify(sshKey))
+        ? console.log(DataConverter.stringify(sshKey))
         : await logger.log(
             localhost,
             `Not a valid id, key provider prefix "${
@@ -70,7 +70,7 @@ new (require("../lib/noun"))({
       ])).filter(Boolean);
 
       // Log all SSH keys
-      console.log(YAML.stringify(sshKeys));
+      console.log(DataConverter.stringify(sshKeys));
     }
   }
 });
