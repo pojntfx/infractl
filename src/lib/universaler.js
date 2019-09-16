@@ -209,6 +209,11 @@ module.exports = class {
       const machineType = nodeType.server_type
         ? nodeType.server_type
         : nodeType;
+
+      if (machineType.error) {
+        return false;
+      }
+
       const prices = machineType.prices.sort(
         (a, b) => a.price_hourly.gross < b.price_hourly.gross
       )[0];

@@ -25,14 +25,20 @@ new (require("../lib/noun"))({
     // Log either one or multiple oses
     if (commander.args[0]) {
       let os = undefined;
+      let osStatus = undefined;
 
       // Hetzner
       if (commander.args[0].split("-")[0] === "H") {
         os = await universaler.getSupracloudOS(
           "hetzner",
-          await hetzner.getOS(
-            await universaler.getProprietaryOSId("hetzner", commander.args[0])
-          ),
+          await hetzner
+            .getOS(
+              await universaler.getProprietaryOSId("hetzner", commander.args[0])
+            )
+            .then(os => {
+              osStatus = os;
+              return os;
+            }),
           true,
           false
         );
@@ -40,7 +46,9 @@ new (require("../lib/noun"))({
 
       // Log single os
       os
-        ? console.log(DataConverter.stringify(os))
+        ? osStatus.error
+          ? await logger.log(localhost, osStatus.error.message, "error")
+          : console.log(DataConverter.stringify(os))
         : await logger.log(
             localhost,
             `Not a valid id, os provider prefix "${
