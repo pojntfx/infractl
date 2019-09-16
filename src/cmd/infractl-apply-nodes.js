@@ -85,7 +85,7 @@ new (require("../lib/noun"))({
         ? await logger.log(localhost, node.error.message, "error")
         : await logger.log(
             localhost,
-            await universaler.getSupracloudNode("hetzner", node, true, false),
+            await universaler.getSupracloudNode("hetzner", node, false),
             "data",
             "Successfully applied node"
           );
