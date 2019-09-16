@@ -24,7 +24,7 @@ new (require("../lib/noun"))({
   args: "<user@manager-node-ip> <user@worker-node-ip> [otherWorkerNodes...]",
   options: [
     [
-      "-e, --lets-encrypt-certificate-issuers-email [user@provider]",
+      "-e, --lets-encrypt-certificate-issuers-email [email]",
       "Let's Encrypt certificate issuers' email for certificates (optional, if not provided the issuers won't be deployed)"
     ],
     [
