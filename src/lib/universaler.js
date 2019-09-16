@@ -15,6 +15,22 @@ module.exports = class {
     }
   }
 
+  async getSupracloudLocationName(from, name) {
+    if (from === "hetzner") {
+      return `H-${name}`;
+    } else {
+      return false;
+    }
+  }
+
+  async getProprietaryLocationName(to, name) {
+    if (to === "hetzner") {
+      return name.replace("H-", "");
+    } else {
+      return false;
+    }
+  }
+
   async getSupracloudSSHKey(from, key, withContent, isUniversalId) {
     if (from === "hetzner") {
       const sshKey = key.ssh_key ? key.ssh_key : key;
@@ -87,8 +103,8 @@ module.exports = class {
     }
   }
 
-  async getProprietaryNodeOS(from, os) {
-    if (from === "hetzner") {
+  async getProprietaryNodeOS(to, os) {
+    if (to === "hetzner") {
       let proprietaryOS = "";
 
       switch (os) {
@@ -114,6 +130,66 @@ module.exports = class {
     }
   }
 
+  async getSupracloudNodeType(from, nodeType) {
+    if (from === "hetzner") {
+      let proprietaryNodeType = "";
+
+      switch (nodeType) {
+        case "cx11":
+          proprietaryNodeType = "1-2-20";
+          break;
+        case "cx21":
+          proprietaryNodeType = "2-4-40";
+          break;
+        case "cx31":
+          proprietaryNodeType = "2-8-80";
+          break;
+        case "cx41":
+          proprietaryNodeType = "4-16-160";
+          break;
+        case "cx51":
+          proprietaryNodeType = "8-32-240";
+          break;
+        default:
+          proprietaryNodeType = nodeType;
+      }
+
+      return proprietaryNodeType;
+    } else {
+      return false;
+    }
+  }
+
+  async getProprietaryNodeType(to, nodeType) {
+    if (to === "hetzner") {
+      let supracloudNodeType = "";
+
+      switch (nodeType) {
+        case "1-2-20":
+          supracloudNodeType = "cx11";
+          break;
+        case "2-4-40":
+          supracloudNodeType = "cx21";
+          break;
+        case "2-8-80":
+          supracloudNodeType = "cx31";
+          break;
+        case "4-16-160":
+          supracloudNodeType = "cx41";
+          break;
+        case "8-32-240":
+          supracloudNodeType = "cx51";
+          break;
+        default:
+          supracloudNodeType = nodeType;
+      }
+
+      return supracloudNodeType;
+    } else {
+      return false;
+    }
+  }
+
   async getSupracloudNode(from, node, isUniversalId) {
     if (from === "hetzner") {
       const server = node.server ? node.server : node;
@@ -123,9 +199,15 @@ module.exports = class {
           : await this.getSupracloudNodeId("hetzner", server.id),
         name: server.name,
         publicAccess: `root@${server.public_net.ipv4.ip}`,
-        location: server.datacenter.location.name,
+        location: await this.getSupracloudLocationName(
+          "hetzner",
+          server.datacenter.location.name
+        ),
         os: await this.getSupracloudNodeOS("hetzner", server.image.name),
-        type: `${server.server_type.cores}-${server.server_type.memory}-${server.server_type.disk}`
+        type: await this.getSupracloudNodeType(
+          "hetzner",
+          server.server_type.name
+        )
       };
     } else {
       return false;
