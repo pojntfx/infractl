@@ -10,8 +10,11 @@ const Cater = require("../lib/cater");
 new (require("../lib/noun"))({
   args: `<id|"H-">`,
   options: [
-    ["-n, --key-name <name>", "Key's name"],
-    ["-f, --key-file [path]", "Key's path (cannot be updated)"]
+    ["-n, --key-name <name>", "Key's name (i.e. user@ip-1)"],
+    [
+      "-f, --key-file [path]",
+      "Key's path (cannot be updated) (i.e. ~/.ssh/id_rsa.pub)"
+    ]
   ],
   checker: commander =>
     commander.args[0]
