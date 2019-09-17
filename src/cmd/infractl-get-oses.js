@@ -3,7 +3,7 @@ const Logger = require("../lib/logger");
 const Hostnamer = require("../lib/hostnamer");
 const Contexter = require("../lib/contexter");
 const packageJSON = require("../../package.json");
-const Universaler = require("../lib/universaler");
+const SupraClouder = require("../lib/supraClouder");
 const Hetzner = require("../lib/hetzner");
 const DataConverter = require("../lib/dataConverter");
 
@@ -14,7 +14,7 @@ new (require("../lib/noun"))({
     const localhost = hostnamer.getAddress();
     const logger = new Logger();
     const contexter = new Contexter(packageJSON.name);
-    const universaler = new Universaler();
+    const supraClouder = new SupraClouder();
 
     // Create clients
     const hetzner = new Hetzner({
@@ -37,11 +37,14 @@ new (require("../lib/noun"))({
             "error"
           );
 
-        os = await universaler.getSupracloudOS(
+        os = await supraClouder.getSupracloudOS(
           "hetzner",
           await hetzner
             .getOS(
-              await universaler.getProprietaryOSId("hetzner", commander.args[0])
+              await supraClouder.getProprietaryOSId(
+                "hetzner",
+                commander.args[0]
+              )
             )
             .then(os => {
               osStatus = os;
@@ -68,12 +71,12 @@ new (require("../lib/noun"))({
       const oses = (await Promise.all([
         // Hetzner
         ...(await Promise.all(
-          (await universaler.getSupracloudOSList(
+          (await supraClouder.getSupracloudOSList(
             "hetzner",
             await hetzner.getOSes()
           )).map(
             async hetznerOS =>
-              await universaler.getSupracloudOS(
+              await supraClouder.getSupracloudOS(
                 "hetzner",
                 hetznerOS,
                 false,

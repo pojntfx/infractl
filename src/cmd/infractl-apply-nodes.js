@@ -3,7 +3,7 @@ const Logger = require("../lib/logger");
 const Hostnamer = require("../lib/hostnamer");
 const Contexter = require("../lib/contexter");
 const packageJSON = require("../../package.json");
-const Universaler = require("../lib/universaler");
+const SupraClouder = require("../lib/supraClouder");
 const Hetzner = require("../lib/hetzner");
 
 new (require("../lib/noun"))({
@@ -32,7 +32,7 @@ new (require("../lib/noun"))({
     const localhost = hostnamer.getAddress();
     const logger = new Logger();
     const contexter = new Contexter(packageJSON.name);
-    const universaler = new Universaler();
+    const supraClouder = new SupraClouder();
 
     // Create clients
     const hetzner = new Hetzner({
@@ -58,27 +58,30 @@ new (require("../lib/noun"))({
 
       node = await hetzner.upsertNode(
         commander.args[0]
-          ? await universaler.getProprietaryNodeId("hetzner", commander.args[0])
+          ? await supraClouder.getProprietaryNodeId(
+              "hetzner",
+              commander.args[0]
+            )
           : false,
         {
           name: commander.nodeName,
-          location: await universaler.getProprietaryLocationId(
+          location: await supraClouder.getProprietaryLocationId(
             "hetzner",
             commander.nodeLocation
           ),
-          image: await universaler.getProprietaryOSId(
+          image: await supraClouder.getProprietaryOSId(
             "hetzner",
             commander.nodeOs
           ),
-          server_type: await universaler.getProprietaryTypeId(
+          server_type: await supraClouder.getProprietaryTypeId(
             "hetzner",
             commander.nodeType
           ),
           ssh_keys: [
-            (await universaler.getSupracloudSSHKey(
+            (await supraClouder.getSupracloudSSHKey(
               "hetzner",
               await hetzner.getSSHKey(
-                await universaler.getProprietarySSHKeyId(
+                await supraClouder.getProprietarySSHKeyId(
                   "hetzner",
                   commander.nodeKey
                 )
@@ -93,7 +96,7 @@ new (require("../lib/noun"))({
         ? await logger.log(localhost, node.error.message, "error")
         : await logger.log(
             localhost,
-            await universaler.getSupracloudNode("hetzner", node, false),
+            await supraClouder.getSupracloudNode("hetzner", node, false),
             "data",
             "Successfully applied node"
           );
