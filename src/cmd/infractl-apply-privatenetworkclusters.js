@@ -381,39 +381,57 @@ new (require("../lib/noun"))({
       localhost,
       "Creating private network cluster manager service"
     );
-    const managerServiceSource = await servicer.createService({
-      description: "Network cluster daemon (manager and worker)",
-      execStart: `/bin/sh -c "/usr/local/bin/wireguard-go wgoverlay && /usr/local/bin/wesher --interface wgoverlay --no-etc-hosts --bind-addr ${
-        publicManagerNode[0].split("@")[1]
-      } --cluster-key ${token}"`,
-      environment: "WG_I_PREFER_BUGGY_USERSPACE_TO_POLISHED_KMOD=1",
-      destination: await tmpFiler.getPath(
-        "private-network-cluster-manager.service"
-      )
-    });
+    const managerServiceSource = isType2
+      ? await servicer.createService({
+          description: "Network cluster daemon (manager and worker)",
+          execStart: `/bin/sh -c "/usr/sbin/supernode -l 9090 -v & /usr/sbin/edge -d edge0 -r -a 192.168.1.0 -c foo -k bar -l localhost:9090 -v -A && /usr/sbin/dhcpd -f edge0"`,
+          destination: await tmpFiler.getPath(
+            "private-network-cluster-manager.service"
+          )
+        })
+      : await servicer.createService({
+          description: "Network cluster daemon (manager and worker)",
+          execStart: `/bin/sh -c "/usr/local/bin/wireguard-go wgoverlay && /usr/local/bin/wesher --interface wgoverlay --no-etc-hosts --bind-addr ${
+            publicManagerNode[0].split("@")[1]
+          } --cluster-key ${token}"`,
+          environment: "WG_I_PREFER_BUGGY_USERSPACE_TO_POLISHED_KMOD=1",
+          destination: await tmpFiler.getPath(
+            "private-network-cluster-manager.service"
+          )
+        });
     await logger.divide();
 
     // Create network cluster worker services
-    const workerServiceSources = await Promise.all(
-      publicWorkerNodes.map(async ([node]) => {
-        await logger.log(
-          node,
-          "Creating private network cluster worker node service"
-        );
-        return await servicer.createService({
+    const workerServiceSources = isType2
+      ? await servicer.createService({
           description: "Network cluster daemon (worker only)",
-          execStart: `/bin/sh -c "/usr/local/bin/wireguard-go wgoverlay && /usr/local/bin/wesher --interface wgoverlay --no-etc-hosts --bind-addr ${
-            node.split("@")[1]
-          } --cluster-key ${token} --join ${
+          execStart: `/bin/sh -c "/usr/sbin/edge -d edge0 -r -a dhcp:0.0.0.0 -c foo -k bar -l ${
             publicManagerNode[0].split("@")[1]
-          }"`,
-          environment: "WG_I_PREFER_BUGGY_USERSPACE_TO_POLISHED_KMOD=1",
+          }:9090 -v -A -m $(echo $(hostname)|md5sum|sed 's/^\\(..\\)\\(..\\)\\(..\\)\\(..\\)\\(..\\).*$/02:\\1:\\2:\\3:\\4:\\5/') && pkill -9 dhclient; /sbin/dhclient edge0; tail -f /dev/null"`,
           destination: await tmpFiler.getPath(
-            `private-network-cluster-worker.service-${node}`
+            "private-network-cluster-worker.service"
           )
-        });
-      })
-    );
+        })
+      : await Promise.all(
+          publicWorkerNodes.map(async ([node]) => {
+            await logger.log(
+              node,
+              "Creating private network cluster worker node service"
+            );
+            return await servicer.createService({
+              description: "Network cluster daemon (worker only)",
+              execStart: `/bin/sh -c "/usr/local/bin/wireguard-go wgoverlay && /usr/local/bin/wesher --interface wgoverlay --no-etc-hosts --bind-addr ${
+                node.split("@")[1]
+              } --cluster-key ${token} --join ${
+                publicManagerNode[0].split("@")[1]
+              }"`,
+              environment: "WG_I_PREFER_BUGGY_USERSPACE_TO_POLISHED_KMOD=1",
+              destination: await tmpFiler.getPath(
+                `private-network-cluster-worker.service-${node}`
+              )
+            });
+          })
+        );
     await logger.divide();
 
     // Upload network cluster manager service
@@ -438,11 +456,13 @@ new (require("../lib/noun"))({
           "Uploading private network cluster worker node service"
         );
         return uploader.upload(
-          workerServiceSources.find(
-            source =>
-              source.split("private-network-cluster-worker.service-")[1] ===
-              node
-          ),
+          isType2
+            ? workerServiceSources
+            : workerServiceSources.find(
+                source =>
+                  source.split("private-network-cluster-worker.service-")[1] ===
+                  node
+              ),
           `${node}:/etc/systemd/system/private-network-cluster-worker.service`,
           true
         );
@@ -496,10 +516,14 @@ new (require("../lib/noun"))({
       "private-network-cluster-manager.service",
       1000
     );
-    await iper.waitForInterface(publicManagerNode[0], "wgoverlay", 1000);
+    await iper.waitForInterface(
+      publicManagerNode[0],
+      isType2 ? "edge0" : "wgoverlay",
+      1000
+    );
     const privateManagerNodeInterface = await iper.getInterface(
       publicManagerNode[0],
-      "wgoverlay"
+      isType2 ? "edge0" : "wgoverlay"
     );
     const privateManagerNode = [
       `${publicManagerNode[0].split("@")[0]}@${privateManagerNodeInterface.ip}`,
@@ -518,10 +542,14 @@ new (require("../lib/noun"))({
           "private-network-cluster-worker.service",
           1000
         );
-        await iper.waitForInterface(node, "wgoverlay", 1000);
+        await iper.waitForInterface(
+          node,
+          isType2 ? "edge0" : "wgoverlay",
+          1000
+        );
         const networkWorkerNodeInNetworkInterface = await iper.getInterface(
           node,
-          "wgoverlay"
+          isType2 ? "edge0" : "wgoverlay"
         );
         return privateWorkerNodes.push([
           `${node.split("@")[0]}@${networkWorkerNodeInNetworkInterface.ip}`,
