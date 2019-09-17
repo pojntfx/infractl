@@ -384,7 +384,7 @@ new (require("../lib/noun"))({
     const managerServiceSource = isType2
       ? await servicer.createService({
           description: "Network cluster daemon (manager and worker)",
-          execStart: `/bin/sh -c "/usr/sbin/supernode -l 9090 -v & /usr/sbin/edge -d edge0 -r -a 192.168.1.0 -c privatenetworkcluster -k ${token} -l localhost:9090 -v -A && /usr/sbin/dhcpd -f edge0"`,
+          execStart: `/bin/sh -c "/usr/sbin/supernode -l 9090 -v & /usr/sbin/edge -d edge0 -r -a 192.168.1.1 -c privatenetworkcluster -k ${token} -l localhost:9090 -v -A && /usr/sbin/dhcpd -f edge0"`,
           destination: await tmpFiler.getPath(
             "private-network-cluster-manager.service"
           )
