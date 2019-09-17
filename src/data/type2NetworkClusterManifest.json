@@ -1,0 +1,65 @@
+[
+  [
+    "universal",
+    [
+      [
+        "private network cl. manager binary",
+        "https://nx904.your-next.cloud/s/fBYFEBfLoJjyBCW/download",
+        "supernode",
+        "/usr/local/bin/supernode"
+      ],
+      [
+        "private network cl. worker binary",
+        "https://nx904.your-next.cloud/s/ZfDmWDbqLToZQeL/download",
+        "edge",
+        "/usr/local/bin/edge"
+      ]
+    ]
+  ],
+  [
+    "debian",
+    [
+      [
+        "private network cl. dhcp package 1",
+        "https://nx904.your-next.cloud/s/CCj7FGWBmkeyjnM/download",
+        "isc-dhcp-server.deb",
+        "/tmp/isc-dhcp-server.deb"
+      ],
+      [
+        "private network cl. dhcp package 2",
+        "https://nx904.your-next.cloud/s/KkgXXL8exYNGmFE/download",
+        "isc-dhcp-client.deb",
+        "/tmp/isc-dhcp-client.deb"
+      ]
+    ]
+  ],
+  [
+    "centos",
+    [
+      [
+        "private network cl. dhcp package 1",
+        "https://nx904.your-next.cloud/s/STHS423WtqwatkB/download",
+        "dhcp-common.rpm",
+        "/tmp/dhcp-common.rpm"
+      ],
+      [
+        "private network cl. dhcp package 2",
+        "https://nx904.your-next.cloud/s/7MpbxziYEYi5cKm/download",
+        "dhcp-libs.rpm",
+        "/tmp/dhcp-libs.rpm"
+      ],
+      [
+        "private network cl. dhcp package 3",
+        "https://nx904.your-next.cloud/s/S7mtEtSdoMJNXRd/download",
+        "dhcp.rpm",
+        "/tmp/dhcp.rpm"
+      ],
+      [
+        "private network cl. dhcp package 4",
+        "https://nx904.your-next.cloud/s/mwf6o6eyzq2HXFQ/download",
+        "dhclient.rpm",
+        "/tmp/dhclient.rpm"
+      ]
+    ]
+  ]
+]

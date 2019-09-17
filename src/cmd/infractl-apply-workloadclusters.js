@@ -32,8 +32,8 @@ new (require("../lib/noun"))({
       "Additional manager node's IP for the workload cluster config (i.e. 192.168.178.141) (optional, by default the target IP will be used, which might only be reachable from within the private network cluster depending on your setup)"
     ],
     [
-      "-n, --private-network-cluster-type [2|3]",
-      "Private network clusters' type (optional, by default 3)"
+      "-t, --private-network-cluster-type [2|3]",
+      "Private network clusters' type (OSI layer) (optional, by default 3)"
     ]
   ],
   checker: commander =>

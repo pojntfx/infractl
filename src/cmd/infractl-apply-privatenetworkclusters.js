@@ -3,13 +3,15 @@
 const Logger = require("../lib/logger");
 const Pinger = require("../lib/pinger");
 const SSHer = require("../lib/ssher");
-const networkClusterManifestRaw = require("../data/networkClusterManifest.json");
+const type2Files = require("../data/type2NetworkClusterManifest.json");
+const type3Files = require("../data/type3NetworkClusterManifest.json");
 const TmpFiler = require("../lib/tmpfiler");
 const Downloader = require("../lib/downloader");
 const OSer = require("../lib/oser");
 const Uploader = require("../lib/uploader");
 const Packager = require("../lib/packager");
 const Permissioner = require("../lib/permissioner");
+const DHCPer = require("../lib/dhcper");
 const Kernelr = require("../lib/kernelr");
 const Servicer = require("../lib/servicer");
 const Cryptographer = require("../lib/cryptographer");
@@ -20,6 +22,12 @@ const Homer = require("../lib/homer");
 new (require("../lib/noun"))({
   args:
     "<user@manager-node-ip> <user@worker-node-ip> [otherWorkerNodes...] $(whoami)@$(hostname)",
+  options: [
+    [
+      "-t, --private-network-cluster-type [2|3]",
+      "Private network clusters' type (OSI layer) (optional, by default 3)"
+    ]
+  ],
   checker: commander =>
     commander.args[0] &&
     commander.args[1] &&
@@ -38,6 +46,7 @@ new (require("../lib/noun"))({
       localhost,
       "Creating provided public network cluster node data model"
     );
+    const isType2 = commander.privateNetworkClusterType === "2" ? true : false;
     const providedManagerNode = commander.args[0];
     const providedWorkerNodes = commander.args.filter(
       (_, index) => index !== 0
@@ -117,7 +126,7 @@ new (require("../lib/noun"))({
     // Set all network cluster file download sources
     const tmpFiler = new TmpFiler();
     const files = await Promise.all(
-      networkClusterManifestRaw.map(async fileType => [
+      (isType2 ? type2Files : type3Files).map(async fileType => [
         fileType[0],
         await Promise.all(
           fileType[1].map(
@@ -178,6 +187,7 @@ new (require("../lib/noun"))({
 
     // Set network cluster services to disable
     const servicesToDisable = [
+      ...(isType2 ? ["dhcpd", "isc-dhcp-server", "isc-dhcp-server6"] : []),
       "firewalld.service",
       "private-network-cluster-manager.service",
       "private-network-cluster-worker.service"
@@ -291,45 +301,74 @@ new (require("../lib/noun"))({
     );
     await logger.divide();
 
-    // Create network cluster kernel config
-    const kernelr = new Kernelr();
-    await logger.log(
-      localhost,
-      "Creating private network cluster node kernel config"
-    );
-    const kernelConfig = await kernelr.createConfig(
-      ["net.ipv4.ip_forward = 1", "net.ipv4.conf.all.proxy_arp = 1"],
-      await tmpFiler.getPath("network-cluster.conf")
-    );
-    await logger.divide();
+    if (isType2) {
+      // Create network cluster dhcp config
+      const dhcper = new DHCPer();
+      await logger.log(
+        localhost,
+        "Creating private network cluster dhcp config"
+      );
+      const dhcpConfig = await dhcper.createConfig(
+        {
+          subnet: "192.168.1.0",
+          netmask: "255.255.255.0"
+        },
+        ["192.168.1.10", "192.168.1.100"],
+        await tmpFiler.getPath("dhcpd.conf")
+      );
 
-    // Upload network cluster kernel config
-    await Promise.all(
-      allPublicNodes.map(async ([node]) => {
-        await logger.log(
-          node,
-          "Uploading private network cluster node kernel config"
-        );
-        return await uploader.upload(
-          kernelConfig,
-          `${node}:/etc/network-cluster.conf`,
-          true
-        );
-      })
-    );
-    await logger.divide();
+      // Upload network cluster kernel config
+      await logger.log(
+        publicManagerNode[0],
+        "Uploading private network cluster dhcp config"
+      );
+      await uploader.upload(
+        dhcpConfig,
+        `${publicManagerNode[0]}:/etc/dhcp/dhcpd.conf`,
+        true
+      );
+      await logger.divide();
+    } else {
+      // Create network cluster kernel config
+      const kernelr = new Kernelr();
+      await logger.log(
+        localhost,
+        "Creating private network cluster node kernel config"
+      );
+      const kernelConfig = await kernelr.createConfig(
+        ["net.ipv4.ip_forward = 1", "net.ipv4.conf.all.proxy_arp = 1"],
+        await tmpFiler.getPath("network-cluster.conf")
+      );
+      await logger.divide();
 
-    // Apply network cluster kernel config
-    await Promise.all(
-      allPublicNodes.map(async ([node]) => {
-        await logger.log(
-          node,
-          "Applying private network cluster node kernel config"
-        );
-        return await kernelr.applyConfig(`${node}:/etc/network-cluster.conf`);
-      })
-    );
-    await logger.divide();
+      // Upload network cluster kernel config
+      await Promise.all(
+        allPublicNodes.map(async ([node]) => {
+          await logger.log(
+            node,
+            "Uploading private network cluster node kernel config"
+          );
+          return await uploader.upload(
+            kernelConfig,
+            `${node}:/etc/network-cluster.conf`,
+            true
+          );
+        })
+      );
+      await logger.divide();
+
+      // Apply network cluster kernel config
+      await Promise.all(
+        allPublicNodes.map(async ([node]) => {
+          await logger.log(
+            node,
+            "Applying private network cluster node kernel config"
+          );
+          return await kernelr.applyConfig(`${node}:/etc/network-cluster.conf`);
+        })
+      );
+      await logger.divide();
+    }
 
     // Create network cluster token
     const cryptographer = new Cryptographer();

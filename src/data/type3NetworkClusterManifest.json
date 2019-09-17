@@ -61,7 +61,7 @@
     "centos",
     [
       [
-        "private network cl. firewall 1",
+        "private network cl. firewall package 1",
         "https://nx904.your-storageshare.de/s/jkidqgeCMbmijmY/download",
         "iptables.rpm",
         "/tmp/iptables.rpm"
