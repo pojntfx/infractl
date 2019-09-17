@@ -3,7 +3,7 @@ const Logger = require("../lib/logger");
 const Hostnamer = require("../lib/hostnamer");
 const Contexter = require("../lib/contexter");
 const packageJSON = require("../../package.json");
-const Universaler = require("../lib/universaler");
+const SupraClouder = require("../lib/supraClouder");
 const Hetzner = require("../lib/hetzner");
 const DataConverter = require("../lib/dataConverter");
 
@@ -14,7 +14,7 @@ new (require("../lib/noun"))({
     const localhost = hostnamer.getAddress();
     const logger = new Logger();
     const contexter = new Contexter(packageJSON.name);
-    const universaler = new Universaler();
+    const supraClouder = new SupraClouder();
 
     // Create clients
     const hetzner = new Hetzner({
@@ -37,11 +37,11 @@ new (require("../lib/noun"))({
             "error"
           );
 
-        location = await universaler.getSupracloudLocation(
+        location = await supraClouder.getSupracloudLocation(
           "hetzner",
           await hetzner
             .getLocation(
-              await universaler.getProprietaryLocationId(
+              await supraClouder.getProprietaryLocationId(
                 "hetzner",
                 commander.args[0]
               )
@@ -71,12 +71,12 @@ new (require("../lib/noun"))({
       const locations = (await Promise.all([
         // Hetzner
         ...(await Promise.all(
-          (await universaler.getSupracloudLocationList(
+          (await supraClouder.getSupracloudLocationList(
             "hetzner",
             await hetzner.getLocations()
           )).map(
             async hetznerLocation =>
-              await universaler.getSupracloudLocation(
+              await supraClouder.getSupracloudLocation(
                 "hetzner",
                 hetznerLocation,
                 false,

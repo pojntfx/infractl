@@ -3,7 +3,7 @@ const Logger = require("../lib/logger");
 const Hostnamer = require("../lib/hostnamer");
 const Contexter = require("../lib/contexter");
 const packageJSON = require("../../package.json");
-const Universaler = require("../lib/universaler");
+const SupraClouder = require("../lib/supraClouder");
 const Hetzner = require("../lib/hetzner");
 const Cater = require("../lib/cater");
 
@@ -27,7 +27,7 @@ new (require("../lib/noun"))({
     const localhost = hostnamer.getAddress();
     const logger = new Logger();
     const contexter = new Contexter(packageJSON.name);
-    const universaler = new Universaler();
+    const supraClouder = new SupraClouder();
     const cater = new Cater();
 
     // Create clients
@@ -50,7 +50,7 @@ new (require("../lib/noun"))({
 
       sshKey = await hetzner.upsertSSHKey(
         commander.args[0]
-          ? await universaler.getProprietarySSHKeyId(
+          ? await supraClouder.getProprietarySSHKeyId(
               "hetzner",
               commander.args[0]
             )
@@ -66,7 +66,7 @@ new (require("../lib/noun"))({
         ? await logger.log(localhost, sshKey.error.message, "error")
         : await logger.log(
             localhost,
-            await universaler.getSupracloudSSHKey(
+            await supraClouder.getSupracloudSSHKey(
               "hetzner",
               sshKey,
               true,
