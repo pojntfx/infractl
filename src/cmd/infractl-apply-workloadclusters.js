@@ -25,11 +25,15 @@ new (require("../lib/noun"))({
   options: [
     [
       "-e, --lets-encrypt-certificate-issuers-email [email]",
-      "Let's Encrypt certificate issuers' email for certificates (i.e. user@host.tld) (optional, if not provided the issuers won't be deployed)"
+      "Let's Encrypt certificate issuers' email for certificates (i.e. user@host.tld) (optional, by default the issuers won't be deployed)"
     ],
     [
       "-m, --additional-manager-node-ip [ip]",
-      "Additional manager node's IP for the workload cluster config (i.e. 192.168.178.141) (if not specified, the target IP will be used, which might only be reachable from within the private network cluster depending on your setup)"
+      "Additional manager node's IP for the workload cluster config (i.e. 192.168.178.141) (optional, by default the target IP will be used, which might only be reachable from within the private network cluster depending on your setup)"
+    ],
+    [
+      "-n, --private-network-cluster-type [2|3]",
+      "Private network clusters' type (optional, by default 3)"
     ]
   ],
   checker: commander =>
@@ -46,6 +50,8 @@ new (require("../lib/noun"))({
       localhost,
       "Creating provided network cluster node data model"
     );
+    const interfaceName =
+      commander.privateNetworkClusterType === "2" ? "edge0" : "wgoverlay";
     const providedManagerNode = commander.args[0];
     const providedWorkerNodes = commander.args.filter(
       (_, index) => index !== 0
@@ -362,7 +368,7 @@ new (require("../lib/noun"))({
     await logger.log(localhost, "Creating cluster manager service");
     const managerServiceSource = await servicer.createService({
       description: "Workload cluster daemon (manager and worker)",
-      execStart: `/usr/local/bin/k3s server --no-deploy traefik --no-deploy servicelb --flannel-iface wgoverlay --tls-san ${
+      execStart: `/usr/local/bin/k3s server --no-deploy traefik --no-deploy servicelb --flannel-iface ${interfaceName} --tls-san ${
         commander.additionalManagerNodeIp
           ? commander.additionalManagerNodeIp
           : managerNode[0].split("@")[1]
@@ -510,7 +516,7 @@ new (require("../lib/noun"))({
     await logger.log(localhost, "Creating workload cluster worker service");
     const workerServiceSource = await servicer.createService({
       description: "Workload cluster daemon (worker only)",
-      execStart: `/usr/local/bin/k3s agent --flannel-iface wgoverlay --token ${token} --server https://${
+      execStart: `/usr/local/bin/k3s agent --flannel-iface ${interfaceName} --token ${token} --server https://${
         managerNode[0].split("@")[1]
       }:6443`,
       destination: await tmpFiler.getPath("workload-cluster-worker.service")
