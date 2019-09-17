@@ -1,33 +1,47 @@
 [
-  [
-    "universal",
-    [
-      [
-        "private network cl. manager binary",
-        "https://nx904.your-next.cloud/s/fBYFEBfLoJjyBCW/download",
-        "supernode",
-        "/usr/local/bin/supernode"
-      ],
-      [
-        "private network cl. worker binary",
-        "https://nx904.your-next.cloud/s/ZfDmWDbqLToZQeL/download",
-        "edge",
-        "/usr/local/bin/edge"
-      ]
-    ]
-  ],
+  ["universal", []],
   [
     "debian",
     [
       [
+        "private network cl. dhcp package 0",
+        "https://nx904.your-storageshare.de/s/orBdZ96dMmjmqba/download",
+        "n2n.deb",
+        "/tmp/n2n.deb"
+      ],
+      [
         "private network cl. dhcp package 1",
-        "https://nx904.your-next.cloud/s/CCj7FGWBmkeyjnM/download",
+        "https://nx904.your-storageshare.de/s/mXqZnY8jSGgLX8k/download",
+        "libisc-export1100.deb",
+        "/tmp/libisc-export1100.deb"
+      ],
+      [
+        "private network cl. dhcp package 2",
+        "https://nx904.your-storageshare.de/s/wNfoXkyFZjQKT5k/download",
+        "libdns-export1104.deb",
+        "/tmp/libdns-export1104.deb"
+      ],
+      [
+        "private network cl. dhcp package 3",
+        "https://nx904.your-storageshare.de/s/EYwzetxWXDDYGom/download",
+        "libisccfg-export163.deb",
+        "/tmp/libisccfg-export163.deb"
+      ],
+      [
+        "private network cl. dhcp package 4",
+        "https://nx904.your-storageshare.de/s/5JqmeApaMH57MWY/download",
+        "libirs-export161.deb",
+        "/tmp/libirs-export161.deb"
+      ],
+      [
+        "private network cl. dhcp package 5",
+        "https://nx904.your-storageshare.de/s/CCj7FGWBmkeyjnM/download",
         "isc-dhcp-server.deb",
         "/tmp/isc-dhcp-server.deb"
       ],
       [
-        "private network cl. dhcp package 2",
-        "https://nx904.your-next.cloud/s/KkgXXL8exYNGmFE/download",
+        "private network cl. dhcp package 6",
+        "https://nx904.your-storageshare.de/s/KkgXXL8exYNGmFE/download",
         "isc-dhcp-client.deb",
         "/tmp/isc-dhcp-client.deb"
       ]
@@ -37,26 +51,32 @@
     "centos",
     [
       [
-        "private network cl. dhcp package 1",
-        "https://nx904.your-next.cloud/s/STHS423WtqwatkB/download",
-        "dhcp-common.rpm",
-        "/tmp/dhcp-common.rpm"
+        "private network cl. dhcp package 0",
+        "https://nx904.your-storageshare.de/s/b4CcCBF6j5sNiXC/download",
+        "n2n.rpm",
+        "/tmp/n2n.rpm"
       ],
       [
-        "private network cl. dhcp package 2",
-        "https://nx904.your-next.cloud/s/7MpbxziYEYi5cKm/download",
+        "private network cl. dhcp package 1",
+        "https://nx904.your-storageshare.de/s/7MpbxziYEYi5cKm/download",
         "dhcp-libs.rpm",
         "/tmp/dhcp-libs.rpm"
       ],
       [
+        "private network cl. dhcp package 2",
+        "https://nx904.your-storageshare.de/s/STHS423WtqwatkB/download",
+        "dhcp-common.rpm",
+        "/tmp/dhcp-common.rpm"
+      ],
+      [
         "private network cl. dhcp package 3",
-        "https://nx904.your-next.cloud/s/S7mtEtSdoMJNXRd/download",
+        "https://nx904.your-storageshare.de/s/S7mtEtSdoMJNXRd/download",
         "dhcp.rpm",
         "/tmp/dhcp.rpm"
       ],
       [
         "private network cl. dhcp package 4",
-        "https://nx904.your-next.cloud/s/mwf6o6eyzq2HXFQ/download",
+        "https://nx904.your-storageshare.de/s/mwf6o6eyzq2HXFQ/download",
         "dhclient.rpm",
         "/tmp/dhclient.rpm"
       ]
