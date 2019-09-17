@@ -3,7 +3,30 @@ const IPer = require("./iper");
 const AsyncHostnamer = require("./asyncHostnamer");
 
 module.exports = class {
-  async getClusterToken(destination) {
+  async getType2ClusterToken(destination) {
+    const cater = new Cater();
+    const rawClusterWorkerToken = await cater.getFileContent(
+      `${destination}:/etc/systemd/system/private-network-cluster-worker.service`,
+      false,
+      true
+    );
+    if (rawClusterWorkerToken) {
+      return rawClusterWorkerToken.split(" -k ")[1].split(" -l")[0];
+    } else {
+      const rawClusterManagerToken = await cater.getFileContent(
+        `${destination}:/etc/systemd/system/private-network-cluster-manager.service`,
+        false,
+        true
+      );
+      if (rawClusterManagerToken) {
+        return rawClusterManagerToken.split(" -k ")[1].split(" -l")[0];
+      } else {
+        return false;
+      }
+    }
+  }
+
+  async getType3ClusterToken(destination) {
     const cater = new Cater();
     const rawClusterInfo = await cater.getFileContent(
       `${destination}:/var/lib/wesher/state.json`,
