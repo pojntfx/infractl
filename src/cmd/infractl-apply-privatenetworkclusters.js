@@ -407,7 +407,7 @@ new (require("../lib/noun"))({
           description: "Network cluster daemon (worker only)",
           execStart: `/bin/sh -c "/usr/sbin/edge -d edge0 -r -a dhcp:0.0.0.0 -c privatenetworkcluster -k ${token} -l ${
             publicManagerNode[0].split("@")[1]
-          }:9090 -v -A -m $(echo $(hostname)|md5sum|sed 's/^\\(..\\)\\(..\\)\\(..\\)\\(..\\)\\(..\\).*$/02:\\1:\\2:\\3:\\4:\\5/') && pkill -9 dhclient; /sbin/dhclient edge0; tail -f /dev/null"`,
+          }:9090 -v -A -m $(echo $(cat /etc/machine-id)|md5sum|sed 's/^\\(..\\)\\(..\\)\\(..\\)\\(..\\)\\(..\\).*$/02:\\1:\\2:\\3:\\4:\\5/') && pkill -9 dhclient; /sbin/dhclient edge0; tail -f /dev/null"`,
           destination: await tmpFiler.getPath(
             "private-network-cluster-worker.service"
           )
