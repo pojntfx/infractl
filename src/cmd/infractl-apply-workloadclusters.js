@@ -119,15 +119,13 @@ new (require("../lib/noun"))({
         ([operatingSystemNode]) => operatingSystemNode === providedManagerNode
       )[1]
     ];
-    const workerNodes = allProvidedNodes.map(node => [
+    const allNodes = allProvidedNodes.map(node => [
       node,
       nodeOperatingSystems.find(
         ([operatingSystemNode]) => operatingSystemNode === node
       )[1]
     ]);
-    const allNodes = workerNodes.filter(
-      node => providedManagerNode[0] !== node[0]
-    );
+    const workerNodes = allNodes.filter(node => managerNode[0] !== node[0]);
     await logger.divide();
 
     // Set all workload cluster file download sources
@@ -153,9 +151,9 @@ new (require("../lib/noun"))({
       .filter(
         target =>
           target[0] === "universal" ||
-          (workerNodes.find(([_, os]) => os === "debian") &&
+          (allNodes.find(([_, os]) => os === "debian") &&
             target[0] === "debian") ||
-          (workerNodes.find(([_, os]) => os === "centos") &&
+          (allNodes.find(([_, os]) => os === "centos") &&
             target[0] === "centos")
       )
       .filter(Boolean);
@@ -204,7 +202,7 @@ new (require("../lib/noun"))({
     const servicer = new Servicer();
     await Promise.all(
       servicesToDisable
-        .map(service => workerNodes.map(([node]) => `${node}:${service}`))
+        .map(service => allNodes.map(([node]) => `${node}:${service}`))
         .reduce((a, b) => a.concat(b), [])
         .map(async destination => {
           await logger.log(
@@ -222,7 +220,7 @@ new (require("../lib/noun"))({
     // Upload workload cluster files
     const uploader = new Uploader();
     const filesToInstall = await Promise.all(
-      workerNodes
+      allNodes
         .map(([node, nodeOperatingSystem]) =>
           filesToUpload
             .filter(
@@ -322,7 +320,7 @@ new (require("../lib/noun"))({
 
     // Upload workload cluster kernel config
     await Promise.all(
-      workerNodes.map(async ([node]) => {
+      allNodes.map(async ([node]) => {
         await logger.log(node, "Uploading workload cluster kernel config");
         return await uploader.upload(
           kernelConfig,
@@ -335,7 +333,7 @@ new (require("../lib/noun"))({
 
     // Apply workload cluster kernel config
     await Promise.all(
-      workerNodes.map(async ([node]) => {
+      allNodes.map(async ([node]) => {
         await logger.log(node, "Applying workload cluster kernel config");
         return await kernelr.applyConfig(`${node}:/etc/workload-cluster.conf`);
       })
@@ -345,7 +343,7 @@ new (require("../lib/noun"))({
     // Load br_netfilter module
     const modprober = new Modprober();
     await Promise.all(
-      workerNodes.map(async ([node]) => {
+      allNodes.map(async ([node]) => {
         await logger.log(node, "Loading br_netfilter kernel module");
         return await modprober.modprobe(node, "br_netfilter");
       })
@@ -355,7 +353,7 @@ new (require("../lib/noun"))({
     // Set SELinux context
     const selinuxer = new SELinuxer();
     await Promise.all(
-      workerNodes.map(async ([node]) => {
+      allNodes.map(async ([node]) => {
         await logger.log(node, "Setting SELinux context");
         await selinuxer.setenforce(node, "Permissive");
         await selinuxer.semanage(`${node}:/usr/local/bin/k3s`);
@@ -464,7 +462,7 @@ new (require("../lib/noun"))({
 
     // Reload services on all workload cluster nodes
     await Promise.all(
-      workerNodes.map(async ([node]) => {
+      allNodes.map(async ([node]) => {
         await logger.log(node, "Reloading services");
         return await servicer.reloadServices(node);
       })
@@ -473,7 +471,7 @@ new (require("../lib/noun"))({
 
     // Enable systemd-resolved service on all workload cluster nodes
     await Promise.all(
-      workerNodes.map(async ([node]) => {
+      allNodes.map(async ([node]) => {
         await logger.log(node, "Enabling systemd-resolved.service service");
         return await servicer.enableService(node, "systemd-resolved.service");
       })
@@ -482,7 +480,7 @@ new (require("../lib/noun"))({
 
     // Enable iscsid service on all workload cluster nodes
     await Promise.all(
-      workerNodes.map(async ([node]) => {
+      allNodes.map(async ([node]) => {
         await logger.log(node, "Enabling iscsid.service service");
         return await servicer.enableService(node, "iscsid.service");
       })
@@ -538,7 +536,7 @@ new (require("../lib/noun"))({
 
     // Reload services on workload cluster worker nodes
     await Promise.all(
-      allNodes.map(async ([node]) => {
+      workerNodes.map(async ([node]) => {
         await logger.log(node, "Reloading services");
         return await servicer.reloadServices(node);
       })
