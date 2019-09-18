@@ -25,19 +25,23 @@ new (require("../lib/noun"))({
   options: [
     [
       "-e, --lets-encrypt-certificate-issuers-email [email]",
-      "Let's Encrypt certificate issuers' email for certificates (i.e. user@host.tld) (optional, by default the issuers won't be deployed)"
+      "Let's Encrypt certificate issuers' email for certificates (i.e. user@host.tld) (by default the issuers won't be deployed)"
     ],
     [
       "-m, --additional-manager-node-ip [ip]",
-      "Additional manager node's IP for the workload cluster config (i.e. 192.168.178.141) (optional, by default the target IP will be used, which might only be reachable from within the private network cluster depending on your setup)"
+      "Additional manager node's IP for the workload cluster config (i.e. 192.168.178.141) (by default the target IP will be used, which might only be reachable from within the private network cluster depending on your setup)"
     ],
     [
       "-t, --private-network-cluster-type [2|3]",
-      "Private network clusters' type (OSI layer) (optional, by default 3)"
+      "Private network clusters' type (OSI layer) (by default 3)"
     ],
     [
       "-a, --apply [monitoring,tracing,error-tracking]",
-      "Comma-seperated list of additional components to apply (optional)"
+      "Comma-seperated list of components which are not applied by default to apply"
+    ],
+    [
+      "-d, --dont-apply [storage,ingress-controller,certificate-manager,virtual-machines,metrics]",
+      "Comma-seperated list of components which are applied by default to not apply"
     ]
   ],
   checker: commander =>
@@ -56,9 +60,13 @@ new (require("../lib/noun"))({
     );
     const interfaceName =
       commander.privateNetworkClusterType === "2" ? "edge0" : "wgoverlay";
-    const additionalComponents = commander.apply
+    const additionalComponentsToApply = commander.apply
       ? commander.apply.split(",")
       : [];
+    const defaultComponentsToNotApply = commander.dontApply
+      ? commander.apply.split(",")
+      : [];
+    console.log(defaultComponentsToNotApply);
     const providedManagerNode = commander.args[0];
     const providedWorkerNodes = commander.args.filter(
       (_, index) => index !== 0
@@ -403,42 +411,49 @@ new (require("../lib/noun"))({
       `${managerNode[0]}:/var/lib/rancher/k3s/server/manifests`,
       true
     );
-    // Upload workload cluster storage chart
-    await logger.log(
-      managerNode[0],
-      "Uploading workload cluster storage chart"
-    );
-    await uploader.upload(
-      `${__dirname}/../data/openEBSChart.yaml`,
-      `${managerNode[0]}:/var/lib/rancher/k3s/server/manifests/openebs.yaml`,
-      true
-    );
-    // Upload workload cluster ingress controller chart
-    await logger.log(
-      managerNode[0],
-      "Uploading workload cluster ingress controller chart"
-    );
-    await uploader.upload(
-      `${__dirname}/../data/nginxIngressChart.yaml`,
-      `${
-        managerNode[0]
-      }:/var/lib/rancher/k3s/server/manifests/nginxingresscontroller.yaml`,
-      true
-    );
-    // Upload workload cluster certificate manager chart
-    await logger.log(
-      managerNode[0],
-      "Uploading workload cluster certificate manager chart"
-    );
-    await uploader.upload(
-      `${__dirname}/../data/certManagerChart.yaml`,
-      `${
-        managerNode[0]
-      }:/var/lib/rancher/k3s/server/manifests/certmanager.yaml`,
-      true
-    );
+    if (!defaultComponentsToNotApply.includes("storage")) {
+      // Upload workload cluster storage chart
+      await logger.log(
+        managerNode[0],
+        "Uploading workload cluster storage chart"
+      );
+      await uploader.upload(
+        `${__dirname}/../data/openEBSChart.yaml`,
+        `${managerNode[0]}:/var/lib/rancher/k3s/server/manifests/openebs.yaml`,
+        true
+      );
+    }
+    if (!defaultComponentsToNotApply.includes("ingress-controller")) {
+      // Upload workload cluster ingress controller chart
+      await logger.log(
+        managerNode[0],
+        "Uploading workload cluster ingress controller chart"
+      );
+      await uploader.upload(
+        `${__dirname}/../data/nginxIngressChart.yaml`,
+        `${
+          managerNode[0]
+        }:/var/lib/rancher/k3s/server/manifests/nginxingresscontroller.yaml`,
+        true
+      );
+    }
+    if (!defaultComponentsToNotApply.includes("certificate-manager")) {
+      // Upload workload cluster certificate manager chart
+      await logger.log(
+        managerNode[0],
+        "Uploading workload cluster certificate manager chart"
+      );
+      await uploader.upload(
+        `${__dirname}/../data/certManagerChart.yaml`,
+        `${
+          managerNode[0]
+        }:/var/lib/rancher/k3s/server/manifests/certmanager.yaml`,
+        true
+      );
+    }
     // Upload workload cluster certificate issuer manifest
     if (
+      !defaultComponentsToNotApply.includes("certificate-manager") &&
       commander.letsEncryptCertificateIssuersEmail &&
       (commander.letsEncryptCertificateIssuersEmail.split("@")[0] &&
         commander.letsEncryptCertificateIssuersEmail.split("@")[1])
@@ -465,29 +480,33 @@ new (require("../lib/noun"))({
         true
       );
     }
-    // Upload workload cluster virtual machines manifest
-    await logger.log(
-      managerNode[0],
-      "Uploading workload cluster virtual machines manifest"
-    );
-    await uploader.upload(
-      `${__dirname}/../data/kubevirtManifest.yaml`,
-      `${
-        managerNode[0]
-      }:/var/lib/rancher/k3s/server/manifests/virtualmachines.yaml`,
-      true
-    );
-    // Upload workload cluster metrics chart
-    await logger.log(
-      managerNode[0],
-      "Uploading workload cluster metrics chart"
-    );
-    await uploader.upload(
-      `${__dirname}/../data/metricsChart.yaml`,
-      `${managerNode[0]}:/var/lib/rancher/k3s/server/manifests/metrics.yaml`,
-      true
-    );
-    if (additionalComponents.includes("monitoring")) {
+    if (!defaultComponentsToNotApply.includes("virtual-machines")) {
+      // Upload workload cluster virtual machines manifest
+      await logger.log(
+        managerNode[0],
+        "Uploading workload cluster virtual machines manifest"
+      );
+      await uploader.upload(
+        `${__dirname}/../data/kubevirtManifest.yaml`,
+        `${
+          managerNode[0]
+        }:/var/lib/rancher/k3s/server/manifests/virtualmachines.yaml`,
+        true
+      );
+    }
+    if (!defaultComponentsToNotApply.includes("metrics")) {
+      // Upload workload cluster metrics chart
+      await logger.log(
+        managerNode[0],
+        "Uploading workload cluster metrics chart"
+      );
+      await uploader.upload(
+        `${__dirname}/../data/metricsChart.yaml`,
+        `${managerNode[0]}:/var/lib/rancher/k3s/server/manifests/metrics.yaml`,
+        true
+      );
+    }
+    if (additionalComponentsToApply.includes("monitoring")) {
       // Upload workload cluster monitoring chart
       await logger.log(
         managerNode[0],
@@ -501,7 +520,7 @@ new (require("../lib/noun"))({
         true
       );
     }
-    if (additionalComponents.includes("tracing")) {
+    if (additionalComponentsToApply.includes("tracing")) {
       // Upload workload cluster tracing chart
       await logger.log(
         managerNode[0],
@@ -513,7 +532,7 @@ new (require("../lib/noun"))({
         true
       );
     }
-    if (additionalComponents.includes("error-tracking")) {
+    if (additionalComponentsToApply.includes("error-tracking")) {
       // Upload workload cluster error tracking chart
       await logger.log(
         managerNode[0],
