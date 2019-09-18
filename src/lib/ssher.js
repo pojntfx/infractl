@@ -106,6 +106,16 @@ module.exports = class {
     }
   }
 
+  async touch(destination, withSudo) {
+    if (this.isLocal && !withSudo) {
+      return await this.shell.touch(destination.split(":")[1]);
+    } else {
+      return await this.execCommand(
+        `${withSudo ? "sudo" : ""} touch ${destination.split(":")[1]}`
+      );
+    }
+  }
+
   async chmod(destination, permissions, withSudo) {
     if (this.isLocal && !withSudo) {
       return await this.shell.chmod(permissions, destination.split(":")[1]);

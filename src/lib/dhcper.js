@@ -1,4 +1,5 @@
 const fs = require("fs");
+const SSHer = require("./ssher");
 
 module.exports = class {
   async createConfig({ subnet, netmask }, range, destination) {
@@ -11,5 +12,10 @@ module.exports = class {
         () => resolve(destination)
       )
     );
+  }
+
+  async createLeaseFile(destination) {
+    const ssher = new SSHer(destination);
+    return await ssher.touch(`${destination}:/var/lib/dhcp/dhcpd.leases`, true);
   }
 };

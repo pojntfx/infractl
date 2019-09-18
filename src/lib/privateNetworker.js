@@ -62,7 +62,6 @@ module.exports = class {
           private: block.split(" {")[0]
         }
       }));
-    console.log(id);
     return id
       ? parsedClusterNodes.find(node => node.id === id)
       : parsedClusterNodes;
