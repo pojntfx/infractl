@@ -55,7 +55,7 @@ new (require("../lib/noun"))({
 
         // Delete files
         const filesToDelete = isType2
-          ? []
+          ? ["/usr/local/bin/supernode", "/usr/local/bin/edge"]
           : ["/usr/local/bin/wesher", "/usr/local/bin/wireguard-go"];
         await Promise.all(
           filesToDelete.map(async file => {

@@ -1,14 +1,24 @@
 [
-  ["universal", []],
+  [
+    "universal",
+    [
+      [
+        "private network cl. binary 1",
+        "https://nx904.your-storageshare.de/s/sszz8Zm4EtnJK9y/download",
+        "edge",
+        "/usr/local/bin/edge"
+      ],
+      [
+        "private network cl. binary 2",
+        "https://nx904.your-storageshare.de/s/Fqjj9pHbwRmy4AN/download",
+        "supernode",
+        "/usr/local/bin/supernode"
+      ]
+    ]
+  ],
   [
     "debian",
     [
-      [
-        "private network cl. dhcp package 0",
-        "https://nx904.your-storageshare.de/s/orBdZ96dMmjmqba/download",
-        "n2n.deb",
-        "/tmp/n2n.deb"
-      ],
       [
         "private network cl. dhcp package 1",
         "https://nx904.your-storageshare.de/s/mXqZnY8jSGgLX8k/download",
@@ -50,12 +60,6 @@
   [
     "centos",
     [
-      [
-        "private network cl. dhcp package 0",
-        "https://nx904.your-storageshare.de/s/b4CcCBF6j5sNiXC/download",
-        "n2n.rpm",
-        "/tmp/n2n.rpm"
-      ],
       [
         "private network cl. dhcp package 1",
         "https://nx904.your-storageshare.de/s/7MpbxziYEYi5cKm/download",
