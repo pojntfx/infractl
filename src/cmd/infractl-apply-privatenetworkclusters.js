@@ -25,7 +25,7 @@ new (require("../lib/noun"))({
   options: [
     [
       "-t, --private-network-cluster-type [2|3]",
-      "Private network clusters' type (OSI layer) (optional, by default 3)"
+      "Private network clusters' type (OSI layer) (by default 3)"
     ]
   ],
   checker: commander =>
