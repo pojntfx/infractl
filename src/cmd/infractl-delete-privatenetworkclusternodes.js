@@ -21,13 +21,15 @@ new (require("../lib/noun"))({
     const logger = new Logger();
     const servicer = new Servicer();
     const isType2 = commander.privateNetworkClusterType === "2" ? true : false;
+    const serviceSuffix =
+      commander.privateNetworkClusterType === "2" ? "-type-2" : "-type-3";
 
     return await Promise.all(
       commander.args.map(async node => {
         // Set private network cluster services to disable
         const servicesToDisableAndDelete = [
-          "private-network-cluster-manager.service",
-          "private-network-cluster-worker.service"
+          `private-network-cluster-manager${serviceSuffix}.service`,
+          `private-network-cluster-worker${serviceSuffix}.service`
         ];
 
         // Disable and delete services

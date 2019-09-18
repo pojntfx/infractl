@@ -6,7 +6,7 @@ module.exports = class {
   async getType2ClusterToken(destination) {
     const cater = new Cater();
     const rawClusterWorkerToken = await cater.getFileContent(
-      `${destination}:/etc/systemd/system/private-network-cluster-worker.service`,
+      `${destination}:/etc/systemd/system/private-network-cluster-worker-type-2.service`,
       false,
       true
     );
@@ -14,7 +14,7 @@ module.exports = class {
       return rawClusterWorkerToken.split(" -k ")[1].split(" -l")[0];
     } else {
       const rawClusterManagerToken = await cater.getFileContent(
-        `${destination}:/etc/systemd/system/private-network-cluster-manager.service`,
+        `${destination}:/etc/systemd/system/private-network-cluster-manager-type-2.service`,
         false,
         true
       );
