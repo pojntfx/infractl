@@ -47,6 +47,8 @@ new (require("../lib/noun"))({
       "Creating provided public network cluster node data model"
     );
     const isType2 = commander.privateNetworkClusterType === "2" ? true : false;
+    const serviceSuffix =
+      commander.privateNetworkClusterType === "2" ? "-type-2" : "-type-3";
     const providedManagerNode = commander.args[0];
     const providedWorkerNodes = commander.args.filter(
       (_, index) => index !== 0
@@ -189,8 +191,8 @@ new (require("../lib/noun"))({
     const servicesToDisable = [
       ...(isType2 ? ["dhcpd", "isc-dhcp-server", "isc-dhcp-server6"] : []),
       "firewalld.service",
-      "private-network-cluster-manager.service",
-      "private-network-cluster-worker.service"
+      `private-network-cluster-manager${serviceSuffix}.service`,
+      `private-network-cluster-worker${serviceSuffix}.service`
     ];
 
     // Disable network cluster services
@@ -394,7 +396,7 @@ new (require("../lib/noun"))({
           description: "Network cluster daemon (manager and worker)",
           execStart: `/bin/sh -c "/usr/local/bin/supernode -l 9090 -v & /usr/local/bin/edge -d edge0 -r -a 192.168.1.1 -c privatenetworkcluster -k ${token} -l localhost:9090 -v && /usr/sbin/dhcpd -f edge0"`,
           destination: await tmpFiler.getPath(
-            "private-network-cluster-manager.service"
+            `private-network-cluster-manager${serviceSuffix}.service`
           )
         })
       : await servicer.createService({
@@ -404,7 +406,7 @@ new (require("../lib/noun"))({
           } --cluster-key ${token}"`,
           environment: "WG_I_PREFER_BUGGY_USERSPACE_TO_POLISHED_KMOD=1",
           destination: await tmpFiler.getPath(
-            "private-network-cluster-manager.service"
+            `private-network-cluster-manager${serviceSuffix}.service`
           )
         });
     await logger.divide();
@@ -417,7 +419,7 @@ new (require("../lib/noun"))({
             publicManagerNode[0].split("@")[1]
           }:9090 -v -m $(echo $(cat /etc/machine-id)|md5sum|sed 's/^\\(..\\)\\(..\\)\\(..\\)\\(..\\)\\(..\\).*$/02:\\1:\\2:\\3:\\4:\\5/') && pkill -9 dhclient; /sbin/dhclient edge0; tail -f /dev/null"`,
           destination: await tmpFiler.getPath(
-            "private-network-cluster-worker.service"
+            `private-network-cluster-worker${serviceSuffix}.service`
           )
         })
       : await Promise.all(
@@ -435,7 +437,7 @@ new (require("../lib/noun"))({
               }"`,
               environment: "WG_I_PREFER_BUGGY_USERSPACE_TO_POLISHED_KMOD=1",
               destination: await tmpFiler.getPath(
-                `private-network-cluster-worker.service-${node}`
+                `private-network-cluster-worker${serviceSuffix}.service-${node}`
               )
             });
           })
@@ -451,7 +453,7 @@ new (require("../lib/noun"))({
       managerServiceSource,
       `${
         publicManagerNode[0]
-      }:/etc/systemd/system/private-network-cluster-manager.service`,
+      }:/etc/systemd/system/private-network-cluster-manager${serviceSuffix}.service`,
       true
     );
     await logger.divide();
@@ -468,10 +470,11 @@ new (require("../lib/noun"))({
             ? workerServiceSources
             : workerServiceSources.find(
                 source =>
-                  source.split("private-network-cluster-worker.service-")[1] ===
-                  node
+                  source.split(
+                    `private-network-cluster-worker${serviceSuffix}.service-`
+                  )[1] === node
               ),
-          `${node}:/etc/systemd/system/private-network-cluster-worker.service`,
+          `${node}:/etc/systemd/system/private-network-cluster-worker${serviceSuffix}.service`,
           true
         );
       })
@@ -494,7 +497,7 @@ new (require("../lib/noun"))({
     );
     await servicer.enableService(
       publicManagerNode[0],
-      "private-network-cluster-manager.service"
+      `private-network-cluster-manager${serviceSuffix}.service`
     );
     await logger.divide();
 
@@ -507,7 +510,7 @@ new (require("../lib/noun"))({
         );
         return servicer.enableService(
           node,
-          "private-network-cluster-worker.service"
+          `private-network-cluster-worker${serviceSuffix}.service`
         );
       })
     );
@@ -521,7 +524,7 @@ new (require("../lib/noun"))({
     );
     await servicer.waitForService(
       publicManagerNode[0],
-      "private-network-cluster-manager.service",
+      `private-network-cluster-manager${serviceSuffix}.service`,
       1000
     );
     await iper.waitForInterface(
@@ -547,7 +550,7 @@ new (require("../lib/noun"))({
         await logger.log(node, "Getting private network cluster worker node");
         await servicer.waitForService(
           node,
-          "private-network-cluster-worker.service",
+          `private-network-cluster-worker${serviceSuffix}.service`,
           1000
         );
         await iper.waitForInterface(
