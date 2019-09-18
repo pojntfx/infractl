@@ -468,6 +468,18 @@ new (require("../lib/noun"))({
       `${managerNode[0]}:/var/lib/rancher/k3s/server/manifests/metrics.yaml`,
       true
     );
+    // Upload workload cluster virtual machines manifest
+    await logger.log(
+      managerNode[0],
+      "Uploading workload cluster virtual machines manifest"
+    );
+    await uploader.upload(
+      `${__dirname}/../data/kubevirtManifest.yaml`,
+      `${
+        managerNode[0]
+      }:/var/lib/rancher/k3s/server/manifests/virtualmachines.yaml`,
+      true
+    );
     await logger.divide();
 
     // Reload services on all workload cluster nodes
