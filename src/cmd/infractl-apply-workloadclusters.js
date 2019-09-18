@@ -34,6 +34,10 @@ new (require("../lib/noun"))({
     [
       "-t, --private-network-cluster-type [2|3]",
       "Private network clusters' type (OSI layer) (optional, by default 3)"
+    ],
+    [
+      "-a, --apply [monitoring,tracing,error-tracking]",
+      "Comma-seperated list of additional components to apply (optional)"
     ]
   ],
   checker: commander =>
@@ -52,6 +56,9 @@ new (require("../lib/noun"))({
     );
     const interfaceName =
       commander.privateNetworkClusterType === "2" ? "edge0" : "wgoverlay";
+    const additionalComponents = commander.apply
+      ? commander.apply.split(",")
+      : [];
     const providedManagerNode = commander.args[0];
     const providedWorkerNodes = commander.args.filter(
       (_, index) => index !== 0
@@ -480,38 +487,46 @@ new (require("../lib/noun"))({
       `${managerNode[0]}:/var/lib/rancher/k3s/server/manifests/metrics.yaml`,
       true
     );
-    // Upload workload cluster monitoring chart
-    await logger.log(
-      managerNode[0],
-      "Uploading workload cluster monitoring chart"
-    );
-    await uploader.upload(
-      `${__dirname}/../data/prometheusChart.yaml`,
-      `${managerNode[0]}:/var/lib/rancher/k3s/server/manifests/monitoring.yaml`,
-      true
-    );
-    // Upload workload cluster tracing chart
-    await logger.log(
-      managerNode[0],
-      "Uploading workload cluster tracing chart"
-    );
-    await uploader.upload(
-      `${__dirname}/../data/jaegerChart.yaml`,
-      `${managerNode[0]}:/var/lib/rancher/k3s/server/manifests/tracing.yaml`,
-      true
-    );
-    // Upload workload cluster error tracking chart
-    await logger.log(
-      managerNode[0],
-      "Uploading workload cluster error tracking chart"
-    );
-    await uploader.upload(
-      `${__dirname}/../data/sentryChart.yaml`,
-      `${
-        managerNode[0]
-      }:/var/lib/rancher/k3s/server/manifests/errortracking.yaml`,
-      true
-    );
+    if (additionalComponents.includes("monitoring")) {
+      // Upload workload cluster monitoring chart
+      await logger.log(
+        managerNode[0],
+        "Uploading workload cluster monitoring chart"
+      );
+      await uploader.upload(
+        `${__dirname}/../data/prometheusChart.yaml`,
+        `${
+          managerNode[0]
+        }:/var/lib/rancher/k3s/server/manifests/monitoring.yaml`,
+        true
+      );
+    }
+    if (additionalComponents.includes("tracing")) {
+      // Upload workload cluster tracing chart
+      await logger.log(
+        managerNode[0],
+        "Uploading workload cluster tracing chart"
+      );
+      await uploader.upload(
+        `${__dirname}/../data/jaegerChart.yaml`,
+        `${managerNode[0]}:/var/lib/rancher/k3s/server/manifests/tracing.yaml`,
+        true
+      );
+    }
+    if (additionalComponents.includes("error-tracking")) {
+      // Upload workload cluster error tracking chart
+      await logger.log(
+        managerNode[0],
+        "Uploading workload cluster error tracking chart"
+      );
+      await uploader.upload(
+        `${__dirname}/../data/sentryChart.yaml`,
+        `${
+          managerNode[0]
+        }:/var/lib/rancher/k3s/server/manifests/errortracking.yaml`,
+        true
+      );
+    }
     await logger.divide();
 
     // Reload services on all workload cluster nodes
