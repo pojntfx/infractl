@@ -38,33 +38,47 @@ module.exports = class {
 
   async getType2Nodes(destination, id) {
     const cater = new Cater();
+    const iper = new IPer();
+    const asyncHostnamer = new AsyncHostnamer();
+    const basicQueryNode = {
+      id: "not_available_manually_configured",
+      name: await asyncHostnamer.getHostname(destination),
+      ips: {
+        private: (await iper.getInterface(destination, "edge0")).ip
+      }
+    };
     const rawClusterNodes = await cater.getFileContent(
       `${destination}:/var/lib/dhcp/dhcpd.leases`,
       false,
       true
     );
-    const parsedClusterNodes = rawClusterNodes
-      .split("\n")
-      .filter(line => !line.includes("#")) // Remove comments
-      .join("\n")
-      .split("lease ")
-      .filter(block => block.includes("}"))
-      .map(block => ({
-        id: block.split("hardware ethernet ")[1].split(";")[0],
-        name: block.split("client-hostname ")[1]
-          ? block
-              .split("client-hostname")[1]
-              .split(";")[0]
-              .split('"')[1]
-              .split('"')[0]
-          : "not_available_hostname_unknown",
-        ips: {
-          private: block.split(" {")[0]
-        }
-      }));
-    return id
-      ? parsedClusterNodes.find(node => node.id === id)
-      : parsedClusterNodes;
+    const parsedClusterNodes = [
+      basicQueryNode,
+      ...rawClusterNodes
+        .split("\n")
+        .filter(line => !line.includes("#")) // Remove comments
+        .join("\n")
+        .split("lease ")
+        .filter(block => block.includes("}"))
+        .map(block => ({
+          id: block.split("hardware ethernet ")[1].split(";")[0],
+          name: block.split("client-hostname ")[1]
+            ? block
+                .split("client-hostname")[1]
+                .split(";")[0]
+                .split('"')[1]
+                .split('"')[0]
+            : "not_available_hostname_unknown",
+          ips: {
+            private: block.split(" {")[0]
+          }
+        }))
+    ];
+    return parsedClusterNodes
+      ? id
+        ? parsedClusterNodes.find(node => node.id === id)
+        : parsedClusterNodes
+      : false;
   }
 
   async getType3Nodes(destination, id) {
