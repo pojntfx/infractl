@@ -36,7 +36,39 @@ module.exports = class {
     return rawClusterInfo ? rawClusterInfo.ClusterKey : false;
   }
 
-  async getNodes(destination, id) {
+  async getType2Nodes(destination, id) {
+    const cater = new Cater();
+    const rawClusterNodes = await cater.getFileContent(
+      `${destination}:/var/lib/dhcp/dhcpd.leases`,
+      false,
+      true
+    );
+    const parsedClusterNodes = rawClusterNodes
+      .split("\n")
+      .filter(line => !line.includes("#")) // Remove comments
+      .join("\n")
+      .split("lease ")
+      .filter(block => block.includes("}"))
+      .map(block => ({
+        id: block.split("hardware ethernet ")[1].split(";")[0],
+        name: block.split("client-hostname ")[1]
+          ? block
+              .split("client-hostname")[1]
+              .split(";")[0]
+              .split('"')[1]
+              .split('"')[0]
+          : "not_available_hostname_unknown",
+        ips: {
+          private: block.split(" {")[0]
+        }
+      }));
+    console.log(id);
+    return id
+      ? parsedClusterNodes.find(node => node.id === id)
+      : parsedClusterNodes;
+  }
+
+  async getType3Nodes(destination, id) {
     const cater = new Cater();
     const rawClusterInfo = await cater.getFileContent(
       `${destination}:/var/lib/wesher/state.json`,

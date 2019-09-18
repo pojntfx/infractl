@@ -5,6 +5,12 @@ const DataConverter = require("../lib/dataConverter");
 
 new (require("../lib/noun"))({
   args: "<user@query-node-ip> [id]",
+  options: [
+    [
+      "-t, --private-network-cluster-type [2|3]",
+      "Private network clusters' type (OSI layer) (optional, by default 3)"
+    ]
+  ],
   checker: commander =>
     commander.args[0] &&
     (commander.args[0].split("@")[0] && commander.args[0].split("@")[1]),
@@ -14,10 +20,16 @@ new (require("../lib/noun"))({
 
     if (commander.args[1]) {
       // Get cluster node
-      const clusterNode = await privateNetworker.getNodes(
-        commander.args[0],
-        commander.args[1]
-      );
+      const clusterNode =
+        commander.privateNetworkClusterType === "2"
+          ? await privateNetworker.getType2Nodes(
+              commander.args[0],
+              commander.args[1]
+            )
+          : await privateNetworker.getType3Nodes(
+              commander.args[0],
+              commander.args[1]
+            );
       // Log cluster node
       if (clusterNode) {
         console.log(DataConverter.stringify(clusterNode));
@@ -30,7 +42,10 @@ new (require("../lib/noun"))({
       }
     } else {
       // Get cluster nodes
-      const clusterNodes = await privateNetworker.getNodes(commander.args[0]);
+      const clusterNodes =
+        commander.privateNetworkClusterType === "2"
+          ? await privateNetworker.getType2Nodes(commander.args[0])
+          : await privateNetworker.getType3Nodes(commander.args[0]);
       // Log cluster nodes
       if (clusterNodes) {
         console.log(DataConverter.stringify(clusterNodes));
