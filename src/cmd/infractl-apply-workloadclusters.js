@@ -458,16 +458,6 @@ new (require("../lib/noun"))({
         true
       );
     }
-    // Upload workload cluster metrics chart
-    await logger.log(
-      managerNode[0],
-      "Uploading workload cluster metrics chart"
-    );
-    await uploader.upload(
-      `${__dirname}/../data/metricsChart.yaml`,
-      `${managerNode[0]}:/var/lib/rancher/k3s/server/manifests/metrics.yaml`,
-      true
-    );
     // Upload workload cluster virtual machines manifest
     await logger.log(
       managerNode[0],
@@ -478,6 +468,48 @@ new (require("../lib/noun"))({
       `${
         managerNode[0]
       }:/var/lib/rancher/k3s/server/manifests/virtualmachines.yaml`,
+      true
+    );
+    // Upload workload cluster metrics chart
+    await logger.log(
+      managerNode[0],
+      "Uploading workload cluster metrics chart"
+    );
+    await uploader.upload(
+      `${__dirname}/../data/metricsChart.yaml`,
+      `${managerNode[0]}:/var/lib/rancher/k3s/server/manifests/metrics.yaml`,
+      true
+    );
+    // Upload workload cluster monitoring chart
+    await logger.log(
+      managerNode[0],
+      "Uploading workload cluster monitoring chart"
+    );
+    await uploader.upload(
+      `${__dirname}/../data/prometheusChart.yaml`,
+      `${managerNode[0]}:/var/lib/rancher/k3s/server/manifests/monitoring.yaml`,
+      true
+    );
+    // Upload workload cluster tracing chart
+    await logger.log(
+      managerNode[0],
+      "Uploading workload cluster tracing chart"
+    );
+    await uploader.upload(
+      `${__dirname}/../data/jaegerChart.yaml`,
+      `${managerNode[0]}:/var/lib/rancher/k3s/server/manifests/tracing.yaml`,
+      true
+    );
+    // Upload workload cluster error tracking chart
+    await logger.log(
+      managerNode[0],
+      "Uploading workload cluster error tracking chart"
+    );
+    await uploader.upload(
+      `${__dirname}/../data/sentryChart.yaml`,
+      `${
+        managerNode[0]
+      }:/var/lib/rancher/k3s/server/manifests/errortracking.yaml`,
       true
     );
     await logger.divide();
