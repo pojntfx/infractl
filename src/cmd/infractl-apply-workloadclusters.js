@@ -406,16 +406,16 @@ new (require("../lib/noun"))({
       `${managerNode[0]}:/var/lib/rancher/k3s/server/manifests/openebs.yaml`,
       true
     );
-    // Upload workload cluster ingress chart
+    // Upload workload cluster ingress controller chart
     await logger.log(
       managerNode[0],
-      "Uploading workload cluster ingress chart"
+      "Uploading workload cluster ingress controller chart"
     );
     await uploader.upload(
       `${__dirname}/../data/nginxIngressChart.yaml`,
       `${
         managerNode[0]
-      }:/var/lib/rancher/k3s/server/manifests/nginxingress.yaml`,
+      }:/var/lib/rancher/k3s/server/manifests/nginxingresscontroller.yaml`,
       true
     );
     // Upload workload cluster certificate manager chart
