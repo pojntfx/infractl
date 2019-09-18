@@ -1,4 +1,4 @@
-#!/usr/bin/env no de
+#!/usr/bin/env node
 const Logger = require("../lib/logger");
 const Hostnamer = require("../lib/hostnamer");
 const Servicer = require("../lib/servicer");
@@ -6,6 +6,12 @@ const SSHer = require("../lib/ssher");
 
 new (require("../lib/noun"))({
   args: "<user@ip> [...otherNodes]",
+  options: [
+    [
+      "-t, --private-network-cluster-type [2|3]",
+      "Private network clusters' type (OSI layer) (optional, by default 3)"
+    ]
+  ],
   checker: commander =>
     commander.args[0] &&
     (commander.args[0].split("@")[0] && commander.args[0].split("@")[1]),
@@ -14,6 +20,7 @@ new (require("../lib/noun"))({
     const localhost = hostnamer.getAddress();
     const logger = new Logger();
     const servicer = new Servicer();
+    const isType2 = commander.privateNetworkClusterType === "2" ? true : false;
 
     return await Promise.all(
       commander.args.map(async node => {
@@ -47,10 +54,9 @@ new (require("../lib/noun"))({
         await logger.divide();
 
         // Delete files
-        const filesToDelete = [
-          "/usr/local/bin/wesher",
-          "/usr/local/bin/wireguard-go"
-        ];
+        const filesToDelete = isType2
+          ? []
+          : ["/usr/local/bin/wesher", "/usr/local/bin/wireguard-go"];
         await Promise.all(
           filesToDelete.map(async file => {
             await logger.log(node, `Deleting file ${file}`);
@@ -61,7 +67,9 @@ new (require("../lib/noun"))({
         await logger.divide();
 
         // Delete folders
-        const foldersToDelete = ["/var/lib/wesher"];
+        const foldersToDelete = isType2
+          ? ["/var/lib/dhcp/dhcpd.leases"]
+          : ["/var/lib/wesher"];
         await Promise.all(
           foldersToDelete.map(async folder => {
             await logger.log(node, `Deleting folder ${folder}`);
