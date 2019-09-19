@@ -62,7 +62,8 @@ new (require("../lib/noun"))({
     const isType2 = commander.privateNetworkClusterType === "2" ? true : false;
     const clusterToken = commander.token;
     const isManagerOnly =
-      clusterToken &&
+      !clusterToken &&
+      !commander.args[1] &&
       commander.args[0].split("@")[0] &&
       commander.args[0].split("@")[1];
     const serviceSuffix =

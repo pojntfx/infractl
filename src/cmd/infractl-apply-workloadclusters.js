@@ -22,7 +22,7 @@ const DataConverter = require("../lib/dataConverter");
 
 new (require("../lib/noun"))({
   args:
-    "<user@manager-node-ip|manager-node-ip> <user@worker-node-ip> [otherWorkerNodes...]",
+    "<user@manager-node-ip|manager-node-ip> [user@worker-node-ip] [otherWorkerNodes...] $(whoami)@$(hostname)",
   options: [
     [
       "-e, --lets-encrypt-certificate-issuers-email [email]",
@@ -51,16 +51,19 @@ new (require("../lib/noun"))({
   ],
   checker: commander =>
     commander.token
-      ? commander.args[0] &&
+      ? // Worker only install
+        commander.args[0] &&
         commander.args[1] &&
         (!commander.args[0].split("@")[1] && // There should be no username in the manager node address
         commander.args[1].split("@")[0] && // There should be a username in the worker nodes' address
           commander.args[1].split("@")[1])
-      : commander.args[0] &&
-        commander.args[1] &&
-        (commander.args[0].split("@")[0] &&
-          commander.args[0].split("@")[1] &&
-          (commander.args[1].split("@")[0] && commander.args[1].split("@")[1])),
+      : commander.args[0] && commander.args[1]
+      ? // Manager and worker install
+        commander.args[0].split("@")[0] &&
+        commander.args[0].split("@")[1] &&
+        (commander.args[1].split("@")[0] && commander.args[1].split("@")[1])
+      : // Manager only install
+        commander.args[0].split("@")[0] && commander.args[0].split("@")[1],
   action: async commander => {
     // Set up logger
     const logger = new Logger();
@@ -75,6 +78,11 @@ new (require("../lib/noun"))({
     const interfaceName =
       commander.privateNetworkClusterType === "2" ? "edge0" : "wgoverlay";
     const clusterToken = commander.token;
+    const isManagerOnly =
+      !clusterToken &&
+      !commander.args[1] &&
+      commander.args[0].split("@")[0] &&
+      commander.args[0].split("@")[1];
     const additionalComponentsToApply = commander.apply
       ? commander.apply.split(",")
       : [];
@@ -82,12 +90,13 @@ new (require("../lib/noun"))({
       ? commander.apply.split(",")
       : [];
     const providedManagerNode = commander.args[0];
-    const providedWorkerNodes = commander.args.filter(
-      (_, index) => index !== 0
-    );
-    const allProvidedNodes = clusterToken
-      ? providedWorkerNodes
-      : [providedManagerNode, ...providedWorkerNodes];
+    const providedWorkerNodes = isManagerOnly
+      ? []
+      : commander.args.filter((_, index) => index !== 0);
+    const allProvidedNodes =
+      clusterToken && !isManagerOnly
+        ? providedWorkerNodes
+        : [providedManagerNode, ...providedWorkerNodes];
     await logger.divide();
 
     // Wait for provided network cluster node connectivity
@@ -144,22 +153,25 @@ new (require("../lib/noun"))({
 
     // Create data model of workload cluster
     await logger.log(localhost, "Creating workload cluster node data model");
-    const managerNode = clusterToken
-      ? [providedManagerNode]
-      : [
-          providedManagerNode,
-          nodeOperatingSystems.find(
-            ([operatingSystemNode]) =>
-              operatingSystemNode === providedManagerNode
-          )[1]
-        ];
+    const managerNode =
+      clusterToken && !isManagerOnly
+        ? [providedManagerNode]
+        : [
+            providedManagerNode,
+            nodeOperatingSystems.find(
+              ([operatingSystemNode]) =>
+                operatingSystemNode === providedManagerNode
+            )[1]
+          ];
     const allNodes = allProvidedNodes.map(node => [
       node,
       nodeOperatingSystems.find(
         ([operatingSystemNode]) => operatingSystemNode === node
       )[1]
     ]);
-    const workerNodes = clusterToken
+    const workerNodes = isManagerOnly
+      ? []
+      : clusterToken
       ? allNodes
       : allNodes.filter(node => managerNode[0] !== node[0]);
     await logger.divide();
@@ -619,7 +631,10 @@ new (require("../lib/noun"))({
     }
 
     // Get workload cluster token
-    await logger.log(managerNode[0], "Getting workload cluster token");
+    await logger.log(
+      managerNode[0],
+      `${clusterToken ? "Setting" : "Getting"} workload cluster token`
+    );
     let token = "";
     const workloader = new Workloader();
     if (!clusterToken) {
@@ -635,52 +650,54 @@ new (require("../lib/noun"))({
     }
     await logger.divide();
 
-    // Create workload cluster worker service
-    await logger.log(localhost, "Creating workload cluster worker service");
-    const workerServiceSource = await servicer.createService({
-      description: "Workload cluster daemon (worker only)",
-      execStart: `/usr/local/bin/k3s agent --flannel-iface ${interfaceName} --token ${token} --server https://${
-        clusterToken ? managerNode[0] : managerNode[0].split("@")[1]
-      }:6443`,
-      destination: await tmpFiler.getPath("workload-cluster-worker.service")
-    });
+    if (!isManagerOnly) {
+      // Create workload cluster worker service
+      await logger.log(localhost, "Creating workload cluster worker service");
+      const workerServiceSource = await servicer.createService({
+        description: "Workload cluster daemon (worker only)",
+        execStart: `/usr/local/bin/k3s agent --flannel-iface ${interfaceName} --token ${token} --server https://${
+          clusterToken ? managerNode[0] : managerNode[0].split("@")[1]
+        }:6443`,
+        destination: await tmpFiler.getPath("workload-cluster-worker.service")
+      });
 
-    // Upload workload cluster worker service
-    await Promise.all(
-      workerNodes.map(async ([node]) => {
-        await logger.log(node, "Uploading workload cluster worker service");
-        return await uploader.upload(
-          workerServiceSource,
-          `${node}:/etc/systemd/system/workload-cluster-worker.service`,
-          true
-        );
-      })
-    );
-    await logger.divide();
+      // Upload workload cluster worker service
+      await Promise.all(
+        workerNodes.map(async ([node]) => {
+          await logger.log(node, "Uploading workload cluster worker service");
+          return await uploader.upload(
+            workerServiceSource,
+            `${node}:/etc/systemd/system/workload-cluster-worker.service`,
+            true
+          );
+        })
+      );
+      await logger.divide();
 
-    // Reload services on workload cluster worker nodes
-    await Promise.all(
-      workerNodes.map(async ([node]) => {
-        await logger.log(node, "Reloading services");
-        return await servicer.reloadServices(node);
-      })
-    );
-    await logger.divide();
+      // Reload services on workload cluster worker nodes
+      await Promise.all(
+        workerNodes.map(async ([node]) => {
+          await logger.log(node, "Reloading services");
+          return await servicer.reloadServices(node);
+        })
+      );
+      await logger.divide();
 
-    // Enable workload cluster worker service on workload cluster worker nodes
-    await Promise.all(
-      workerNodes.map(async ([node]) => {
-        await logger.log(
-          node,
-          "Enabling workload-cluster-worker.service service"
-        );
-        return await servicer.enableService(
-          node,
-          "workload-cluster-worker.service"
-        );
-      })
-    );
-    await logger.divide();
+      // Enable workload cluster worker service on workload cluster worker nodes
+      await Promise.all(
+        workerNodes.map(async ([node]) => {
+          await logger.log(
+            node,
+            "Enabling workload-cluster-worker.service service"
+          );
+          return await servicer.enableService(
+            node,
+            "workload-cluster-worker.service"
+          );
+        })
+      );
+      await logger.divide();
+    }
 
     if (!clusterToken) {
       // Get workload cluster config from workload cluster manager node
