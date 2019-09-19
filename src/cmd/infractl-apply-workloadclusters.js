@@ -21,7 +21,8 @@ const Homer = require("../lib/homer");
 const DataConverter = require("../lib/dataConverter");
 
 new (require("../lib/noun"))({
-  args: "<user@manager-node-ip> [user@worker-node-ip] [otherWorkerNodes...]",
+  args:
+    "<user@manager-node-ip|manager-node-ip> <user@worker-node-ip> [otherWorkerNodes...]",
   options: [
     [
       "-e, --lets-encrypt-certificate-issuers-email [email]",
@@ -36,6 +37,10 @@ new (require("../lib/noun"))({
       "Private network clusters' type (OSI layer) (by default 3)"
     ],
     [
+      "-k, --token [token]",
+      "Workload cluster's token (if specified, provide just the manager node's ip without the it's user, but specify the worker nodes' users)"
+    ],
+    [
       "-a, --apply [monitoring,tracing,error-tracking]",
       "Comma-seperated list of components which are not applied by default to apply"
     ],
@@ -45,8 +50,17 @@ new (require("../lib/noun"))({
     ]
   ],
   checker: commander =>
-    commander.args[0] &&
-    (commander.args[0].split("@")[0] && commander.args[0].split("@")[1]),
+    commander.token
+      ? commander.args[0] &&
+        commander.args[1] &&
+        (!commander.args[0].split("@")[1] && // There should be no username in the manager node address
+        commander.args[1].split("@")[0] && // There should be a username in the worker nodes' address
+          commander.args[1].split("@")[1])
+      : commander.args[0] &&
+        commander.args[1] &&
+        (commander.args[0].split("@")[0] &&
+          commander.args[0].split("@")[1] &&
+          (commander.args[1].split("@")[0] && commander.args[1].split("@")[1])),
   action: async commander => {
     // Set up logger
     const logger = new Logger();
@@ -60,18 +74,20 @@ new (require("../lib/noun"))({
     );
     const interfaceName =
       commander.privateNetworkClusterType === "2" ? "edge0" : "wgoverlay";
+    const clusterToken = commander.token;
     const additionalComponentsToApply = commander.apply
       ? commander.apply.split(",")
       : [];
     const defaultComponentsToNotApply = commander.dontApply
       ? commander.apply.split(",")
       : [];
-    console.log(defaultComponentsToNotApply);
     const providedManagerNode = commander.args[0];
     const providedWorkerNodes = commander.args.filter(
       (_, index) => index !== 0
     );
-    const allProvidedNodes = [providedManagerNode, ...providedWorkerNodes];
+    const allProvidedNodes = clusterToken
+      ? providedWorkerNodes
+      : [providedManagerNode, ...providedWorkerNodes];
     await logger.divide();
 
     // Wait for provided network cluster node connectivity
@@ -128,19 +144,24 @@ new (require("../lib/noun"))({
 
     // Create data model of workload cluster
     await logger.log(localhost, "Creating workload cluster node data model");
-    const managerNode = [
-      providedManagerNode,
-      nodeOperatingSystems.find(
-        ([operatingSystemNode]) => operatingSystemNode === providedManagerNode
-      )[1]
-    ];
+    const managerNode = clusterToken
+      ? [providedManagerNode]
+      : [
+          providedManagerNode,
+          nodeOperatingSystems.find(
+            ([operatingSystemNode]) =>
+              operatingSystemNode === providedManagerNode
+          )[1]
+        ];
     const allNodes = allProvidedNodes.map(node => [
       node,
       nodeOperatingSystems.find(
         ([operatingSystemNode]) => operatingSystemNode === node
       )[1]
     ]);
-    const workerNodes = allNodes.filter(node => managerNode[0] !== node[0]);
+    const workerNodes = clusterToken
+      ? allNodes
+      : allNodes.filter(node => managerNode[0] !== node[0]);
     await logger.divide();
 
     // Set all workload cluster file download sources
@@ -377,176 +398,185 @@ new (require("../lib/noun"))({
     );
     await logger.divide();
 
-    // Create workload cluster manager service
-    await logger.log(localhost, "Creating cluster manager service");
-    const managerServiceSource = await servicer.createService({
-      description: "Workload cluster daemon (manager and worker)",
-      execStart: `/usr/local/bin/k3s server --no-deploy traefik --no-deploy servicelb --flannel-iface ${interfaceName} --tls-san ${
-        commander.additionalManagerNodeIp
-          ? commander.additionalManagerNodeIp
-          : managerNode[0].split("@")[1]
-      }`,
-      destination: await tmpFiler.getPath("workload-cluster-manager.service")
-    });
-    await logger.divide();
+    if (!clusterToken) {
+      // Create workload cluster manager service
+      await logger.log(localhost, "Creating cluster manager service");
+      const managerServiceSource = await servicer.createService({
+        description: "Workload cluster daemon (manager and worker)",
+        execStart: `/usr/local/bin/k3s server --no-deploy traefik --no-deploy servicelb --flannel-iface ${interfaceName} --tls-san ${
+          commander.additionalManagerNodeIp
+            ? commander.additionalManagerNodeIp
+            : managerNode[0].split("@")[1]
+        }`,
+        destination: await tmpFiler.getPath("workload-cluster-manager.service")
+      });
 
-    // Upload workload cluster manager service
-    await logger.log(
-      managerNode[0],
-      "Uploading workload cluster manager service"
-    );
-    await uploader.upload(
-      managerServiceSource,
-      `${managerNode[0]}:/etc/systemd/system/workload-cluster-manager.service`,
-      true
-    );
-    await logger.divide();
+      // Upload workload cluster manager service
+      await logger.log(
+        managerNode[0],
+        "Uploading workload cluster manager service"
+      );
+      await uploader.upload(
+        managerServiceSource,
+        `${
+          managerNode[0]
+        }:/etc/systemd/system/workload-cluster-manager.service`,
+        true
+      );
+      await logger.divide();
 
-    // Create remote manifests and charts directory
-    await logger.log(
-      managerNode[0],
-      "Creating remote manifests and charts directory"
-    );
-    await uploader.createDirectory(
-      `${managerNode[0]}:/var/lib/rancher/k3s/server/manifests`,
-      true
-    );
-    if (!defaultComponentsToNotApply.includes("storage")) {
-      // Upload workload cluster storage chart
+      // Create remote manifests and charts directory
       await logger.log(
         managerNode[0],
-        "Uploading workload cluster storage chart"
+        "Creating remote manifests and charts directory"
       );
-      await uploader.upload(
-        `${__dirname}/../data/openEBSChart.yaml`,
-        `${managerNode[0]}:/var/lib/rancher/k3s/server/manifests/openebs.yaml`,
+      await uploader.createDirectory(
+        `${managerNode[0]}:/var/lib/rancher/k3s/server/manifests`,
         true
       );
+      if (!defaultComponentsToNotApply.includes("storage")) {
+        // Upload workload cluster storage chart
+        await logger.log(
+          managerNode[0],
+          "Uploading workload cluster storage chart"
+        );
+        await uploader.upload(
+          `${__dirname}/../data/openEBSChart.yaml`,
+          `${
+            managerNode[0]
+          }:/var/lib/rancher/k3s/server/manifests/openebs.yaml`,
+          true
+        );
+      }
+      if (!defaultComponentsToNotApply.includes("ingress-controller")) {
+        // Upload workload cluster ingress controller chart
+        await logger.log(
+          managerNode[0],
+          "Uploading workload cluster ingress controller chart"
+        );
+        await uploader.upload(
+          `${__dirname}/../data/nginxIngressChart.yaml`,
+          `${
+            managerNode[0]
+          }:/var/lib/rancher/k3s/server/manifests/nginxingresscontroller.yaml`,
+          true
+        );
+      }
+      if (!defaultComponentsToNotApply.includes("certificate-manager")) {
+        // Upload workload cluster certificate manager chart
+        await logger.log(
+          managerNode[0],
+          "Uploading workload cluster certificate manager chart"
+        );
+        await uploader.upload(
+          `${__dirname}/../data/certManagerChart.yaml`,
+          `${
+            managerNode[0]
+          }:/var/lib/rancher/k3s/server/manifests/certmanager.yaml`,
+          true
+        );
+      }
+      // Upload workload cluster certificate issuer manifest
+      if (
+        !defaultComponentsToNotApply.includes("certificate-manager") &&
+        commander.letsEncryptCertificateIssuersEmail &&
+        (commander.letsEncryptCertificateIssuersEmail.split("@")[0] &&
+          commander.letsEncryptCertificateIssuersEmail.split("@")[1])
+      ) {
+        await logger.log(
+          localhost,
+          "Creating workload cluster certificate issuer manifest"
+        );
+        const issuer = new Issuer();
+        const issuersManifestSource = await issuer.createIssuers(
+          `${localhost}:${__dirname}/../data/certIssuersManifest.yaml`,
+          await tmpFiler.getPath("certIssuersManifest.yaml"),
+          commander.letsEncryptCertificateIssuersEmail
+        );
+        await logger.log(
+          managerNode[0],
+          "Uploading workload cluster certificate issuer manifest"
+        );
+        await uploader.upload(
+          issuersManifestSource,
+          `${
+            managerNode[0]
+          }:/var/lib/rancher/k3s/server/manifests/certissuers.yaml`,
+          true
+        );
+      }
+      if (!defaultComponentsToNotApply.includes("virtual-machines")) {
+        // Upload workload cluster virtual machines manifest
+        await logger.log(
+          managerNode[0],
+          "Uploading workload cluster virtual machines manifest"
+        );
+        await uploader.upload(
+          `${__dirname}/../data/kubevirtManifest.yaml`,
+          `${
+            managerNode[0]
+          }:/var/lib/rancher/k3s/server/manifests/virtualmachines.yaml`,
+          true
+        );
+      }
+      if (!defaultComponentsToNotApply.includes("metrics")) {
+        // Upload workload cluster metrics chart
+        await logger.log(
+          managerNode[0],
+          "Uploading workload cluster metrics chart"
+        );
+        await uploader.upload(
+          `${__dirname}/../data/metricsChart.yaml`,
+          `${
+            managerNode[0]
+          }:/var/lib/rancher/k3s/server/manifests/metrics.yaml`,
+          true
+        );
+      }
+      if (additionalComponentsToApply.includes("monitoring")) {
+        // Upload workload cluster monitoring chart
+        await logger.log(
+          managerNode[0],
+          "Uploading workload cluster monitoring chart"
+        );
+        await uploader.upload(
+          `${__dirname}/../data/prometheusChart.yaml`,
+          `${
+            managerNode[0]
+          }:/var/lib/rancher/k3s/server/manifests/monitoring.yaml`,
+          true
+        );
+      }
+      if (additionalComponentsToApply.includes("tracing")) {
+        // Upload workload cluster tracing chart
+        await logger.log(
+          managerNode[0],
+          "Uploading workload cluster tracing chart"
+        );
+        await uploader.upload(
+          `${__dirname}/../data/jaegerChart.yaml`,
+          `${
+            managerNode[0]
+          }:/var/lib/rancher/k3s/server/manifests/tracing.yaml`,
+          true
+        );
+      }
+      if (additionalComponentsToApply.includes("error-tracking")) {
+        // Upload workload cluster error tracking chart
+        await logger.log(
+          managerNode[0],
+          "Uploading workload cluster error tracking chart"
+        );
+        await uploader.upload(
+          `${__dirname}/../data/sentryChart.yaml`,
+          `${
+            managerNode[0]
+          }:/var/lib/rancher/k3s/server/manifests/errortracking.yaml`,
+          true
+        );
+      }
+      await logger.divide();
     }
-    if (!defaultComponentsToNotApply.includes("ingress-controller")) {
-      // Upload workload cluster ingress controller chart
-      await logger.log(
-        managerNode[0],
-        "Uploading workload cluster ingress controller chart"
-      );
-      await uploader.upload(
-        `${__dirname}/../data/nginxIngressChart.yaml`,
-        `${
-          managerNode[0]
-        }:/var/lib/rancher/k3s/server/manifests/nginxingresscontroller.yaml`,
-        true
-      );
-    }
-    if (!defaultComponentsToNotApply.includes("certificate-manager")) {
-      // Upload workload cluster certificate manager chart
-      await logger.log(
-        managerNode[0],
-        "Uploading workload cluster certificate manager chart"
-      );
-      await uploader.upload(
-        `${__dirname}/../data/certManagerChart.yaml`,
-        `${
-          managerNode[0]
-        }:/var/lib/rancher/k3s/server/manifests/certmanager.yaml`,
-        true
-      );
-    }
-    // Upload workload cluster certificate issuer manifest
-    if (
-      !defaultComponentsToNotApply.includes("certificate-manager") &&
-      commander.letsEncryptCertificateIssuersEmail &&
-      (commander.letsEncryptCertificateIssuersEmail.split("@")[0] &&
-        commander.letsEncryptCertificateIssuersEmail.split("@")[1])
-    ) {
-      await logger.log(
-        localhost,
-        "Creating workload cluster certificate issuer manifest"
-      );
-      const issuer = new Issuer();
-      const issuersManifestSource = await issuer.createIssuers(
-        `${localhost}:${__dirname}/../data/certIssuersManifest.yaml`,
-        await tmpFiler.getPath("certIssuersManifest.yaml"),
-        commander.letsEncryptCertificateIssuersEmail
-      );
-      await logger.log(
-        managerNode[0],
-        "Uploading workload cluster certificate issuer manifest"
-      );
-      await uploader.upload(
-        issuersManifestSource,
-        `${
-          managerNode[0]
-        }:/var/lib/rancher/k3s/server/manifests/certissuers.yaml`,
-        true
-      );
-    }
-    if (!defaultComponentsToNotApply.includes("virtual-machines")) {
-      // Upload workload cluster virtual machines manifest
-      await logger.log(
-        managerNode[0],
-        "Uploading workload cluster virtual machines manifest"
-      );
-      await uploader.upload(
-        `${__dirname}/../data/kubevirtManifest.yaml`,
-        `${
-          managerNode[0]
-        }:/var/lib/rancher/k3s/server/manifests/virtualmachines.yaml`,
-        true
-      );
-    }
-    if (!defaultComponentsToNotApply.includes("metrics")) {
-      // Upload workload cluster metrics chart
-      await logger.log(
-        managerNode[0],
-        "Uploading workload cluster metrics chart"
-      );
-      await uploader.upload(
-        `${__dirname}/../data/metricsChart.yaml`,
-        `${managerNode[0]}:/var/lib/rancher/k3s/server/manifests/metrics.yaml`,
-        true
-      );
-    }
-    if (additionalComponentsToApply.includes("monitoring")) {
-      // Upload workload cluster monitoring chart
-      await logger.log(
-        managerNode[0],
-        "Uploading workload cluster monitoring chart"
-      );
-      await uploader.upload(
-        `${__dirname}/../data/prometheusChart.yaml`,
-        `${
-          managerNode[0]
-        }:/var/lib/rancher/k3s/server/manifests/monitoring.yaml`,
-        true
-      );
-    }
-    if (additionalComponentsToApply.includes("tracing")) {
-      // Upload workload cluster tracing chart
-      await logger.log(
-        managerNode[0],
-        "Uploading workload cluster tracing chart"
-      );
-      await uploader.upload(
-        `${__dirname}/../data/jaegerChart.yaml`,
-        `${managerNode[0]}:/var/lib/rancher/k3s/server/manifests/tracing.yaml`,
-        true
-      );
-    }
-    if (additionalComponentsToApply.includes("error-tracking")) {
-      // Upload workload cluster error tracking chart
-      await logger.log(
-        managerNode[0],
-        "Uploading workload cluster error tracking chart"
-      );
-      await uploader.upload(
-        `${__dirname}/../data/sentryChart.yaml`,
-        `${
-          managerNode[0]
-        }:/var/lib/rancher/k3s/server/manifests/errortracking.yaml`,
-        true
-      );
-    }
-    await logger.divide();
 
     // Reload services on all workload cluster nodes
     await Promise.all(
@@ -575,27 +605,34 @@ new (require("../lib/noun"))({
     );
     await logger.divide();
 
-    // Enable workload cluster manager service on workload cluster manager node
-    await logger.log(
-      managerNode[0],
-      "Enabling workload-cluster-manager.service service"
-    );
-    await servicer.enableService(
-      managerNode[0],
-      "workload-cluster-manager.service"
-    );
-    await logger.divide();
+    if (!clusterToken) {
+      // Enable workload cluster manager service on workload cluster manager node
+      await logger.log(
+        managerNode[0],
+        "Enabling workload-cluster-manager.service service"
+      );
+      await servicer.enableService(
+        managerNode[0],
+        "workload-cluster-manager.service"
+      );
+      await logger.divide();
+    }
 
     // Get workload cluster token
     await logger.log(managerNode[0], "Getting workload cluster token");
+    let token = "";
     const workloader = new Workloader();
-    await servicer.waitForService(
-      managerNode[0],
-      "workload-cluster-manager.service",
-      1000
-    );
-    await workloader.waitForClusterToken(managerNode[0], 1000);
-    const token = await workloader.getClusterToken(managerNode[0]);
+    if (!clusterToken) {
+      await servicer.waitForService(
+        managerNode[0],
+        "workload-cluster-manager.service",
+        1000
+      );
+      await workloader.waitForClusterToken(managerNode[0], 1000);
+      token = await workloader.getClusterToken(managerNode[0]);
+    } else {
+      token = clusterToken;
+    }
     await logger.divide();
 
     // Create workload cluster worker service
@@ -603,11 +640,10 @@ new (require("../lib/noun"))({
     const workerServiceSource = await servicer.createService({
       description: "Workload cluster daemon (worker only)",
       execStart: `/usr/local/bin/k3s agent --flannel-iface ${interfaceName} --token ${token} --server https://${
-        managerNode[0].split("@")[1]
+        clusterToken ? managerNode[0] : managerNode[0].split("@")[1]
       }:6443`,
       destination: await tmpFiler.getPath("workload-cluster-worker.service")
     });
-    await logger.divide();
 
     // Upload workload cluster worker service
     await Promise.all(
@@ -646,41 +682,58 @@ new (require("../lib/noun"))({
     );
     await logger.divide();
 
-    // Get workload cluster config from workload cluster manager node
-    await logger.log(managerNode[0], "Getting workload cluster config");
-    await workloader.waitForClusterConfig(managerNode[0]);
-    const config = await workloader.getClusterConfig(
-      managerNode[0],
-      commander.additionalManagerNodeIp
-        ? commander.additionalManagerNodeIp
-        : managerNode[0].split("@")[1]
-    );
-    await logger.divide();
+    if (!clusterToken) {
+      // Get workload cluster config from workload cluster manager node
+      await logger.log(managerNode[0], "Getting workload cluster config");
+      await workloader.waitForClusterConfig(managerNode[0]);
+      const config = await workloader.getClusterConfig(
+        managerNode[0],
+        commander.additionalManagerNodeIp
+          ? commander.additionalManagerNodeIp
+          : managerNode[0].split("@")[1]
+      );
+      await logger.divide();
 
-    // Log the data
-    await logger.log(
-      localhost,
-      {
-        managerNode: {
-          access: {
-            public: commander.additionalManagerNodeIp
-              ? `${managerNode[0].split("@")[0]}@${
-                  commander.additionalManagerNodeIp
-                }`
-              : managerNode[0],
-            private: managerNode[0]
-          }
+      // Log the data
+      await logger.log(
+        localhost,
+        {
+          managerNode: {
+            access: {
+              public: commander.additionalManagerNodeIp
+                ? `${managerNode[0].split("@")[0]}@${
+                    commander.additionalManagerNodeIp
+                  }`
+                : managerNode[0],
+              private: managerNode[0]
+            }
+          },
+          token
         },
-        token
-      },
-      "data",
-      "Successfully applied workload clusters' variables"
-    );
-    await logger.log(
-      localhost,
-      DataConverter.parse(config),
-      "data",
-      "Successfully applied workload cluster's config"
-    );
+        "data",
+        "Successfully applied workload clusters' variables"
+      );
+      await logger.log(
+        localhost,
+        DataConverter.parse(config),
+        "data",
+        "Successfully applied workload cluster's config"
+      );
+    } else {
+      // Log the data
+      await logger.log(
+        localhost,
+        {
+          managerNode: {
+            ips: {
+              public: commander.additionalManagerNodeIp || managerNode[0]
+            }
+          },
+          token
+        },
+        "data",
+        "Successfully applied workload clusters' variables"
+      );
+    }
   }
 });
