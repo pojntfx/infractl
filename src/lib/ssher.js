@@ -13,19 +13,6 @@ module.exports = class {
     const localUser = hostnamer.getUsername();
     const localHostname = hostnamer.getHostname();
     const localAlternativeHostname = "localhost";
-
-    if (
-      this.user === localUser &&
-      (this.hostname === localHostname ||
-        this.hostname === localAlternativeHostname)
-    ) {
-      this.isLocal = true;
-      this.shell = shell;
-    } else {
-      this.isLocal = false;
-      this.shell = new SSH();
-    }
-
     const localInterfaces = Object.keys(os.networkInterfaces());
     const localIps = localInterfaces.map(name => {
       const localNetworkInterfaces = os.networkInterfaces();
@@ -36,8 +23,18 @@ module.exports = class {
         (localNetworkInterface && localNetworkInterface.address) || undefined
       );
     });
-    if (localIps.includes(this.hostname)) {
+
+    if (
+      this.user === localUser &&
+      (this.hostname === localHostname ||
+        this.hostname === localAlternativeHostname ||
+        localIps.includes(this.hostname))
+    ) {
       this.isLocal = true;
+      this.shell = shell;
+    } else {
+      this.isLocal = false;
+      this.shell = new SSH();
     }
   }
 
