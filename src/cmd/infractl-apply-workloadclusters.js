@@ -705,9 +705,7 @@ new (require("../lib/noun"))({
       await workloader.waitForClusterConfig(managerNode[0]);
       const config = await workloader.getClusterConfig(
         managerNode[0],
-        commander.additionalManagerNodeIp
-          ? commander.additionalManagerNodeIp
-          : managerNode[0].split("@")[1]
+        commander.additionalManagerNodeIp || managerNode[0].split("@")[1]
       );
       await logger.divide();
 
