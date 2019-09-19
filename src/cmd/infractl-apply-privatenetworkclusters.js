@@ -21,19 +21,29 @@ const Homer = require("../lib/homer");
 
 new (require("../lib/noun"))({
   args:
-    "<user@manager-node-ip> <user@worker-node-ip> [otherWorkerNodes...] $(whoami)@$(hostname)",
+    "<user@manager-node-ip|manager-node-ip> <user@worker-node-ip> [otherWorkerNodes...] $(whoami)@$(hostname)",
   options: [
     [
       "-t, --private-network-cluster-type [2|3]",
       "Private network clusters' type (OSI layer) (by default 3)"
+    ],
+    [
+      "-k, --token [token]",
+      "Private network cluster's token (if specified, provide just the manager node's ip without the it's user, but specify the worker nodes' users)"
     ]
   ],
   checker: commander =>
-    commander.args[0] &&
-    commander.args[1] &&
-    (commander.args[0].split("@")[0] &&
-      commander.args[0].split("@")[1] &&
-      (commander.args[1].split("@")[0] && commander.args[1].split("@")[1])),
+    commander.token
+      ? commander.args[0] &&
+        commander.args[1] &&
+        (!commander.args[0].split("@")[1] && // There should be no username in the manager node address
+        commander.args[1].split("@")[0] && // There should be a username in the worker nodes' address
+          commander.args[1].split("@")[1])
+      : commander.args[0] &&
+        commander.args[1] &&
+        (commander.args[0].split("@")[0] &&
+          commander.args[0].split("@")[1] &&
+          (commander.args[1].split("@")[0] && commander.args[1].split("@")[1])),
   action: async commander => {
     // Set up logger
     const logger = new Logger();
@@ -47,13 +57,16 @@ new (require("../lib/noun"))({
       "Creating provided public network cluster node data model"
     );
     const isType2 = commander.privateNetworkClusterType === "2" ? true : false;
+    const clusterToken = commander.token;
     const serviceSuffix =
       commander.privateNetworkClusterType === "2" ? "-type-2" : "-type-3";
     const providedManagerNode = commander.args[0];
     const providedWorkerNodes = commander.args.filter(
       (_, index) => index !== 0
     );
-    const allProvidedNodes = [providedManagerNode, ...providedWorkerNodes];
+    const allProvidedNodes = clusterToken
+      ? providedWorkerNodes
+      : [providedManagerNode, ...providedWorkerNodes];
     await logger.divide();
 
     // Wait for node connectivity
@@ -110,19 +123,24 @@ new (require("../lib/noun"))({
       localhost,
       "Creating public network cluster node data model"
     );
-    const publicManagerNode = [
-      providedManagerNode,
-      nodeOperatingSystems.find(
-        ([operatingSystemNode]) => operatingSystemNode === providedManagerNode
-      )[1]
-    ];
+    const publicManagerNode = clusterToken
+      ? [providedManagerNode]
+      : [
+          providedManagerNode,
+          nodeOperatingSystems.find(
+            ([operatingSystemNode]) =>
+              operatingSystemNode === providedManagerNode
+          )[1]
+        ];
     const publicWorkerNodes = providedWorkerNodes.map(node => [
       node,
       nodeOperatingSystems.find(
         ([operatingSystemNode]) => operatingSystemNode === node
       )[1]
     ]);
-    const allPublicNodes = [publicManagerNode, ...publicWorkerNodes];
+    const allPublicNodes = clusterToken
+      ? publicWorkerNodes
+      : [publicManagerNode, ...publicWorkerNodes];
     await logger.divide();
 
     // Set all network cluster file download sources
@@ -303,7 +321,7 @@ new (require("../lib/noun"))({
     );
     await logger.divide();
 
-    if (isType2) {
+    if (isType2 && !clusterToken) {
       // Create network cluster dhcp config
       const dhcper = new DHCPer();
       await logger.log(
@@ -382,41 +400,63 @@ new (require("../lib/noun"))({
 
     // Create network cluster token
     const cryptographer = new Cryptographer();
-    await logger.log(localhost, "Creating private network cluster token");
-    const token = await cryptographer.getRandomString(32);
-    await logger.divide();
-
-    // Create network cluster manager service
     await logger.log(
       localhost,
-      "Creating private network cluster manager service"
+      `${clusterToken ? "Setting" : "Creating"} private network cluster token`
     );
-    const managerServiceSource = isType2
-      ? await servicer.createService({
-          description: "Network cluster daemon (manager and worker)",
-          execStart: `/bin/sh -c "/usr/local/bin/supernode -l 9090 -v & /usr/local/bin/edge -d edge0 -r -a 192.168.1.1 -c privatenetworkcluster -k ${token} -l localhost:9090 -v && /usr/sbin/dhcpd -f edge0"`,
-          destination: await tmpFiler.getPath(
-            `private-network-cluster-manager${serviceSuffix}.service`
-          )
-        })
-      : await servicer.createService({
-          description: "Network cluster daemon (manager and worker)",
-          execStart: `/bin/sh -c "/usr/local/bin/wireguard-go wgoverlay && /usr/local/bin/wesher --interface wgoverlay --no-etc-hosts --bind-addr ${
-            publicManagerNode[0].split("@")[1]
-          } --cluster-key ${token}"`,
-          environment: "WG_I_PREFER_BUGGY_USERSPACE_TO_POLISHED_KMOD=1",
-          destination: await tmpFiler.getPath(
-            `private-network-cluster-manager${serviceSuffix}.service`
-          )
-        });
+    const token = clusterToken
+      ? clusterToken
+      : await cryptographer.getRandomString(32);
     await logger.divide();
+
+    if (!clusterToken) {
+      // Create network cluster manager service
+      await logger.log(
+        localhost,
+        "Creating private network cluster manager service"
+      );
+      const managerServiceSource = isType2
+        ? await servicer.createService({
+            description: "Network cluster daemon (manager and worker)",
+            execStart: `/bin/sh -c "/usr/local/bin/supernode -l 9090 -v & /usr/local/bin/edge -d edge0 -r -a 192.168.1.1 -c privatenetworkcluster -k ${token} -l localhost:9090 -v && /usr/sbin/dhcpd -f edge0"`,
+            destination: await tmpFiler.getPath(
+              `private-network-cluster-manager${serviceSuffix}.service`
+            )
+          })
+        : await servicer.createService({
+            description: "Network cluster daemon (manager and worker)",
+            execStart: `/bin/sh -c "/usr/local/bin/wireguard-go wgoverlay && /usr/local/bin/wesher --interface wgoverlay --no-etc-hosts --bind-addr ${
+              publicManagerNode[0].split("@")[1]
+            } --cluster-key ${token}"`,
+            environment: "WG_I_PREFER_BUGGY_USERSPACE_TO_POLISHED_KMOD=1",
+            destination: await tmpFiler.getPath(
+              `private-network-cluster-manager${serviceSuffix}.service`
+            )
+          });
+
+      // Upload network cluster manager service
+      await logger.log(
+        publicManagerNode[0],
+        "Uploading private network cluster manager node service"
+      );
+      await uploader.upload(
+        managerServiceSource,
+        `${
+          publicManagerNode[0]
+        }:/etc/systemd/system/private-network-cluster-manager${serviceSuffix}.service`,
+        true
+      );
+      await logger.divide();
+    }
 
     // Create network cluster worker services
     const workerServiceSources = isType2
       ? await servicer.createService({
           description: "Network cluster daemon (worker only)",
           execStart: `/bin/sh -c "/usr/local/bin/edge -d edge0 -r -a dhcp:0.0.0.0 -c privatenetworkcluster -k ${token} -l ${
-            publicManagerNode[0].split("@")[1]
+            clusterToken
+              ? publicManagerNode[0]
+              : publicManagerNode[0].split("@")[1]
           }:9090 -v -m $(echo $(cat /etc/machine-id)|md5sum|sed 's/^\\(..\\)\\(..\\)\\(..\\)\\(..\\)\\(..\\).*$/02:\\1:\\2:\\3:\\4:\\5/') && pkill -9 dhclient; /sbin/dhclient edge0; tail -f /dev/null"`,
           destination: await tmpFiler.getPath(
             `private-network-cluster-worker${serviceSuffix}.service`
@@ -433,7 +473,9 @@ new (require("../lib/noun"))({
               execStart: `/bin/sh -c "/usr/local/bin/wireguard-go wgoverlay && /usr/local/bin/wesher --interface wgoverlay --no-etc-hosts --bind-addr ${
                 node.split("@")[1]
               } --cluster-key ${token} --join ${
-                publicManagerNode[0].split("@")[1]
+                clusterToken
+                  ? publicManagerNode[0]
+                  : publicManagerNode[0].split("@")[1]
               }"`,
               environment: "WG_I_PREFER_BUGGY_USERSPACE_TO_POLISHED_KMOD=1",
               destination: await tmpFiler.getPath(
@@ -442,21 +484,6 @@ new (require("../lib/noun"))({
             });
           })
         );
-    await logger.divide();
-
-    // Upload network cluster manager service
-    await logger.log(
-      publicManagerNode[0],
-      "Uploading private network cluster manager node service"
-    );
-    await uploader.upload(
-      managerServiceSource,
-      `${
-        publicManagerNode[0]
-      }:/etc/systemd/system/private-network-cluster-manager${serviceSuffix}.service`,
-      true
-    );
-    await logger.divide();
 
     // Upload network cluster worker service
     await Promise.all(
@@ -490,16 +517,18 @@ new (require("../lib/noun"))({
     );
     await logger.divide();
 
-    // Enable network cluster manager service
-    await logger.log(
-      publicManagerNode[0],
-      "Enabling private network cluster manager service"
-    );
-    await servicer.enableService(
-      publicManagerNode[0],
-      `private-network-cluster-manager${serviceSuffix}.service`
-    );
-    await logger.divide();
+    if (!clusterToken) {
+      // Enable network cluster manager service
+      await logger.log(
+        publicManagerNode[0],
+        "Enabling private network cluster manager service"
+      );
+      await servicer.enableService(
+        publicManagerNode[0],
+        `private-network-cluster-manager${serviceSuffix}.service`
+      );
+      await logger.divide();
+    }
 
     // Enable network cluster worker service
     await Promise.all(
@@ -516,34 +545,8 @@ new (require("../lib/noun"))({
     );
     await logger.divide();
 
-    // Get network cluster manager node
-    const iper = new IPer();
-    await logger.log(
-      publicManagerNode[0],
-      "Getting private network cluster manager node"
-    );
-    await servicer.waitForService(
-      publicManagerNode[0],
-      `private-network-cluster-manager${serviceSuffix}.service`,
-      1000
-    );
-    await iper.waitForInterface(
-      publicManagerNode[0],
-      isType2 ? "edge0" : "wgoverlay",
-      1000
-    );
-    const privateManagerNodeInterface = await iper.getInterface(
-      publicManagerNode[0],
-      isType2 ? "edge0" : "wgoverlay"
-    );
-    const privateManagerNode = [
-      `${publicManagerNode[0].split("@")[0]}@${privateManagerNodeInterface.ip}`,
-      publicManagerNode[1],
-      publicManagerNode[0]
-    ];
-    await logger.divide();
-
     // Get network cluster worker nodes
+    const iper = new IPer();
     const privateWorkerNodes = [];
     await Promise.all(
       publicWorkerNodes.map(async ([node]) => {
@@ -571,20 +574,65 @@ new (require("../lib/noun"))({
     );
     await logger.divide();
 
-    // Log the data
-    await logger.log(
-      localhost,
-      {
-        managerNode: {
-          access: {
-            public: privateManagerNode[2],
-            private: privateManagerNode[0]
-          }
+    if (!clusterToken) {
+      // Get network cluster manager node
+      await logger.log(
+        publicManagerNode[0],
+        "Getting private network cluster manager node"
+      );
+      await servicer.waitForService(
+        publicManagerNode[0],
+        `private-network-cluster-manager${serviceSuffix}.service`,
+        1000
+      );
+      await iper.waitForInterface(
+        publicManagerNode[0],
+        isType2 ? "edge0" : "wgoverlay",
+        1000
+      );
+      const privateManagerNodeInterface = await iper.getInterface(
+        publicManagerNode[0],
+        isType2 ? "edge0" : "wgoverlay"
+      );
+      const privateManagerNode = [
+        `${publicManagerNode[0].split("@")[0]}@${
+          privateManagerNodeInterface.ip
+        }`,
+        publicManagerNode[1],
+        publicManagerNode[0]
+      ];
+      await logger.divide();
+
+      // Log the data
+      await logger.log(
+        localhost,
+        {
+          managerNode: {
+            access: {
+              public: privateManagerNode[2],
+              private: privateManagerNode[0]
+            }
+          },
+          token
         },
-        token
-      },
-      "data",
-      "Successfully applied private network clusters' variables"
-    );
+        "data",
+        "Successfully applied private network clusters' variables"
+      );
+    } else {
+      // Log the data
+      await logger.log(
+        localhost,
+        {
+          managerNode: {
+            ips: {
+              public: publicManagerNode[0]
+            }
+          },
+          token
+        },
+        "data",
+        "Successfully applied private network clusters' variables"
+      );
+    }
   }
 });
