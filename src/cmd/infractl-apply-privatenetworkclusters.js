@@ -21,7 +21,7 @@ const Homer = require("../lib/homer");
 
 new (require("../lib/noun"))({
   args:
-    "<user@manager-node-ip|manager-node-ip> [user@worker-node-ip] [otherWorkerNodes...] [$(whoami)@$(hostname)]",
+    "<user@manager-node-ip|user@manager-node-public-ip/manager-node-private-ip|manager-node-ip> [user@worker-node-ip|user@worker-node-public-ip/worker-node-private-ip] [otherWorkerNodes...] [$(whoami)@$(hostname)|$(whoami)@$(hostname)/node-private-ip]",
   options: [
     [
       "-t, --private-network-cluster-type [2|3]",
@@ -70,10 +70,19 @@ new (require("../lib/noun"))({
       commander.args[0].split("@")[1];
     const serviceSuffix =
       commander.privateNetworkClusterType === "2" ? "-type-2" : "-type-3";
-    const providedManagerNode = commander.args[0];
+    const bindIps = commander.args.map(node =>
+      node.split("@")[1]
+        ? node.split("/")[1]
+          ? [node.split("/")[0], node.split("/")[1]]
+          : [node, false]
+        : [node, false]
+    );
+    const providedManagerNode = commander.args[0].split("/")[0];
     const providedWorkerNodes = isManagerOnly
       ? []
-      : commander.args.filter((_, index) => index !== 0);
+      : commander.args
+          .filter((_, index) => index !== 0)
+          .map(node => node.split("/")[0]);
     const allProvidedNodes =
       clusterToken && !isManagerOnly
         ? providedWorkerNodes
@@ -438,9 +447,10 @@ new (require("../lib/noun"))({
           })
         : await servicer.createService({
             description: "Network cluster daemon (manager and worker)",
-            execStart: `/bin/sh -c "/usr/local/bin/wireguard-go wgoverlay && /usr/local/bin/wesher --interface wgoverlay --no-etc-hosts --bind-addr ${
-              publicManagerNode[0].split("@")[1]
-            } --cluster-key ${token}"`,
+            execStart: `/bin/sh -c "/usr/local/bin/wireguard-go wgoverlay && /usr/local/bin/wesher --interface wgoverlay --no-etc-hosts --bind-addr ${bindIps.find(
+              ip => ip[0] === publicManagerNode[0]
+            )[1] ||
+              publicManagerNode[0].split("@")[1]} --cluster-key ${token}"`,
             environment: "WG_I_PREFER_BUGGY_USERSPACE_TO_POLISHED_KMOD=1",
             destination: await tmpFiler.getPath(
               `private-network-cluster-manager${serviceSuffix}.service`
@@ -470,7 +480,8 @@ new (require("../lib/noun"))({
             execStart: `/bin/sh -c "/usr/local/bin/edge -d edge0 -r -a dhcp:0.0.0.0 -c privatenetworkcluster -k ${token} -l ${
               clusterToken && !isManagerOnly
                 ? publicManagerNode[0]
-                : publicManagerNode[0].split("@")[1]
+                : bindIps.find(ip => ip[0] === publicManagerNode[0])[1] ||
+                  publicManagerNode[0].split("@")[1]
             }:9090 -v -m $(echo $(cat /etc/machine-id)|md5sum|sed 's/^\\(..\\)\\(..\\)\\(..\\)\\(..\\)\\(..\\).*$/02:\\1:\\2:\\3:\\4:\\5/') && pkill -9 dhclient; /sbin/dhclient edge0; tail -f /dev/null"`,
             destination: await tmpFiler.getPath(
               `private-network-cluster-worker${serviceSuffix}.service`
@@ -484,12 +495,13 @@ new (require("../lib/noun"))({
               );
               return await servicer.createService({
                 description: "Network cluster daemon (worker only)",
-                execStart: `/bin/sh -c "/usr/local/bin/wireguard-go wgoverlay && /usr/local/bin/wesher --interface wgoverlay --no-etc-hosts --bind-addr ${
-                  node.split("@")[1]
-                } --cluster-key ${token} --join ${
+                execStart: `/bin/sh -c "/usr/local/bin/wireguard-go wgoverlay && /usr/local/bin/wesher --interface wgoverlay --no-etc-hosts --bind-addr ${bindIps.find(
+                  ip => ip[0] === node
+                )[1] || node.split("@")[1]} --cluster-key ${token} --join ${
                   clusterToken && !isManagerOnly
                     ? publicManagerNode[0]
-                    : publicManagerNode[0].split("@")[1]
+                    : bindIps.find(ip => ip[0] === publicManagerNode[0])[1] ||
+                      publicManagerNode[0].split("@")[1]
                 }"`,
                 environment: "WG_I_PREFER_BUGGY_USERSPACE_TO_POLISHED_KMOD=1",
                 destination: await tmpFiler.getPath(
