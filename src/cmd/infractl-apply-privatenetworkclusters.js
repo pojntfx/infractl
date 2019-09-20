@@ -33,20 +33,22 @@ new (require("../lib/noun"))({
     ]
   ],
   checker: commander =>
-    commander.token
-      ? // Worker only install
-        commander.args[0] &&
-        commander.args[1] &&
-        (!commander.args[0].split("@")[1] && // There should be no username in the manager node address
-        commander.args[1].split("@")[0] && // There should be a username in the worker nodes' address
-          commander.args[1].split("@")[1])
-      : commander.args[0] && commander.args[1]
-      ? // Manager and worker install
-        commander.args[0].split("@")[0] &&
-        commander.args[0].split("@")[1] &&
-        (commander.args[1].split("@")[0] && commander.args[1].split("@")[1])
-      : // Manager only install
-        commander.args[0].split("@")[0] && commander.args[0].split("@")[1],
+    commander.args[0]
+      ? commander.token
+        ? // Worker only install
+          commander.args[0] &&
+          commander.args[1] &&
+          (!commander.args[0].split("@")[1] && // There should be no username in the manager node address
+          commander.args[1].split("@")[0] && // There should be a username in the worker nodes' address
+            commander.args[1].split("@")[1])
+        : commander.args[0] && commander.args[1]
+        ? // Manager and worker install
+          commander.args[0].split("@")[0] &&
+          commander.args[0].split("@")[1] &&
+          (commander.args[1].split("@")[0] && commander.args[1].split("@")[1])
+        : // Manager only install
+          commander.args[0].split("@")[0] && commander.args[0].split("@")[1]
+      : false,
   action: async commander => {
     // Set up logger
     const logger = new Logger();

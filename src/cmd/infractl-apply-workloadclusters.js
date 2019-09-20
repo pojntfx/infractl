@@ -22,7 +22,7 @@ const DataConverter = require("../lib/dataConverter");
 
 new (require("../lib/noun"))({
   args:
-    "<user@manager-node-ip|manager-node-ip> [user@worker-node-ip] [otherWorkerNodes...] $(whoami)@$(hostname)",
+    "<user@manager-node-ip|user@manager-node-public-ip/manager-node-private-ip|manager-node-ip|manager-node-public-ip/manager-node-private-ip> [user@worker-node-ip] [otherWorkerNodes...] [$(whoami)@$(hostname)]",
   options: [
     [
       "-e, --lets-encrypt-certificate-issuers-email [email]",
@@ -50,20 +50,22 @@ new (require("../lib/noun"))({
     ]
   ],
   checker: commander =>
-    commander.token
-      ? // Worker only install
-        commander.args[0] &&
-        commander.args[1] &&
-        (!commander.args[0].split("@")[1] && // There should be no username in the manager node address
-        commander.args[1].split("@")[0] && // There should be a username in the worker nodes' address
-          commander.args[1].split("@")[1])
-      : commander.args[0] && commander.args[1]
-      ? // Manager and worker install
-        commander.args[0].split("@")[0] &&
-        commander.args[0].split("@")[1] &&
-        (commander.args[1].split("@")[0] && commander.args[1].split("@")[1])
-      : // Manager only install
-        commander.args[0].split("@")[0] && commander.args[0].split("@")[1],
+    commander.args[0]
+      ? commander.token
+        ? // Worker only install
+          commander.args[0] &&
+          commander.args[1] &&
+          (!commander.args[0].split("@")[1] && // There should be no username in the manager node address
+          commander.args[1].split("@")[0] && // There should be a username in the worker nodes' address
+            commander.args[1].split("@")[1])
+        : commander.args[0] && commander.args[1]
+        ? // Manager and worker install
+          commander.args[0].split("@")[0] &&
+          commander.args[0].split("@")[1] &&
+          (commander.args[1].split("@")[0] && commander.args[1].split("@")[1])
+        : // Manager only install
+          commander.args[0].split("@")[0] && commander.args[0].split("@")[1]
+      : false,
   action: async commander => {
     // Set up logger
     const logger = new Logger();
@@ -89,7 +91,8 @@ new (require("../lib/noun"))({
     const defaultComponentsToNotApply = commander.dontApply
       ? commander.apply.split(",")
       : [];
-    const providedManagerNode = commander.args[0];
+    const providedManagerNode = commander.args[0].split("/")[0];
+    const providedManagerNodeContactIp = commander.args[0].split("/")[1];
     const providedWorkerNodes = isManagerOnly
       ? []
       : commander.args.filter((_, index) => index !== 0);
@@ -656,7 +659,9 @@ new (require("../lib/noun"))({
       const workerServiceSource = await servicer.createService({
         description: "Workload cluster daemon (worker only)",
         execStart: `/usr/local/bin/k3s agent --flannel-iface ${interfaceName} --token ${token} --server https://${
-          clusterToken ? managerNode[0] : managerNode[0].split("@")[1]
+          clusterToken
+            ? providedManagerNodeContactIp || managerNode[0]
+            : providedManagerNodeContactIp || managerNode[0].split("@")[1]
         }:6443`,
         destination: await tmpFiler.getPath("workload-cluster-worker.service")
       });
@@ -720,7 +725,7 @@ new (require("../lib/noun"))({
                     commander.additionalManagerNodeIp
                   }`
                 : managerNode[0],
-              private: managerNode[0]
+              private: providedManagerNodeContactIp || managerNode[0]
             }
           },
           token
