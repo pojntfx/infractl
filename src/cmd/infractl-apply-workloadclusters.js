@@ -22,7 +22,7 @@ const DataConverter = require("../lib/dataConverter");
 
 new (require("../lib/noun"))({
   args:
-    "<user@manager-node-ip|user@manager-node-public-ip/manager-node-private-ip|manager-node-ip|manager-node-public-ip/manager-node-private-ip> [user@worker-node-ip] [otherWorkerNodes...] [$(whoami)@$(hostname)]",
+    "<user@manager-node-ip|user@manager-node-public-ip/manager-node-private-ip|manager-node-ip> [user@worker-node-ip] [otherWorkerNodes...] [$(whoami)@$(hostname)]",
   options: [
     [
       "-e, --lets-encrypt-certificate-issuers-email [email]",
