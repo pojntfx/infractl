@@ -21,7 +21,7 @@ const Homer = require("../lib/homer");
 
 new (require("../lib/noun"))({
   args:
-    "<user@manager-node-ip|manager-node-ip> [user@worker-node-ip] [otherWorkerNodes...] $(whoami)@$(hostname)",
+    "<user@manager-node-ip|manager-node-ip> [user@worker-node-ip] [otherWorkerNodes...] [$(whoami)@$(hostname)]",
   options: [
     [
       "-t, --private-network-cluster-type [2|3]",
@@ -59,7 +59,7 @@ new (require("../lib/noun"))({
       localhost,
       "Creating provided public network cluster node data model"
     );
-    const isType2 = commander.privateNetworkClusterType === "2" ? true : false;
+    const isType2 = commander.privateNetworkClusterType === "2";
     const clusterToken = commander.token;
     const isManagerOnly =
       !clusterToken &&
