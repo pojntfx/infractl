@@ -91,25 +91,25 @@
     "centos",
     [
       [
-        "workload cluster storage package 1",
+        "workload cluster fast storage package 1",
         "https://nx904.your-storageshare.de/s/oFqwPAAPASSDLPo/download",
         "iscsi-initiator-utils.rpm",
         "/tmp/iscsi-initiator-utils.rpm"
       ],
       [
-        "workload cluster storage package 2",
+        "workload cluster fast storage package 2",
         "https://nx904.your-storageshare.de/s/tPpxfo4saQMBFy2/download",
         "iscsi-initiator-utils-iscsiuio.rpm",
         "/tmp/iscsi-initiator-utils-iscsiuio.rpm"
       ],
       [
-        "workload cluster storage package 3",
+        "workload cluster fast storage package 3",
         "https://nx904.your-storageshare.de/s/TyQ74Hn8Z6eKmHn/download",
         "python.rpm",
         "/tmp/python.rpm"
       ],
       [
-        "workload cluster storage package 4",
+        "workload cluster fast storage package 4",
         "https://nx904.your-storageshare.de/s/T2NCxspMYkMxo2p/download",
         "python-libs.rpm",
         "/tmp/python-libs.rpm"
@@ -137,6 +137,102 @@
         "https://nx904.your-storageshare.de/s/DXY454aSrzSi8JB/download",
         "policycoreutils-python.rpm",
         "/tmp/policycoreutils-python.rpm"
+      ],
+      [
+        "workload cluster slow storage package 1",
+        "https://nx904.your-storageshare.de/s/e85oGDGL44YAGi3/download",
+        "gssproxy.rpm",
+        "/tmp/gssproxy.rpm"
+      ],
+      [
+        "workload cluster slow storage package 2",
+        "https://nx904.your-storageshare.de/s/TLqcPzXBTg9dqt5/download",
+        "keyutils.rpm",
+        "/tmp/keyutils.rpm"
+      ],
+      [
+        "workload cluster slow storage package 3",
+        "https://nx904.your-storageshare.de/s/qH4Tj4pf7a3Qn7i/download",
+        "libbasicobjects.rpm",
+        "/tmp/libbasicobjects.rpm"
+      ],
+      [
+        "workload cluster slow storage package 4",
+        "https://nx904.your-storageshare.de/s/RXaxAmHRFMEaZAR/download",
+        "libcollection.rpm",
+        "/tmp/libcollection.rpm"
+      ],
+      [
+        "workload cluster slow storage package 5",
+        "https://nx904.your-storageshare.de/s/a7Ekjks7KwtNyB9/download",
+        "libevent.rpm",
+        "/tmp/libevent.rpm"
+      ],
+      [
+        "workload cluster slow storage package 6",
+        "https://nx904.your-storageshare.de/s/qTt9b88G4q3L98w/download",
+        "libini_config.rpm",
+        "/tmp/libini_config.rpm"
+      ],
+      [
+        "workload cluster slow storage package 6",
+        "https://nx904.your-storageshare.de/s/SMo8DDJTfdSkAqJ/download",
+        "libnfsidmap.rpm",
+        "/tmp/libnfsidmap.rpm"
+      ],
+      [
+        "workload cluster slow storage package 7",
+        "https://nx904.your-storageshare.de/s/ygSBd4Rf5MjSkLo/download",
+        "libpath_utils.rpm",
+        "/tmp/libpath_utils.rpm"
+      ],
+      [
+        "workload cluster slow storage package 8",
+        "https://nx904.your-storageshare.de/s/Stx7QMeG5eB6pBB/download",
+        "libref_array.rpm",
+        "/tmp/libref_array.rpm"
+      ],
+      [
+        "workload cluster slow storage package 9",
+        "https://nx904.your-storageshare.de/s/kEYNRxpTC9SNWx8/download",
+        "libtirpc.rpm",
+        "/tmp/libtirpc.rpm"
+      ],
+      [
+        "workload cluster slow storage package 10",
+        "https://nx904.your-storageshare.de/s/r3pCTisotF8bsE5/download",
+        "libverto.rpm",
+        "/tmp/libverto.rpm"
+      ],
+      [
+        "workload cluster slow storage package 11",
+        "https://nx904.your-storageshare.de/s/a7XwGA4maz5WJ2g/download",
+        "quota.rpm",
+        "/tmp/quota.rpm"
+      ],
+      [
+        "workload cluster slow storage package 12",
+        "https://nx904.your-storageshare.de/s/mp73SijQpqe3PHn/download",
+        "quota-nls.rpm",
+        "/tmp/quota-nls.rpm"
+      ],
+      [
+        "workload cluster slow storage package 13",
+        "https://nx904.your-storageshare.de/s/Aa9orxMDWHHf8Mi/download",
+        "rpcbind.rpm",
+        "/tmp/rpcbind.rpm"
+      ],
+      [
+        "workload cluster slow storage package 14",
+        "https://nx904.your-storageshare.de/s/7Lww6R3FwYjxEaA/download",
+        "tcp_wrappers.rpm",
+        "/tmp/tcp_wrappers.rpm"
+      ],
+      [
+        "workload cluster slow storage package 15",
+        "https://nx904.your-storageshare.de/s/DTGyFPND7CPRFzn/download",
+        "nfs-utils.rpm",
+        "/tmp/nfs-utils.rpm"
       ]
     ]
   ]
