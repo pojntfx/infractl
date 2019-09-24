@@ -38,18 +38,40 @@ module.exports = class {
     }
   }
 
+  async awaitConnect(host, username, interval) {
+    let res = false;
+    try {
+      res = await this.shell.connect({
+        host,
+        username,
+        agent: process.env.SSH_AUTH_SOCK,
+        readyTimeout: 500000
+      });
+    } catch (e) {
+      res = false;
+    }
+    return new Promise(resolve => {
+      if (res) {
+        resolve(true);
+      } else {
+        setTimeout(
+          () =>
+            this.awaitConnect(host, username, interval).then(() =>
+              resolve(true)
+            ),
+          interval
+        );
+      }
+    });
+  }
+
   async execCommand(command) {
     return new Promise(async resolve => {
       if (this.isLocal) {
         const outputRaw = this.shell.exec(command, { silent: true });
         resolve(outputRaw.stdout);
       } else {
-        await this.shell.connect({
-          host: this.hostname,
-          username: this.user,
-          agent: process.env.SSH_AUTH_SOCK,
-          readyTimeout: 500000
-        });
+        await this.awaitConnect(this.hostname, this.user, 2000);
         const outputRaw = await this.shell.execCommand(command);
         this.dispose();
         resolve(outputRaw.stdout);
@@ -69,12 +91,7 @@ module.exports = class {
         return true;
       }
     } else {
-      await this.shell.connect({
-        host: this.hostname,
-        username: this.user,
-        agent: process.env.SSH_AUTH_SOCK,
-        readyTimeout: 500000
-      });
+      await this.awaitConnect(this.hostname, this.user, 2000);
       let res = {};
       if (withSudo) {
         const filePath = destination.split("/");
