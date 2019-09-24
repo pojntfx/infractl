@@ -14,13 +14,13 @@
     "debian",
     [
       [
-        "workload cluster storage package 1",
+        "workload cluster fast storage package 1",
         "https://nx904.your-storageshare.de/s/Kg6ccPBzYSipEaS/download",
         "open-iscsi.deb",
         "/tmp/open-iscsi.deb"
       ],
       [
-        "workload cluster storage package 2",
+        "workload cluster fast storage package 2",
         "https://nx904.your-storageshare.de/s/Krrqs8sBF4pDQZS/download",
         "libisns0.deb",
         "/tmp/libisns0.deb"
@@ -42,6 +42,48 @@
         "https://nx904.your-storageshare.de/s/saGYDs4es29JHWo/download",
         "policycoreutils-python-utils.deb",
         "/tmp/policycoreutils-python-utils.deb"
+      ],
+      [
+        "workload cluster slow storage package 1",
+        "https://nx904.your-storageshare.de/s/XJAPgCgZLDyrjpH/download",
+        "keyutils.deb",
+        "/tmp/keyutils.deb"
+      ],
+      [
+        "workload cluster slow storage package 2",
+        "https://nx904.your-storageshare.de/s/nY2csXR8fLbMkYa/download",
+        "libevent.deb",
+        "/tmp/libevent.deb"
+      ],
+      [
+        "workload cluster slow storage package 3",
+        "https://nx904.your-storageshare.de/s/WbJHAYJZWxnQARf/download",
+        "libnfsidmap2.deb",
+        "/tmp/libnfsidmap2.deb"
+      ],
+      [
+        "workload cluster slow storage package 4",
+        "https://nx904.your-storageshare.de/s/C7mzNJ3cn9EiqxJ/download",
+        "libtirpc-common.deb",
+        "/tmp/libtirpc-common.deb"
+      ],
+      [
+        "workload cluster slow storage package 5",
+        "https://nx904.your-storageshare.de/s/JtHGe8d7Ej6mYkR/download",
+        "libtirpc3.deb",
+        "/tmp/libtirpc3.deb"
+      ],
+      [
+        "workload cluster slow storage package 6",
+        "https://nx904.your-storageshare.de/s/TqLCjDkjqKnE5Rp/download",
+        "nfs-common.deb",
+        "/tmp/nfs-common.deb"
+      ],
+      [
+        "workload cluster slow storage package 7",
+        "https://nx904.your-storageshare.de/s/MXJd92xEW5QsMHk/download",
+        "rpcbind.deb",
+        "/tmp/rpcbind.deb"
       ]
     ]
   ],

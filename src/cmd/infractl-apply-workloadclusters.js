@@ -10,6 +10,7 @@ const Uploader = require("../lib/uploader");
 const Packager = require("../lib/packager");
 const workloadClusterManifestRaw = require("../data/workloadClusterManifest.json");
 const Issuer = require("../lib/issuer");
+const NFSer = require("../lib/nfser");
 const SELinuxer = require("../lib/selinuxer");
 const Permissioner = require("../lib/permissioner");
 const Kernelr = require("../lib/kernelr");
@@ -29,6 +30,10 @@ new (require("../lib/noun"))({
       "Let's Encrypt certificate issuers' email for certificates (i.e. user@host.tld) (by default the issuers won't be deployed)"
     ],
     [
+      "-s, --slow-storage-size [size-in-gb]",
+      "Slow storage's size (by default 10 gigabyte, this can be resized later on) (do not specify unit, it is always gigabyte) (this enables Read-Write-Many PVCs)"
+    ],
+    [
       "-m, --additional-manager-node-ip [ip]",
       "Additional manager node's IP for the workload cluster config (i.e. 192.168.178.141) (by default the target IP will be used, which might only be reachable from within the private network cluster depending on your setup)"
     ],
@@ -45,7 +50,7 @@ new (require("../lib/noun"))({
       "Comma-seperated list of components which are not applied by default to apply"
     ],
     [
-      "-d, --dont-apply [storage,ingress-controller,certificate-manager,virtual-machines,metrics]",
+      "-d, --dont-apply [fast-storage,ingress-controller,certificate-manager,slow-storage,virtual-machines,metrics]",
       "Comma-seperated list of components which are applied by default to not apply"
     ]
   ],
@@ -449,11 +454,11 @@ new (require("../lib/noun"))({
         `${managerNode[0]}:/var/lib/rancher/k3s/server/manifests`,
         true
       );
-      if (!defaultComponentsToNotApply.includes("storage")) {
-        // Upload workload cluster storage chart
+      if (!defaultComponentsToNotApply.includes("fast-storage")) {
+        // Upload workload cluster fast storage chart
         await logger.log(
           managerNode[0],
-          "Uploading workload cluster storage chart"
+          "Uploading workload cluster fast storage chart"
         );
         await uploader.upload(
           `${__dirname}/../data/openEBSChart.yaml`,
@@ -517,6 +522,28 @@ new (require("../lib/noun"))({
           `${
             managerNode[0]
           }:/var/lib/rancher/k3s/server/manifests/certissuers.yaml`,
+          true
+        );
+      }
+      if (!defaultComponentsToNotApply.includes("slow-storage")) {
+        // Upload workload cluster slow storage chart
+        await logger.log(
+          localhost,
+          "Creating workload cluster slow storage chart"
+        );
+        const nfser = new NFSer();
+        const nfserChartSource = await nfser.createNFSSetup(
+          `${localhost}:${__dirname}/../data/nfsProvisionerChart.yaml`,
+          await tmpFiler.getPath("nfsProvisionerChart.yaml"),
+          commander.slowStorageSize || 10
+        );
+        await logger.log(
+          managerNode[0],
+          "Uploading workload cluster slow storage chart"
+        );
+        await uploader.upload(
+          nfserChartSource,
+          `${managerNode[0]}:/var/lib/rancher/k3s/server/manifests/nfs.yaml`,
           true
         );
       }
