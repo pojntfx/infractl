@@ -1,0 +1,15 @@
+apiVersion: helm.cattle.io/v1
+kind: HelmChart
+metadata:
+  name: nfs-server-provisioner
+  namespace: kube-system
+spec:
+  targetNamespace: default
+  chart: stable/nfs-server-provisioner
+  set:
+    persistence.enabled: "true"
+    persistence.storageClass: "fast"
+    storageClass.name: "slow"
+    storageClass.defaultClass: "true"
+    persistence.size: PERSISTENCE_SIZE
+    storageClass.allowVolumeExpansion: "true"
