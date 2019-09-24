@@ -1,6 +1,6 @@
 {
   "name": "infractl",
-  "version": "0.0.1-alpha3",
+  "version": "1.0.0",
   "description": "A CLI to manage supra-cloud SSH keys, nodes, WireGuard (OSI Layer 3)/N2N (OSI Layer 2) overlay networks and Kubernetes clusters.",
   "main": "src/cmd/infractl",
   "scripts": {
