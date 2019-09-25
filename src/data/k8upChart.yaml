@@ -1,0 +1,9 @@
+apiVersion: helm.cattle.io/v1
+kind: HelmChart
+metadata:
+  name: k8up
+  namespace: kube-system
+spec:
+  targetNamespace: default
+  chart: k8up
+  repo: https://charts.appuio.ch
