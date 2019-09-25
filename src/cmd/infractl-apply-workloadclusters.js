@@ -39,6 +39,10 @@ new (require("../lib/noun"))({
       "Backup S3-compatible backend's endpoint (i.e. http://95.217.11.207:9000) (by default the backup system configuration won't be deployed)"
     ],
     [
+      "-B, --backup-s3-bucket [endpoint]",
+      "Backup S3-compatible backend's bucket (i.e. backup-1) (by default the backup system configuration won't be deployed)"
+    ],
+    [
       "-a, --backup-s3-access-key [access-key]",
       "Backup S3-compatible backend's access key (i.e. minio) (by default the backup system configuration won't be deployed)"
     ],
@@ -47,7 +51,7 @@ new (require("../lib/noun"))({
       "Backup S3-compatible backend's secret key (i.e. minio123) (by default the backup system configuration won't be deployed)"
     ],
     [
-      "-B, --backup-encryption-password [password]",
+      "-p, --backup-encryption-password [password]",
       "Backup's encryption password to access and restore backups (by default the backup system configuration won't be deployed)"
     ],
     [
@@ -581,6 +585,7 @@ new (require("../lib/noun"))({
       // Upload workload cluster backup setup manifest
       if (
         commander.backupS3Endpoint &&
+        commander.backupS3Bucket &&
         commander.backupS3AccessKey &&
         commander.backupS3SecretKey &&
         commander.backupEncryptionPassword
@@ -595,6 +600,7 @@ new (require("../lib/noun"))({
           await tmpFiler.getPath("k8upSetupManifest.yaml"),
           {
             endpoint: commander.backupS3Endpoint,
+            bucket: commander.backupS3Bucket,
             accessKey: commander.backupS3AccessKey,
             secretKey: commander.backupS3SecretKey,
             encryptionPassword: commander.backupEncryptionPassword

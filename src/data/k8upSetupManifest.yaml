@@ -25,7 +25,7 @@ spec:
   backend:
     s3:
       endpoint: BACKUP_S3_ENDPOINT
-      bucket: backups
+      bucket: BACKUP_S3_BUCKET
       accessKeyIDSecretRef:
         name: backup-credentials
         key: username
