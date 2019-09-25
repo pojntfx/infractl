@@ -11,6 +11,7 @@ const Packager = require("../lib/packager");
 const workloadClusterManifestRaw = require("../data/workloadClusterManifest.json");
 const Issuer = require("../lib/issuer");
 const NFSer = require("../lib/nfser");
+const Backuper = require("../lib/backuper");
 const SELinuxer = require("../lib/selinuxer");
 const Permissioner = require("../lib/permissioner");
 const Kernelr = require("../lib/kernelr");
@@ -34,6 +35,22 @@ new (require("../lib/noun"))({
       "Slow storage's size (by default 10 gigabyte, this can be resized later on) (do not specify unit, it is always gigabyte) (this enables Read-Write-Many PVCs)"
     ],
     [
+      "-b, --backup-s3-endpoint [endpoint]",
+      "Backup S3-compatible backend's endpoint (i.e. http://95.217.11.207:9000) (by default the backup system configuration won't be deployed)"
+    ],
+    [
+      "-a, --backup-s3-access-key [access-key]",
+      "Backup S3-compatible backend's access key (i.e. minio) (by default the backup system configuration won't be deployed)"
+    ],
+    [
+      "-A, --backup-s3-secret-key [secret-key]",
+      "Backup S3-compatible backend's secret key (i.e. minio123) (by default the backup system configuration won't be deployed)"
+    ],
+    [
+      "-B, --backup-encryption-password [password]",
+      "Backup's encryption password to access and restore backups (by default the backup system configuration won't be deployed)"
+    ],
+    [
       "-m, --additional-manager-node-ip [ip]",
       "Additional manager node's IP for the workload cluster config (i.e. 192.168.178.141) (by default the target IP will be used, which might only be reachable from within the private network cluster depending on your setup)"
     ],
@@ -50,7 +67,7 @@ new (require("../lib/noun"))({
       "Comma-seperated list of components which are not applied by default to apply"
     ],
     [
-      "-d, --dont-apply [fast-storage,ingress-controller,certificate-manager,slow-storage,virtual-machines,metrics]",
+      "-d, --dont-apply [fast-storage,ingress-controller,certificate-manager,slow-storage,backup-system,virtual-machines,metrics]",
       "Comma-seperated list of components which are applied by default to not apply"
     ]
   ],
@@ -544,6 +561,54 @@ new (require("../lib/noun"))({
         await uploader.upload(
           nfserChartSource,
           `${managerNode[0]}:/var/lib/rancher/k3s/server/manifests/nfs.yaml`,
+          true
+        );
+      }
+      if (!defaultComponentsToNotApply.includes("backup-system")) {
+        // Upload workload cluster backup system chart
+        await logger.log(
+          managerNode[0],
+          "Uploading workload cluster backup system chart"
+        );
+        await uploader.upload(
+          `${__dirname}/../data/k8upChart.yaml`,
+          `${
+            managerNode[0]
+          }:/var/lib/rancher/k3s/server/manifests/k8upsystem.yaml`,
+          true
+        );
+      }
+      // Upload workload cluster backup setup manifest
+      if (
+        commander.backupS3Endpoint &&
+        commander.backupS3AccessKey &&
+        commander.backupS3SecretKey &&
+        commander.backupEncryptionPassword
+      ) {
+        await logger.log(
+          localhost,
+          "Creating workload cluster backup setup manifest"
+        );
+        const backuper = new Backuper();
+        const backuperManifestSource = await backuper.createBackupSetup(
+          `${localhost}:${__dirname}/../data/k8upSetupManifest.yaml`,
+          await tmpFiler.getPath("k8upSetupManifest.yaml"),
+          {
+            endpoint: commander.backupS3Endpoint,
+            accessKey: commander.backupS3AccessKey,
+            secretKey: commander.backupS3SecretKey,
+            encryptionPassword: commander.backupEncryptionPassword
+          }
+        );
+        await logger.log(
+          managerNode[0],
+          "Uploading workload cluster backup setup manifest"
+        );
+        await uploader.upload(
+          backuperManifestSource,
+          `${
+            managerNode[0]
+          }:/var/lib/rancher/k3s/server/manifests/k8upsetup.yaml`,
           true
         );
       }
