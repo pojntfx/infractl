@@ -10,7 +10,7 @@ metadata:
   name: kubevirt-config
   namespace: kubevirt
 data:
-  debug.useEmulation: "true"
+  debug.useEmulation: DEBUG_USE_EMULATION
 ---
 # This is upstream (with plugins path adjusted to k3s)
 apiVersion: v1
