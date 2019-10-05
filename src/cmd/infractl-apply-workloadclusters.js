@@ -12,6 +12,7 @@ const workloadClusterManifestRaw = require("../data/workloadClusterManifest.json
 const Issuer = require("../lib/issuer");
 const NFSer = require("../lib/nfser");
 const Backuper = require("../lib/backuper");
+const KubeVirter = require("../lib/kubevirter");
 const SELinuxer = require("../lib/selinuxer");
 const Permissioner = require("../lib/permissioner");
 const Kernelr = require("../lib/kernelr");
@@ -33,6 +34,10 @@ new (require("../lib/noun"))({
     [
       "-s, --slow-storage-size [size-in-gb]",
       "Slow storage's size (by default 10 gigabyte, this can be resized later on) (do not specify unit, it is always gigabyte) (this enables Read-Write-Many PVCs)"
+    ],
+    [
+      "-a, --virtual-machine-hardware-acceleration [true|false]",
+      "Whether to enable hardware acceleration for virtual machines (default false)"
     ],
     [
       "-b, --backup-s3-endpoint [endpoint]",
@@ -619,13 +624,22 @@ new (require("../lib/noun"))({
         );
       }
       if (!defaultComponentsToNotApply.includes("virtual-machines")) {
-        // Upload workload cluster virtual machines manifest
+        await logger.log(
+          localhost,
+          "Creating workload cluster virtual machines manifest"
+        );
+        const kubevirter = new KubeVirter();
+        const kubevirterManifestSource = await kubevirter.createKubeVirtSetup(
+          `${localhost}:${__dirname}/../data/kubevirtManifest.yaml`,
+          await tmpFiler.getPath("kubevirtManifest.yaml"),
+          commander.virtualMachineHardwareAcceleration === "true"
+        );
         await logger.log(
           managerNode[0],
           "Uploading workload cluster virtual machines manifest"
         );
         await uploader.upload(
-          `${__dirname}/../data/kubevirtManifest.yaml`,
+          kubevirterManifestSource,
           `${
             managerNode[0]
           }:/var/lib/rancher/k3s/server/manifests/virtualmachines.yaml`,
