@@ -19,7 +19,7 @@
   "author": "Felicitas Pojtinger <felicitas@pojtinger.com>",
   "license": "AGPL-3.0",
   "dependencies": {
-    "commander": "^2.19.0",
+    "commander": "^3.0.2",
     "configstore": "^5.0.0",
     "download": "^7.1.0",
     "lodash": "^4.17.15",
@@ -29,9 +29,9 @@
     "pluralize": "^8.0.0",
     "shelljs": "^0.8.3",
     "tcp-ping": "^0.1.1",
-    "yaml": "^1.6.0"
+    "yaml": "^1.7.0"
   },
   "devDependencies": {
-    "pkg": "^4.3.7"
+    "pkg": "^4.4.0"
   }
 }
