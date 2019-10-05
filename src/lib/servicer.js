@@ -2,7 +2,13 @@ const fs = require("fs");
 const SSHer = require("./ssher");
 
 module.exports = class {
-  async createService({ description, execStart, environment, destination }) {
+  async createService({
+    description,
+    execStart,
+    environment,
+    destination,
+    dontRestart
+  }) {
     return new Promise(resolve =>
       fs.writeFile(
         destination,
@@ -11,7 +17,9 @@ Description=${description}
 After=network.target
 
 [Service]
-ExecStart=${execStart}${environment ? `\nEnvironment=${environment}` : ""}
+ExecStart=${execStart}${environment ? `\nEnvironment=${environment}` : ""}${
+          dontRestart ? "" : `\nRestart=always`
+        }
 
 [Install]
 WantedBy=multi-user.target
