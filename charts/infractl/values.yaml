@@ -1,0 +1,4 @@
+image: registry.gitlab.com/pojntfx/pojntfx/infractl:latest
+memory: "128Mi"
+cpu: "500m"
+dev: false

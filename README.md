@@ -20,15 +20,6 @@ Commands:
   help [cmd]     display help for [cmd]
 ```
 
-## Usage
-
-```bash
-# Install on Linux
-curl -L https://gitlab.com/pojntfx/pojntfx/-/jobs/artifacts/master/download?job=infractl -o /tmp/infractl.zip && unzip /tmp/infractl.zip -d /tmp/infractl && sudo cp /tmp/infractl/packages/infractl/dist/infractl-linux /tmp/infractl/packages/infractl/dist/infractl && sudo install /tmp/infractl/packages/infractl/dist/infractl /usr/local/bin
-# Install on macOS
-curl -L https://gitlab.com/pojntfx/pojntfx/-/jobs/artifacts/master/download?job=infractl -o /tmp/infractl.zip && unzip /tmp/infractl.zip -d /tmp/infractl && sudo cp /tmp/infractl/packages/infractl/dist/infractl-macos /usr/local/bin/infractl
-```
-
 ## Docs
 
 See [Platform README](../../README.md).
