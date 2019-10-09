@@ -4,7 +4,8 @@
   "description": "A CLI to manage supra-cloud SSH keys, nodes, WireGuard (OSI Layer 3)/N2N (OSI Layer 2) overlay networks and Kubernetes clusters.",
   "main": "src/cmd/infractl",
   "scripts": {
-    "build": "chmod +x ./src/cmd/* && pkg . -t node10-linux,node10-macos,node10-win --out-path dist",
+    "dev": "chmod +x ./src/cmd/* && ttyd -p 1234 ./src/cmd/run-dev.sh",
+    "build": "chmod +x ./src/cmd/*",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "bin": {

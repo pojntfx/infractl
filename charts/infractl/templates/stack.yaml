@@ -1,0 +1,40 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: infractl{{ if .Values.dev }}-dev{{ end }}
+spec:
+  selector:
+    matchLabels:
+      app: infractl{{ if .Values.dev }}-dev{{ end }}
+  template:
+    metadata:
+      labels:
+        app: infractl{{ if .Values.dev }}-dev{{ end }}
+    spec:
+      containers:
+        - name: infractl{{ if .Values.dev }}-dev{{ end }}
+          image: {{ .Values.image }}
+          {{ if .Values.dev }}
+          ports:
+            - containerPort: 1234
+          {{ else }}}
+          resources:
+            limits:
+              memory: {{ .Values.memory }}
+              cpu: {{ .Values.cpu }}
+          {{ end }}
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: infractl{{ if .Values.dev }}-dev{{ end }}
+spec:
+  selector:
+    app: infractl{{ if .Values.dev }}-dev{{ end }}
+  ports:
+    {{ if .Values.dev }}
+    - port: 1234
+      targetPort: 1234
+      name: http-and-ws
+    {{ end }}
