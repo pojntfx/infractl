@@ -22,4 +22,4 @@ Commands:
 
 ## Docs
 
-See [Platform README](../../README.md).
+Check out the [blog post](https://felicitas.pojtinger.com/articles/2019-09-23-infractl-works).
